@@ -35,7 +35,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        if (!$user->is_active) {
+        if ($user->status !== 'active') {
             return response()->json(['message' => 'Account is inactive'], 403);
         }
 
