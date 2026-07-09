@@ -53,6 +53,11 @@ class Provider extends Model
         return $this->hasMany(ServiceRequest::class);
     }
 
+    public function quotationBids()
+    {
+        return $this->hasMany(QuotationBid::class);
+    }
+
     public function payouts()
     {
         return $this->hasMany(Payout::class);

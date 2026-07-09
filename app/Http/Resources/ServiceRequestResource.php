@@ -14,6 +14,9 @@ class ServiceRequestResource extends JsonResource
             'user_id'        => $this->user_id,
             'provider_id'    => $this->provider_id,
             'sub_category_id'=> $this->sub_category_id,
+            'quotation_id'   => $this->quotation_id,
+            'chat_room_id'   => $this->chat_room_id,
+            'source'         => $this->source,
             'title'          => $this->title,
             'description'    => $this->description,
             'price'          => $this->price,
@@ -31,6 +34,8 @@ class ServiceRequestResource extends JsonResource
             'sub_category'   => new SubCategoryResource($this->whenLoaded('subCategory')),
             'attachments'    => ServiceRequestAttachmentResource::collection($this->whenLoaded('attachments')),
             'payment'        => new PaymentResource($this->whenLoaded('payment')),
+            'track'          => ServiceRequestTrackResource::collection($this->whenLoaded('track')),
+            'rates'          => RateResource::collection($this->whenLoaded('rates')),
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreRateRequest;
 use App\Http\Resources\RateResource;
 use App\Http\Traits\ApiResponse;
 use App\Models\Rate;
@@ -30,6 +31,14 @@ class RateController extends Controller
     {
         $rate->load(['rater', 'ratee', 'serviceRequest']);
         return $this->success(new RateResource($rate));
+    }
+
+    public function store(StoreRateRequest $request)
+    {
+        $rate = Rate::create($request->validated());
+        $rate->load(['rater', 'ratee', 'serviceRequest']);
+
+        return $this->success(new RateResource($rate), 'Feedback created successfully.', 201);
     }
 
     public function destroy(Rate $rate)

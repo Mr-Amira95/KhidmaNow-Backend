@@ -10,6 +10,9 @@ class ServiceRequest extends Model
         'user_id',
         'provider_id',
         'sub_category_id',
+        'quotation_id',
+        'chat_room_id',
+        'source',
         'title',
         'description',
         'price',
@@ -45,6 +48,16 @@ class ServiceRequest extends Model
     public function subCategory()
     {
         return $this->belongsTo(SubCategory::class);
+    }
+
+    public function quotation()
+    {
+        return $this->belongsTo(Quotation::class);
+    }
+
+    public function chatRoom()
+    {
+        return $this->belongsTo(ChatRoom::class);
     }
 
     public function attachments()

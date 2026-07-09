@@ -8,7 +8,8 @@ class City extends Model
 {
     protected $fillable = [
         'country_id',
-        'name',
+        'name_ar',
+        'name_en',
         'is_active',
     ];
 
@@ -27,5 +28,10 @@ class City extends Model
     public function providers()
     {
         return $this->hasMany(Provider::class);
+    }
+
+    public function areas()
+    {
+        return $this->hasMany(Area::class);
     }
 }

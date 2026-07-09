@@ -11,7 +11,7 @@ class UpdateServiceRequestStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => 'required|in:pending,approved,in_progress,completed,cancelled',
+            'status' => 'required|in:pending,approved,rejected,in_progress,completed,confirmed,cancelled',
         ];
     }
 }

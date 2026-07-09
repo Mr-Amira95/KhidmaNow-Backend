@@ -7,12 +7,13 @@ use App\Http\Requests\Admin\StoreCountryRequest;
 use App\Http\Requests\Admin\UpdateCountryRequest;
 use App\Http\Resources\CountryResource;
 use App\Http\Traits\ApiResponse;
+use App\Http\Traits\HandlesUploads;
 use App\Models\Country;
 use Illuminate\Http\Request;
 
 class CountryController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, HandlesUploads;
 
     public function index(Request $request)
     {
@@ -23,17 +24,23 @@ class CountryController extends Controller
         }
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
+                $q->where('name_ar', 'like', "%{$request->search}%")
+                  ->orWhere('name_en', 'like', "%{$request->search}%")
                   ->orWhere('iso', 'like', "%{$request->search}%");
             });
         }
 
-        return $this->paginated(CountryResource::class, $query->orderBy('name'));
+        return $this->paginated(CountryResource::class, $query->orderBy('name_en'));
     }
 
     public function store(StoreCountryRequest $request)
     {
-        $country = Country::create($request->validated());
+        $data = $request->validated();
+        if ($request->hasFile('flag')) {
+            $data['flag'] = $this->storeUpload($request->file('flag'), 'countries');
+        }
+
+        $country = Country::create($data)->refresh();
         return $this->success(new CountryResource($country), 'Country created successfully.', 201);
     }
 
@@ -44,7 +51,12 @@ class CountryController extends Controller
 
     public function update(UpdateCountryRequest $request, Country $country)
     {
-        $country->update($request->validated());
+        $data = $request->validated();
+        if ($request->hasFile('flag')) {
+            $data['flag'] = $this->storeUpload($request->file('flag'), 'countries');
+        }
+
+        $country->update($data);
         return $this->success(new CountryResource($country), 'Country updated successfully.');
     }
 

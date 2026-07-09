@@ -10,6 +10,7 @@ class Notification extends Model
         'user_id',
         'title',
         'body',
+        'icon',
         'type',
         'type_id',
         'response',

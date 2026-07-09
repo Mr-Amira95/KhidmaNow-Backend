@@ -11,12 +11,13 @@ class StoreCountryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'           => 'required|string|max:255',
+            'name_ar'        => 'required|string|max:255',
+            'name_en'        => 'required|string|max:255',
             'iso'            => 'required|string|size:3|unique:countries,iso',
             'phone_code'     => 'required|string|max:10',
             'currency_code'  => 'required|string|size:3',
             'currency_value' => 'required|numeric|min:0',
-            'flag'           => 'nullable|string|max:500',
+            'flag'           => $this->hasFile('flag') ? 'image|mimes:jpeg,png,jpg,svg|max:2048' : 'nullable|string|max:500',
             'is_active'      => 'nullable|boolean',
         ];
     }

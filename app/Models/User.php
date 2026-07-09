@@ -17,12 +17,15 @@ class User extends Authenticatable
         'name',
         'phone',
         'email',
+        'google_id',
+        'apple_id',
         'password',
         'profile_image',
         'user_type',
         'average_rating',
         'ratings_count',
         'status',
+        'receive_notifications',
         'latitude',
         'longitude',
         'address',
@@ -41,6 +44,7 @@ class User extends Authenticatable
             'latitude'       => 'decimal:8',
             'longitude'      => 'decimal:8',
             'last_login_at'  => 'datetime',
+            'receive_notifications' => 'boolean',
         ];
     }
 
@@ -74,14 +78,19 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class);
     }
 
-    public function favourites()
+    public function wishlists()
     {
-        return $this->hasMany(Favourite::class);
+        return $this->hasMany(Wishlist::class);
     }
 
     public function serviceRequests()
     {
         return $this->hasMany(ServiceRequest::class);
+    }
+
+    public function quotations()
+    {
+        return $this->hasMany(Quotation::class);
     }
 
     public function givenRates()
@@ -97,6 +106,11 @@ class User extends Authenticatable
     public function chatRooms()
     {
         return $this->hasMany(ChatRoom::class);
+    }
+
+    public function supportTickets()
+    {
+        return $this->hasMany(SupportTicket::class);
     }
 
     public function chatbotRooms()

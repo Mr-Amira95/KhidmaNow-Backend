@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreServiceRequestRequest;
 use App\Http\Requests\Admin\UpdateServiceRequestStatusRequest;
 use App\Http\Resources\ServiceRequestResource;
 use App\Http\Traits\ApiResponse;
@@ -42,8 +43,28 @@ class ServiceRequestController extends Controller
 
     public function show(ServiceRequest $serviceRequest)
     {
-        $serviceRequest->load(['user', 'provider.user', 'subCategory', 'attachments', 'payment', 'track']);
+        $serviceRequest->load(['user', 'provider.user', 'subCategory', 'attachments', 'payment', 'track.changedBy', 'rates']);
         return $this->success(new ServiceRequestResource($serviceRequest));
+    }
+
+    public function store(StoreServiceRequestRequest $request)
+    {
+        $serviceRequest = ServiceRequest::create([
+            ...$request->validated(),
+            'status'         => $request->status ?? 'pending',
+            'payment_status' => $request->payment_status ?? 'unpaid',
+            'source'         => 'direct',
+        ]);
+
+        ServiceRequestTrack::create([
+            'service_request_id' => $serviceRequest->id,
+            'from_status'        => null,
+            'to_status'          => $serviceRequest->status,
+            'changed_by'         => $request->user()->id,
+            'date_time'          => now(),
+        ]);
+
+        return $this->success(new ServiceRequestResource($serviceRequest), 'Service request created successfully.', 201);
     }
 
     public function updateStatus(UpdateServiceRequestStatusRequest $request, ServiceRequest $serviceRequest)

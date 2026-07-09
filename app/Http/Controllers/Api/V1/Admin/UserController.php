@@ -3,16 +3,21 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ChangeUserPasswordRequest;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Http\Resources\UserResource;
+use App\Http\Resources\WishlistResource;
 use App\Http\Traits\ApiResponse;
+use App\Http\Traits\ResolvesWishlistItems;
 use App\Models\User;
+use App\Models\Wishlist;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, ResolvesWishlistItems;
 
     public function index(Request $request)
     {
@@ -69,5 +74,29 @@ class UserController extends Controller
     {
         $user->update(['status' => 'active']);
         return $this->success(new UserResource($user), 'User unblocked successfully.');
+    }
+
+    public function changePassword(ChangeUserPasswordRequest $request, User $user)
+    {
+        $user->update(['password' => Hash::make($request->password)]);
+        $user->tokens()->delete();
+
+        return $this->success(new UserResource($user), 'Password changed successfully.');
+    }
+
+    public function wishlist(Request $request, User $user)
+    {
+        $query = Wishlist::where('user_id', $user->id);
+
+        if ($request->filled('item_type')) {
+            $query->where('item_type', $request->item_type);
+        }
+
+        return $this->paginated(
+            WishlistResource::class,
+            $query->latest(),
+            15,
+            fn ($items) => $this->hydrateWishlistItems($items)
+        );
     }
 }

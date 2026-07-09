@@ -8,10 +8,20 @@ class SubCategory extends Model
 {
     protected $fillable = [
         'category_id',
-        'name',
-        'description',
+        'name_ar',
+        'name_en',
+        'description_ar',
+        'description_en',
         'icon',
+        'is_active',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
 
     public function category()
     {
@@ -21,6 +31,18 @@ class SubCategory extends Model
     public function providerSubCategories()
     {
         return $this->hasMany(ProviderSubCategory::class);
+    }
+
+    public function providers()
+    {
+        return $this->hasManyThrough(
+            Provider::class,
+            ProviderSubCategory::class,
+            'sub_category_id',
+            'id',
+            'id',
+            'provider_id'
+        );
     }
 
     public function serviceRequests()

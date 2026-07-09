@@ -13,6 +13,7 @@ class SendNotificationRequest extends FormRequest
         return [
             'title'    => 'required|string|max:255',
             'body'     => 'required|string',
+            'icon'     => 'nullable|string|max:255',
             'type'     => 'required|in:service_request,payment,chat,system',
             'type_id'  => 'nullable|integer',
             'user_ids' => 'nullable|array',

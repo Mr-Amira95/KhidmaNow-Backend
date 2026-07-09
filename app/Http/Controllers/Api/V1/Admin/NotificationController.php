@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\SendNotificationRequest;
-use App\Http\Resources\UserResource;
+use App\Http\Resources\NotificationResource;
 use App\Http\Traits\ApiResponse;
 use App\Models\Notification;
 use App\Models\User;
@@ -28,22 +28,12 @@ class NotificationController extends Controller
             $query->where('is_read', filter_var($request->is_read, FILTER_VALIDATE_BOOLEAN));
         }
 
-        $paginator = $query->paginate(15);
-        return response()->json([
-            'status' => 'success',
-            'data'   => $paginator->items(),
-            'meta'   => [
-                'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-            ],
-        ]);
+        return $this->paginated(NotificationResource::class, $query->latest());
     }
 
     public function send(SendNotificationRequest $request)
     {
-        $payload = $request->only('title', 'body', 'type', 'type_id');
+        $payload = $request->only('title', 'body', 'icon', 'type', 'type_id');
 
         if ($request->filled('user_ids')) {
             $users = User::whereIn('id', $request->user_ids)->get();

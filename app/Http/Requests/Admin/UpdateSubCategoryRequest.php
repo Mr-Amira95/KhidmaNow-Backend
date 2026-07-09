@@ -11,10 +11,13 @@ class UpdateSubCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => 'sometimes|integer|exists:categories,id',
-            'name'        => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'icon'        => 'nullable|string|max:500',
+            'category_id'    => 'sometimes|integer|exists:categories,id',
+            'name_ar'        => 'sometimes|string|max:255',
+            'name_en'        => 'sometimes|string|max:255',
+            'description_ar' => 'sometimes|string',
+            'description_en' => 'sometimes|string',
+            'icon'           => $this->hasFile('icon') ? 'image|mimes:jpeg,png,jpg,svg|max:2048' : 'nullable|string|max:500',
+            'is_active'      => 'nullable|boolean',
         ];
     }
 }

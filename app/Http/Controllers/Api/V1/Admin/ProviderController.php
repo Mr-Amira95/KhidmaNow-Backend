@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateProviderRequest;
 use App\Http\Resources\ProviderResource;
 use App\Http\Traits\ApiResponse;
 use App\Models\Provider;
+use App\Models\ProviderSubCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProviderController extends Controller
 {
@@ -40,6 +43,31 @@ class ProviderController extends Controller
     {
         $provider->load(['user', 'city', 'documents', 'subCategories.subCategory']);
         return $this->success(new ProviderResource($provider));
+    }
+
+    public function update(UpdateProviderRequest $request, Provider $provider)
+    {
+        $data = $request->validated();
+        $subCategoryIds = $data['sub_category_ids'] ?? null;
+        unset($data['sub_category_ids']);
+
+        DB::transaction(function () use ($provider, $data, $subCategoryIds) {
+            $provider->update($data);
+
+            if ($subCategoryIds !== null) {
+                $provider->subCategories()->delete();
+                foreach ($subCategoryIds as $subCategoryId) {
+                    ProviderSubCategory::create([
+                        'provider_id' => $provider->id,
+                        'sub_category_id' => $subCategoryId,
+                    ]);
+                }
+            }
+        });
+
+        $provider->load(['user', 'city', 'documents', 'subCategories.subCategory']);
+
+        return $this->success(new ProviderResource($provider), 'Provider updated successfully.');
     }
 
     public function verify(Provider $provider)

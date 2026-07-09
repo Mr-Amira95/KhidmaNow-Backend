@@ -11,10 +11,13 @@ class StoreSubCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => 'required|integer|exists:categories,id',
-            'name'        => 'required|string|max:255',
-            'description' => 'required|string',
-            'icon'        => 'nullable|string|max:500',
+            'category_id'    => 'required|integer|exists:categories,id',
+            'name_ar'        => 'required|string|max:255',
+            'name_en'        => 'required|string|max:255',
+            'description_ar' => 'required|string',
+            'description_en' => 'required|string',
+            'icon'           => $this->hasFile('icon') ? 'image|mimes:jpeg,png,jpg,svg|max:2048' : 'nullable|string|max:500',
+            'is_active'      => 'nullable|boolean',
         ];
     }
 }

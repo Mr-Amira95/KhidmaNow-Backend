@@ -12,7 +12,8 @@ class UpdateCityRequest extends FormRequest
     {
         return [
             'country_id' => 'sometimes|integer|exists:countries,id',
-            'name'       => 'sometimes|string|max:255',
+            'name_ar'    => 'sometimes|string|max:255',
+            'name_en'    => 'sometimes|string|max:255',
             'is_active'  => 'nullable|boolean',
         ];
     }

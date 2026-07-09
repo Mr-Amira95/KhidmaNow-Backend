@@ -25,9 +25,12 @@ trait ApiResponse
         return response()->json($payload, $status);
     }
 
-    protected function paginated(mixed $resource, $query, int $perPage = 15): JsonResponse
+    protected function paginated(mixed $resource, $query, int $perPage = 15, ?callable $beforeResource = null): JsonResponse
     {
         $paginator = $query->paginate($perPage);
+        if ($beforeResource) {
+            $beforeResource($paginator->items());
+        }
         return response()->json([
             'status' => 'success',
             'data'   => $resource::collection($paginator->items()),

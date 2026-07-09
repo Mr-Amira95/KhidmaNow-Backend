@@ -25,15 +25,18 @@ class CityController extends Controller
             $query->where('is_active', filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN));
         }
         if ($request->filled('search')) {
-            $query->where('name', 'like', "%{$request->search}%");
+            $query->where(function ($q) use ($request) {
+                $q->where('name_ar', 'like', "%{$request->search}%")
+                  ->orWhere('name_en', 'like', "%{$request->search}%");
+            });
         }
 
-        return $this->paginated(CityResource::class, $query->orderBy('name'));
+        return $this->paginated(CityResource::class, $query->orderBy('name_en'));
     }
 
     public function store(StoreCityRequest $request)
     {
-        $city = City::create($request->validated());
+        $city = City::create($request->validated())->refresh();
         $city->load('country');
         return $this->success(new CityResource($city), 'City created successfully.', 201);
     }
