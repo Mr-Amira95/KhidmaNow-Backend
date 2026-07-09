@@ -6,7 +6,8 @@
         <title>@yield('title') &middot; {{ config('app.name') }} Admin</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=cairo:400,500,600,700,900" rel="stylesheet" />
+        <link rel="icon" href="/brand/logo_icon.png" type="image/png">
 
         <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
@@ -22,16 +23,9 @@
             <main class="relative flex min-h-[100dvh] items-center justify-center px-4 py-12">
                 <div class="w-full max-w-md">
                     <div class="mb-8 flex flex-col items-center text-center">
-                        <div class="mb-4 h-12 w-12 rounded-xl bg-accent-600 shadow-lg shadow-accent-600/20">
-                            <svg viewBox="0 0 32 32" class="h-full w-full" aria-hidden="true">
-                                <rect width="32" height="32" rx="8" fill="none" />
-                                <rect x="10" y="7" width="3.5" height="18" rx="1" fill="white" />
-                                <path d="M13.5 16 L22 7" stroke="white" stroke-width="3.5" stroke-linecap="round" />
-                                <path d="M13.5 15 L22 25" stroke="white" stroke-width="3.5" stroke-linecap="round" />
-                            </svg>
-                        </div>
-                        <p class="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{{ config('app.name') }}</p>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Admin Portal</p>
+                        <img src="/brand/logo_colored.png" alt="KhidmaNow Logo" class="h-14 w-auto mb-3 dark:hidden object-contain" />
+                        <img src="/brand/logo_white.png" alt="KhidmaNow Logo" class="h-14 w-auto mb-3 hidden dark:block object-contain" />
+                        <p class="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Admin Portal</p>
                     </div>
 
                     <div class="rounded-2xl border border-zinc-200/70 bg-white p-8 shadow-xl shadow-zinc-950/5 dark:border-zinc-800 dark:bg-zinc-900">

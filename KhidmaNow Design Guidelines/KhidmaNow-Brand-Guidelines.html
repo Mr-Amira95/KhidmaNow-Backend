@@ -1,0 +1,1446 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KhidmaNow — Brand Guidelines</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue: #1E3A8A;
+      --blue-600: #2747A8;
+      --blue-100: #E5EAF6;
+      --orange: #F97316;
+      --orange-600: #EA6A0F;
+      --orange-100: #FFE9D6;
+      --green: #22C55E;
+      --green-100: #D9F7E4;
+      --ink: #0B1020;
+      --muted: #5B6478;
+      --line: #E7EAF0;
+      --bg: #FFFFFF;
+      --soft: #F6F8FB;
+      --radius: 20px;
+      --radius-sm: 12px;
+      --shadow: 0 4px 20px rgba(11, 16, 32, 0.05), 0 1px 3px rgba(11, 16, 32, 0.02);
+      --shadow-hover: 0 12px 30px rgba(30, 58, 138, 0.08), 0 4px 8px rgba(11, 16, 32, 0.03);
+      --glass-bg: rgba(255, 255, 255, 0.8);
+      --glass-border: rgba(255, 255, 255, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Cairo", system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+
+    section {
+      padding: 110px 0;
+      position: relative;
+    }
+
+    section:not(:first-of-type)::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 5%;
+      right: 5%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--line) 15%, var(--line) 85%, transparent);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--blue);
+      background: linear-gradient(135deg, var(--blue-100), rgba(229, 234, 246, 0.4));
+      padding: 6px 16px 6px 6px;
+      border-radius: 50px;
+      border: 1px solid rgba(30, 58, 138, 0.05);
+      margin-bottom: 20px;
+    }
+
+    .eyebrow:not(:has(.num)) {
+      padding-left: 16px;
+    }
+
+    .eyebrow .num {
+      display: inline-grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50px;
+      background: linear-gradient(135deg, var(--blue), var(--blue-600));
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      box-shadow: 0 2px 6px rgba(30, 58, 138, 0.3);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      font-family: "Cairo", sans-serif;
+      color: var(--ink);
+      margin: 0 0 0.4em;
+      letter-spacing: -0.02em;
+    }
+
+    h1 {
+      font-size: 72px;
+      font-weight: 900;
+      line-height: 1.05;
+      background: linear-gradient(135deg, var(--ink) 30%, var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h2 {
+      font-size: 44px;
+      font-weight: 800;
+      line-height: 1.15;
+    }
+
+    h3 {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    h4 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    p {
+      color: var(--muted);
+      font-size: 16px;
+      margin: 0 0 16px;
+    }
+
+    .lead {
+      font-size: 20px;
+      color: #3A425A;
+      max-width: 760px;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    .grid {
+      display: grid;
+      gap: 32px;
+    }
+
+    .g-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .g-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .g-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    @media (max-width: 960px) {
+
+      .g-3,
+      .g-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 700px) {
+
+      .g-2,
+      .g-3,
+      .g-4 {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 48px;
+      }
+
+      h2 {
+        font-size: 32px;
+      }
+
+      .wrap {
+        padding: 0 24px;
+      }
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-2px);
+      border-color: rgba(30, 58, 138, 0.15);
+    }
+
+    .soft {
+      background: var(--soft);
+      border: 1px solid rgba(231, 234, 240, 0.5);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: var(--blue-100);
+      color: var(--blue);
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    /* COVER */
+    .cover {
+      padding: 140px 0 100px;
+      background:
+        radial-gradient(1000px 600px at 90% 10%, rgba(249, 115, 22, 0.08), transparent 70%),
+        radial-gradient(1000px 800px at 10% 90%, rgba(30, 58, 138, 0.06), transparent 70%),
+        linear-gradient(180deg, #fff 0%, var(--soft) 100%);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .cover .inner {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    @media (max-width: 960px) {
+      .cover .inner {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .cover img.logo {
+        margin: 0 auto;
+      }
+    }
+
+    .cover img.logo {
+      width: 100%;
+      max-width: 480px;
+      display: block;
+      margin-left: auto;
+      filter: drop-shadow(0 20px 40px rgba(30, 58, 138, 0.08));
+      transform: scale(1);
+      transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.5s ease;
+    }
+
+    .cover img.logo:hover {
+      transform: scale(1.03);
+      filter: drop-shadow(0 25px 50px rgba(30, 58, 138, 0.12));
+    }
+
+    .meta {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(11, 16, 32, 0.06);
+    }
+
+    .meta div {
+      position: relative;
+    }
+
+    .meta b {
+      color: var(--blue);
+      font-weight: 800;
+      display: block;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 10px;
+      margin-bottom: 6px;
+    }
+
+    /* TOC */
+    .toc {
+      background: #fff;
+    }
+
+    .toc ol {
+      list-style: none;
+      padding: 0;
+      margin: 32px 0 0;
+      counter-reset: n;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 700px) {
+      .toc ol {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .toc li {
+      counter-increment: n;
+    }
+
+    .toc a {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 20px 24px;
+      text-decoration: none;
+      color: var(--ink);
+      font-weight: 700;
+      background: var(--soft);
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      font-size: 17px;
+    }
+
+    .toc a::before {
+      content: counter(n, decimal-leading-zero);
+      color: var(--orange);
+      font-weight: 900;
+      font-size: 15px;
+      background: #fff;
+      padding: 4px 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(11, 16, 32, 0.04);
+    }
+
+    .toc a:hover {
+      background: #fff;
+      color: var(--blue);
+      border-color: var(--blue-100);
+      box-shadow: var(--shadow);
+      transform: translateX(4px);
+    }
+
+    /* VALUES */
+    .value {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 32px;
+    }
+
+    .value .ic {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: var(--blue-100);
+      color: var(--blue);
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .value:hover .ic {
+      transform: scale(1.1) rotate(5deg);
+    }
+
+    .value:nth-child(2) .ic {
+      background: var(--orange-100);
+      color: var(--orange);
+    }
+
+    .value:nth-child(3) .ic {
+      background: var(--green-100);
+      color: var(--green);
+    }
+
+    .value:nth-child(4) .ic {
+      background: linear-gradient(135deg, #0B1020, #27304A);
+      color: #fff;
+    }
+
+    /* LOGOS */
+    .logo-tile {
+      display: flex;
+      flex-direction: column;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .logo-tile:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-4px);
+      border-color: rgba(30, 58, 138, 0.15);
+    }
+
+    .logo-tile .stage {
+      aspect-ratio: 4/3;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      position: relative;
+    }
+
+    .logo-tile .stage img {
+      max-width: 80%;
+      max-height: 80%;
+      object-fit: contain;
+      transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .logo-tile:hover .stage img {
+      transform: scale(1.06);
+    }
+
+    .logo-tile .label {
+      padding: 16px 20px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 13px;
+      background: #fff;
+    }
+
+    .logo-tile .label b {
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .logo-tile .label span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .stage.dark {
+      background: linear-gradient(135deg, #0B1020, #17203A);
+    }
+
+    .stage.softbg {
+      background: linear-gradient(135deg, #F6F8FB, #EAEEF5);
+    }
+
+    /* CONCEPT */
+    .concept {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    @media (max-width: 960px) {
+      .concept {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+    }
+
+    .concept .stage {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 56px;
+      display: grid;
+      place-items: center;
+      box-shadow: var(--shadow);
+    }
+
+    .concept .stage img {
+      width: 100%;
+      max-width: 320px;
+      filter: drop-shadow(0 10px 20px rgba(30, 58, 138, 0.06));
+    }
+
+    .anno {
+      display: grid;
+      gap: 20px;
+    }
+
+    .anno .row {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 16px;
+      align-items: start;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(231, 234, 240, 0.8);
+    }
+
+    .anno .row:hover {
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(11, 16, 32, 0.03);
+      border-color: var(--line);
+    }
+
+    .anno .dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .anno .row:nth-child(1) .dot {
+      background: var(--blue);
+    }
+
+    .anno .row:nth-child(2) .dot {
+      background: var(--orange);
+    }
+
+    .anno .row:nth-child(3) .dot {
+      background: var(--green);
+    }
+
+    .anno .row:nth-child(4) .dot {
+      background: linear-gradient(135deg, var(--blue), var(--orange));
+    }
+
+    .anno b {
+      color: var(--ink);
+      font-size: 16px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .anno p {
+      margin: 0;
+      font-size: 14.5px;
+    }
+
+    /* CLEAR SPACE */
+    .clear {
+      position: relative;
+      background: linear-gradient(135deg, var(--soft), #EAEEF5);
+      border-radius: var(--radius);
+      padding: 64px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+    }
+
+    .clear .frame {
+      position: relative;
+      padding: 64px;
+      border: 2px dashed rgba(30, 58, 138, 0.25);
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(11, 16, 32, 0.05);
+    }
+
+    .clear img {
+      width: 260px;
+      display: block;
+    }
+
+    .clear .x {
+      position: absolute;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--blue);
+      background: var(--blue-100);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(30, 58, 138, 0.1);
+      box-shadow: 0 2px 4px rgba(30, 58, 138, 0.05);
+    }
+
+    .clear .x.t {
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .clear .x.b {
+      bottom: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .clear .x.l {
+      left: -22px;
+      top: 50%;
+      transform: translateY(-50%) rotate(-90deg);
+    }
+
+    .clear .x.r {
+      right: -22px;
+      top: 50%;
+      transform: translateY(-50%) rotate(90deg);
+    }
+
+    /* DO/DON'T */
+    .dd {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .dd:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-4px);
+    }
+
+    .dd .stage {
+      aspect-ratio: 5/3;
+      display: grid;
+      place-items: center;
+      background: var(--soft);
+      position: relative;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    .dd .stage img {
+      max-width: 75%;
+      max-height: 80%;
+      object-fit: contain;
+    }
+
+    .dd .tag {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border-top: 1px solid var(--line);
+    }
+
+    .dd.ok {
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .dd.ok .tag {
+      background: rgba(34, 197, 94, 0.05);
+      color: #15803D;
+    }
+
+    .dd.ok .tag::before {
+      content: "✓";
+      background: var(--green);
+      color: #fff;
+    }
+
+    .dd.no {
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .dd.no .tag {
+      background: rgba(239, 68, 68, 0.04);
+      color: #B91C1C;
+    }
+
+    .dd.no .tag::before {
+      content: "✕";
+      background: #EF4444;
+      color: #fff;
+    }
+
+    .dd .tag::before {
+      width: 20px;
+      height: 20px;
+      border-radius: 50px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .stretch img {
+      transform: scaleX(1.6);
+    }
+
+    .rotate img {
+      transform: rotate(15deg);
+    }
+
+    .recolor {
+      filter: hue-rotate(220deg) saturate(1.4);
+    }
+
+    .shadow img {
+      filter: drop-shadow(0 12px 12px rgba(0, 0, 0, 0.6));
+    }
+
+    .busy {
+      background: repeating-linear-gradient(45deg, var(--blue), var(--blue) 15px, var(--orange) 15px, var(--orange) 30px) !important;
+    }
+
+    .outline img {
+      filter: drop-shadow(0 0 0 #000) drop-shadow(0 0 0 #000);
+    }
+
+    /* COLORS */
+    .swatch {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow);
+    }
+
+    .swatch:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-4px);
+    }
+
+    .swatch .chip {
+      aspect-ratio: 5/4;
+      position: relative;
+      color: #fff;
+      padding: 24px;
+      display: flex;
+      align-items: flex-end;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.02em;
+    }
+
+    .swatch .body {
+      padding: 20px 24px;
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .swatch .body b {
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    .scale {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      margin-top: 10px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .scale span {
+      aspect-ratio: 2.5/1;
+      display: block;
+      border-radius: 4px;
+    }
+
+    .ratio {
+      display: flex;
+      height: 32px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 12px;
+      gap: 4px;
+    }
+
+    .ratio .a {
+      flex: 6;
+      background: var(--blue);
+    }
+
+    .ratio .b {
+      flex: 3;
+      background: var(--orange);
+    }
+
+    .ratio .c {
+      flex: 1;
+      background: var(--green);
+    }
+
+    .neutral {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      gap: 1px;
+      background: var(--line);
+      margin-top: 12px;
+    }
+
+    .neutral div {
+      aspect-ratio: 1.2/1;
+      display: flex;
+      align-items: flex-end;
+      padding: 10px 8px;
+      font-size: 11px;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .a11y {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 700px) {
+      .a11y {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .a11y .pair {
+      border-radius: var(--radius-sm);
+      padding: 20px 24px;
+      font-weight: 800;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(11, 16, 32, 0.04);
+    }
+
+    /* TYPE */
+    .type-row {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 32px;
+      padding: 28px 0;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+    }
+
+    .type-row:last-child {
+      border-bottom: none;
+    }
+
+    .type-row .meta-col {
+      color: var(--muted);
+      font-size: 13.5px;
+    }
+
+    .type-row .meta-col b {
+      display: block;
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .sample-h1 {
+      font-size: 60px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .sample-h2 {
+      font-size: 38px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .sample-h3 {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .sample-body {
+      font-size: 16px;
+      font-weight: 500;
+      color: #3A425A;
+    }
+
+    .bi {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 32px;
+    }
+
+    @media (max-width: 860px) {
+      .bi {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .bi .box {
+      padding: 40px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: #fff;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    .ar {
+      direction: rtl;
+      text-align: right;
+    }
+
+    .ar .pill {
+      letter-spacing: 0;
+    }
+
+    /* TONE */
+    .tone .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 860px) {
+      .tone .row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .tone .ok,
+    .tone .no {
+      padding: 40px;
+      border-radius: var(--radius);
+      border: 1px solid;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+
+    .tone .ok {
+      background: linear-gradient(135deg, #F0FDF4, #DCFCE7);
+      border-color: #BBF7D0;
+    }
+
+    .tone .no {
+      background: linear-gradient(135deg, #FEF2F2, #FEE2E2);
+      border-color: #FECACA;
+    }
+
+    .tone .ok h4 {
+      color: #166534;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tone .ok h4::before {
+      content: "✓";
+      background: var(--green);
+      color: #fff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50px;
+      display: inline-grid;
+      place-items: center;
+      font-size: 13px;
+    }
+
+    .tone .no h4 {
+      color: #991B1B;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tone .no h4::before {
+      content: "✕";
+      background: #EF4444;
+      color: #fff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50px;
+      display: inline-grid;
+      place-items: center;
+      font-size: 13px;
+    }
+
+    .tone p {
+      background: rgba(255, 255, 255, 0.7);
+      padding: 14px 18px;
+      border-radius: 10px;
+      color: var(--ink);
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      margin-bottom: 12px;
+    }
+
+    .tone p:last-child {
+      margin-bottom: 0;
+    }
+
+    footer {
+      padding: 64px 0;
+      background: linear-gradient(180deg, #0B1020, #050812);
+      color: #8A93A8;
+      text-align: center;
+      font-size: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    footer img {
+      height: 44px;
+      display: block;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+    }
+
+    footer b {
+      color: #fff;
+    }
+
+    @media print {
+      section {
+        padding: 40px 0;
+        break-inside: avoid;
+      }
+
+      .cover {
+        padding: 40px 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- COVER -->
+  <section class="cover">
+    <div class="wrap inner">
+      <div>
+        <span class="pill">Brand Book · v1.0 · 2026</span>
+        <h1>Brand<br />Guidelines</h1>
+        <p class="lead">The visual and verbal system behind <b>KhidmaNow</b> — an on-demand maintenance platform built
+          around speed, trust, and seamless service.</p>
+        <div class="meta">
+          <div><b>Client</b>KhidmaNow</div>
+          <div><b>Industry</b>On-demand services</div>
+          <div><b>Document</b>Brand Identity Guidelines</div>
+          <div><b>Version</b>1.0 · 2026</div>
+        </div>
+      </div>
+      <div>
+        <img class="logo" src="https://drive.google.com/thumbnail?id=1POIem5MLLnQB9HLLCcr8gYXkfFGrjzod&amp;sz=w1000"
+          alt="KhidmaNow logo" />
+      </div>
+    </div>
+  </section>
+
+  <!-- TOC -->
+  <section class="toc">
+    <div class="wrap">
+      <span class="eyebrow">Contents</span>
+      <h2>Inside this document</h2>
+      <ol>
+        <li><a href="#overview">Brand Overview</a></li>
+        <li><a href="#logo">Logo System</a></li>
+        <li><a href="#concept">Logo Concept</a></li>
+        <li><a href="#clear">Clear Space &amp; Misuse</a></li>
+        <li><a href="#color">Color Palette</a></li>
+        <li><a href="#type">Typography</a></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <div class="wrap">
+      <span class="eyebrow"><span class="num">01</span> Brand Overview</span>
+      <h2>Seamless service, anytime, everytime.</h2>
+      <p class="lead">KhidmaNow connects customers with trusted maintenance professionals in minutes. Our brand
+        expresses the loop between people and providers — fast, reliable, and always on.</p>
+
+      <div class="grid g-4" style="margin-top:48px">
+        <div class="value card">
+          <div class="ic">⚡</div>
+          <h4>Speed</h4>
+          <p>Service requested, dispatched, and resolved without friction.</p>
+        </div>
+        <div class="value card">
+          <div class="ic">★</div>
+          <h4>Trust</h4>
+          <p>Verified providers, transparent pricing, accountable delivery.</p>
+        </div>
+        <div class="value card">
+          <div class="ic">◎</div>
+          <h4>Convenience</h4>
+          <p>One tap to summon help — at home, on the road, anywhere.</p>
+        </div>
+        <div class="value card">
+          <div class="ic">↻</div>
+          <h4>Reliability</h4>
+          <p>A continuous loop of service, available around the clock.</p>
+        </div>
+      </div>
+
+      <div class="grid g-2" style="margin-top:32px">
+        <div class="card soft">
+          <h4>Mission</h4>
+          <p>To make everyday maintenance as effortless as sending a message — bridging customers and skilled providers
+            through a single, dependable platform.</p>
+        </div>
+        <div class="card soft">
+          <h4>Tone of Voice</h4>
+          <p><b>Modern, friendly, efficient.</b> We speak clearly and confidently. We respect the customer's time, and
+            we celebrate the craft of our providers.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGO -->
+  <section id="logo" class="soft">
+    <div class="wrap">
+      <span class="eyebrow"><span class="num">02</span> Logo System</span>
+      <h2>Four expressions, one identity.</h2>
+      <p class="lead">The KhidmaNow mark adapts across surfaces — colored on light, black on neutral, white on dark, and
+        an icon-only form for compact contexts.</p>
+
+      <div class="grid g-4" style="margin-top:48px">
+        <div class="logo-tile">
+          <div class="stage softbg"><img
+              src="https://drive.google.com/thumbnail?id=1POIem5MLLnQB9HLLCcr8gYXkfFGrjzod&amp;sz=w1000"
+              alt="Primary logo" /></div>
+          <div class="label"><b>Primary</b><span>Default usage</span></div>
+        </div>
+        <div class="logo-tile">
+          <div class="stage"><img
+              src="https://drive.google.com/thumbnail?id=1wrp0CAMTqDWZRNyaNXoOy1-OI8FdgzwZ&amp;sz=w1000"
+              alt="Black logo" /></div>
+          <div class="label"><b>Black</b><span>Single-color</span></div>
+        </div>
+        <div class="logo-tile">
+          <div class="stage dark"><img
+              src="https://drive.google.com/thumbnail?id=1JLY_zxT0oqAMLOMxExiK1tFgcxzV9E-c&amp;sz=w1000"
+              alt="White logo" /></div>
+          <div class="label"><b>White</b><span>Dark backgrounds</span></div>
+        </div>
+        <div class="logo-tile">
+          <div class="stage softbg"><img
+              src="https://drive.google.com/thumbnail?id=1ehi8XmRJaf1DaxzwZn2BgJrV7Ny_rC33&amp;sz=w1000"
+              alt="Icon-only logo" /></div>
+          <div class="label"><b>Icon</b><span>App icon or favicon</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONCEPT -->
+  <section id="concept">
+    <div class="wrap">
+      <span class="eyebrow"><span class="num">03</span> Logo Concept</span>
+      <h2>The infinite loop of service.</h2>
+
+      <div class="concept" style="margin-top:48px">
+        <div class="stage"><img
+            src="https://drive.google.com/thumbnail?id=1ehi8XmRJaf1DaxzwZn2BgJrV7Ny_rC33&amp;sz=w1000" alt="Icon" />
+        </div>
+        <div class="anno">
+          <div class="row"><span class="dot">1</span>
+            <div><b>Left circle — The Customer.</b>
+              <p>Represents the user requesting service, anchored in trust and stability through our primary blue.</p>
+            </div>
+          </div>
+          <div class="row"><span class="dot">2</span>
+            <div><b>Center wrench — The Service.</b>
+              <p>Symbolizes maintenance and craft, energized by orange to signal speed and action.</p>
+            </div>
+          </div>
+          <div class="row"><span class="dot">3</span>
+            <div><b>Right circle — The Provider.</b>
+              <p>The verified professional ready to deliver, expressed in green for completion and reliability.</p>
+            </div>
+          </div>
+          <div class="row"><span class="dot">∞</span>
+            <div><b>Infinity flow — Continuity.</b>
+              <p>The looping ribbon ties customer and provider into one seamless, always-on relationship.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLEAR SPACE -->
+  <section id="clear" class="soft">
+    <div class="wrap">
+      <span class="eyebrow"><span class="num">04</span> Clear Space &amp; Misuse</span>
+      <h2>Give the mark room to breathe.</h2>
+      <p class="lead">Maintain a minimum clear space of <b>X</b> on all sides — equal to the height of the wordmark.
+        Never crowd the logo with text, imagery, or borders.</p>
+
+      <div class="grid g-2" style="margin-top:48px">
+        <div class="clear">
+          <div class="frame">
+            <span class="x t">X</span><span class="x b">X</span><span class="x l">X</span><span class="x r">X</span>
+            <img src="https://drive.google.com/thumbnail?id=1POIem5MLLnQB9HLLCcr8gYXkfFGrjzod&amp;sz=w1000"
+              alt="Clear space" />
+          </div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;justify-content:center">
+          <h3>Sizing rules</h3>
+          <p><b>Minimum digital width:</b> 96 px (full lockup), 32 px (icon only).</p>
+          <p><b>Minimum print width:</b> 25 mm (full lockup), 8 mm (icon only).</p>
+          <p><b>Alignment:</b> Always reproduce from approved master files. Never recreate or trace the logo.</p>
+          <p><b>File formats:</b> SVG for digital, PDF/EPS for print, PNG with transparency as a fallback.</p>
+        </div>
+      </div>
+
+      <h3 style="margin-top:64px">Don'ts</h3>
+      <p>Avoid the following misuses to preserve brand integrity.</p>
+      <div class="grid g-3" style="margin-top:24px">
+        <div class="dd no">
+          <div class="stage stretch"><img
+              src="https://drive.google.com/thumbnail?id=1POIem5MLLnQB9HLLCcr8gYXkfFGrjzod&amp;sz=w1000" alt="" /></div>
+          <div class="tag">Don't stretch or distort</div>
+        </div>
+        <div class="dd no">
+          <div class="stage"><img class="recolor"
+              src="https://drive.google.com/thumbnail?id=1POIem5MLLnQB9HLLCcr8gYXkfFGrjzod&amp;sz=w1000" alt="" /></div>
+          <div class="tag">Don't recolor outside palette</div>
+        </div>
+        <div class="dd no">
+          <div class="stage shadow"><img
+              src="https://drive.google.com/thumbnail?id=1POIem5MLLnQB9HLLCcr8gYXkfFGrjzod&amp;sz=w1000" alt="" /></div>
+          <div class="tag">Don't add harsh shadows</div>
+        </div>
+        <div class="dd no">
+          <div class="stage rotate"><img
+              src="https://drive.google.com/thumbnail?id=1POIem5MLLnQB9HLLCcr8gYXkfFGrjzod&amp;sz=w1000" alt="" /></div>
+          <div class="tag">Don't rotate or tilt</div>
+        </div>
+        <div class="dd no">
+          <div class="stage busy"><img
+              src="https://drive.google.com/thumbnail?id=1JLY_zxT0oqAMLOMxExiK1tFgcxzV9E-c&amp;sz=w1000" alt=""
+              style="filter:drop-shadow(0 0 0 #fff)" /></div>
+          <div class="tag">Don't place on busy backgrounds</div>
+        </div>
+        <div class="dd ok">
+          <div class="stage"><img
+              src="https://drive.google.com/thumbnail?id=1POIem5MLLnQB9HLLCcr8gYXkfFGrjzod&amp;sz=w1000" alt="" /></div>
+          <div class="tag">Always use master files</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLOR -->
+  <section id="color">
+    <div class="wrap">
+      <span class="eyebrow"><span class="num">05</span> Color Palette</span>
+      <h2>A confident, action-ready system.</h2>
+      <p class="lead">Blue grounds the brand in trust. Orange drives action and urgency. Green confirms completion.
+        Together they form a balanced, accessible palette.</p>
+
+      <div class="grid g-3" style="margin-top:48px">
+        <div class="swatch">
+          <div class="chip" style="background:#1E3A8A"><span>Primary Blue</span></div>
+          <div class="body">
+            <b>Trust · Reliability</b>
+            <span>HEX #1E3A8A · RGB 30,58,138</span>
+            <div class="scale">
+              <span style="background:#E5EAF6"></span>
+              <span style="background:#A9B6DA"></span>
+              <span style="background:#5C71B8"></span>
+              <span style="background:#1E3A8A"></span>
+              <span style="background:#13265B"></span>
+            </div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="chip" style="background:#F97316"><span>Secondary Orange</span></div>
+          <div class="body">
+            <b>Speed · Action</b>
+            <span>HEX #F97316 · RGB 249,115,22</span>
+            <div class="scale">
+              <span style="background:#FFE9D6"></span>
+              <span style="background:#FCBE85"></span>
+              <span style="background:#FB984B"></span>
+              <span style="background:#F97316"></span>
+              <span style="background:#B7530F"></span>
+            </div>
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="chip" style="background:#22C55E"><span>Accent Green</span></div>
+          <div class="body">
+            <b>Success · Completion</b>
+            <span>HEX #22C55E · RGB 34,197,94</span>
+            <div class="scale">
+              <span style="background:#D9F7E4"></span>
+              <span style="background:#8DE3AE"></span>
+              <span style="background:#4FD17F"></span>
+              <span style="background:#22C55E"></span>
+              <span style="background:#168A41"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid g-2" style="margin-top:32px">
+        <div class="card">
+          <h3>Usage proportions</h3>
+          <p>Use a <b>60 / 30 / 10</b> ratio across most surfaces — blue for structure and trust, orange for action and
+            emphasis, green for confirmation.</p>
+          <div class="ratio">
+            <div class="a"></div>
+            <div class="b"></div>
+            <div class="c"></div>
+          </div>
+          <p style="margin-top:16px;font-size:14px">Reserve green for success states, completion indicators, and
+            positive confirmations only.</p>
+        </div>
+        <div class="card">
+          <h3>Neutrals</h3>
+          <p>A grayscale ramp for typography, surfaces, and dividers.</p>
+          <div class="neutral">
+            <div style="background:#0B1020">900</div>
+            <div style="background:#1F2638">800</div>
+            <div style="background:#3A4258">700</div>
+            <div style="background:#5B6478">600</div>
+            <div style="background:#8A93A8;color:#0B1020">500</div>
+            <div style="background:#C2C9D6;color:#0B1020">300</div>
+            <div style="background:#E7EAF0;color:#0B1020">200</div>
+            <div style="background:#F6F8FB;color:#0B1020">100</div>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:64px">Accessibility</h3>
+      <p>All primary pairings meet WCAG AA contrast standards.</p>
+      <div class="a11y">
+        <div class="pair" style="background:#1E3A8A;color:#fff"><span>Blue / White</span><span>AAA</span></div>
+        <div class="pair" style="background:#F97316;color:#fff"><span>Orange / White</span><span>AA+</span></div>
+        <div class="pair" style="background:#22C55E;color:#fff"><span>Green / White</span><span>AA</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TYPOGRAPHY -->
+  <section id="type" class="soft">
+    <div class="wrap">
+      <span class="eyebrow"><span class="num">06</span> Typography</span>
+      <h2>Cairo — bilingual by design.</h2>
+      <p class="lead">Cairo is our single typeface across Arabic and English. Its geometric forms feel modern and
+        friendly, with excellent legibility at every size.</p>
+
+      <div class="card" style="margin-top:48px;padding:12px 40px">
+        <div class="type-row">
+          <div class="meta-col"><b>Heading</b>Cairo · 900 / 700<br />Bold</div>
+          <div class="sample-h1">Seamless service.</div>
+        </div>
+        <div class="type-row">
+          <div class="meta-col"><b>Subheading</b>Cairo · 800<br />Extra-Bold</div>
+          <div class="sample-h2">Anytime, everywhere.</div>
+        </div>
+        <div class="type-row">
+          <div class="meta-col"><b>Section</b>Cairo · 700<br />Bold</div>
+          <div class="sample-h3">Trusted providers, on demand</div>
+        </div>
+        <div class="type-row">
+          <div class="meta-col"><b>Body</b>Cairo · 500<br />Medium · 16/26</div>
+          <div class="sample-body">KhidmaNow connects customers with verified maintenance professionals in minutes — at
+            home, at work, or on the road.</div>
+        </div>
+      </div>
+
+      <div class="bi">
+        <div class="box">
+          <span class="pill">English</span>
+          <div class="sample-h3" style="margin-top:12px">Seamless service. Anytime. Everytime.</div>
+          <p class="sample-body" style="margin-top:12px">From a flat tire to a leaking faucet — one tap brings the right
+            professional to your door.</p>
+        </div>
+        <div class="box ar">
+          <span class="pill">العربية</span>
+          <div class="sample-h3" style="margin-top:12px">خدمة سلسة. في أي وقت. في كل مكان.</div>
+          <p class="sample-body" style="margin-top:12px">من إصلاح السيارة إلى صيانة المنزل — بضغطة واحدة يصلك المختص
+            المناسب في أسرع وقت.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TONE -->
+  <section id="tone">
+    <div class="wrap">
+      <span class="eyebrow"><span class="num">07</span> Tone of Voice</span>
+      <h2>Clear, warm, and efficient.</h2>
+      <p class="lead">We write the way we serve — quickly, plainly, and with respect for the reader's time.</p>
+
+      <div class="tone">
+        <div class="row">
+          <div class="ok">
+            <h4 style="margin-bottom:24px">Do</h4>
+            <p>"Your provider is on the way — arriving in 12 minutes."</p>
+            <p>"Tap to confirm and we'll handle the rest."</p>
+            <p>"Service completed. Rate your experience."</p>
+          </div>
+          <div class="no">
+            <h4 style="margin-bottom:24px">Don't</h4>
+            <p>"Please be advised that your service request has been allocated."</p>
+            <p>"Kindly proceed by clicking the aforementioned button."</p>
+            <p>"Thank you for utilizing our esteemed platform."</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <img src="https://drive.google.com/thumbnail?id=1JLY_zxT0oqAMLOMxExiK1tFgcxzV9E-c&amp;sz=w1000" alt="KhidmaNow" />
+    <b>KhidmaNow · Brand Guidelines v1.0</b>
+    <div>© 2026 KhidmaNow. Seamless service. Anytime. Everytime.</div>
+  </footer>
+
+</body>
+
+</html>

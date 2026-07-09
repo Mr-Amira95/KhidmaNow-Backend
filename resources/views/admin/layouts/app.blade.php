@@ -6,7 +6,8 @@
         <title>@yield('title') &middot; {{ config('app.name') }} Admin</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=cairo:400,500,600,700,900" rel="stylesheet" />
+        <link rel="icon" href="/brand/logo_icon.png" type="image/png">
         <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
         @vite(['resources/css/app.css', 'resources/js/admin-app.js'])
@@ -16,17 +17,11 @@
             <!-- Sidebar -->
             <aside class="hidden w-64 flex-shrink-0 flex-col border-r border-zinc-200/70 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:flex">
                 <div class="flex items-center gap-3 px-6 py-5">
-                    <div class="h-9 w-9 rounded-lg bg-accent-600 shadow-lg shadow-accent-600/20">
-                        <svg viewBox="0 0 32 32" class="h-full w-full" aria-hidden="true">
-                            <rect x="10" y="7" width="3.5" height="18" rx="1" fill="white" />
-                            <path d="M13.5 16 L22 7" stroke="white" stroke-width="3.5" stroke-linecap="round" />
-                            <path d="M13.5 15 L22 25" stroke="white" stroke-width="3.5" stroke-linecap="round" />
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{{ config('app.name') }}</p>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Admin Portal</p>
-                    </div>
+                    <a href="/admin/dashboard" class="flex flex-col gap-1">
+                        <img src="/brand/logo_colored.png" alt="KhidmaNow Logo" class="h-8 w-auto dark:hidden object-contain" />
+                        <img src="/brand/logo_white.png" alt="KhidmaNow Logo" class="h-8 w-auto hidden dark:block object-contain" />
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 pl-0.5">Admin Portal</p>
+                    </a>
                 </div>
 
                 <nav class="flex-1 space-y-4 overflow-y-auto px-3 py-4">
@@ -129,7 +124,7 @@
             .nav-link:hover { background-color: rgb(244 244 245); }
             .dark .nav-link:hover { background-color: rgb(39 39 42); }
             .nav-link-active { background-color: var(--color-accent-50); color: var(--color-accent-700); }
-            .dark .nav-link-active { background-color: rgba(20, 111, 99, 0.15); color: var(--color-accent-400); }
+            .dark .nav-link-active { background-color: rgba(30, 58, 138, 0.15); color: var(--color-accent-400); }
         </style>
     </body>
 </html>
