@@ -37,6 +37,14 @@ class QuotationController extends Controller
             'status'       => 'pending',
         ]);
 
+        \App\Services\NotificationService::send(
+            $quotation->user_id,
+            'New Bid Received',
+            'Provider ' . ($provider->business_name ?? $request->user()->name) . ' has submitted a bid of ' . $bid->price . ' on your quotation "' . $quotation->title . '".',
+            'service_request',
+            $quotation->id
+        );
+
         $bid->load('provider.user');
 
         return $this->success(new QuotationBidResource($bid), 'Bid submitted successfully.', 201);

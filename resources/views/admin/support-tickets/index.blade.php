@@ -1,16 +1,16 @@
-@extends('admin.layouts.app')
+﻿@extends('admin.layouts.app')
 
 @section('title', 'Support Tickets')
 @section('page', 'support-tickets')
 
 @section('content')
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div class="flex flex-col rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-2">
+        <div class="flex flex-col card-surface lg:col-span-2">
             <div class="space-y-2 border-b border-zinc-200/70 p-4 dark:border-zinc-800">
                 <input id="tickets-search" type="text" placeholder="Search by subject, name, or phone..."
-                    class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950">
+                    class="w-full input-field-sm">
                 <select id="tickets-status-filter"
-                    class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950">
+                    class="w-full input-field-sm">
                     <option value="">All statuses</option>
                     <option value="open">Open</option>
                     <option value="closed">Closed</option>
@@ -20,7 +20,7 @@
             <div id="tickets-pagination" class="flex items-center justify-between border-t border-zinc-200/70 p-4 dark:border-zinc-800"></div>
         </div>
 
-        <div class="flex min-h-[70vh] flex-col rounded-2xl border border-zinc-200/70 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:col-span-3">
+        <div class="flex min-h-[70vh] flex-col card-surface lg:col-span-3">
             <div id="ticket-thread-header" class="flex items-center justify-between border-b border-zinc-200/70 p-4 dark:border-zinc-800">
                 <p class="text-sm text-zinc-500 dark:text-zinc-400">Select a ticket to view its conversation.</p>
             </div>

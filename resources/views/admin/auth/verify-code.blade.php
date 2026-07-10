@@ -19,28 +19,28 @@
                     inputmode="numeric"
                     maxlength="1"
                     aria-label="Digit 1"
-                    class="otp-box h-14 w-full rounded-lg border border-zinc-300 bg-white text-center text-xl font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                    class="otp-box h-14 w-full rounded-lg border border-zinc-300 bg-white text-center text-xl font-semibold text-zinc-900 transition-all duration-150 hover:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-accent-500/60 focus:border-accent-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-zinc-600"
                 >
                 <input
                     type="text"
                     inputmode="numeric"
                     maxlength="1"
                     aria-label="Digit 2"
-                    class="otp-box h-14 w-full rounded-lg border border-zinc-300 bg-white text-center text-xl font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                    class="otp-box h-14 w-full rounded-lg border border-zinc-300 bg-white text-center text-xl font-semibold text-zinc-900 transition-all duration-150 hover:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-accent-500/60 focus:border-accent-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-zinc-600"
                 >
                 <input
                     type="text"
                     inputmode="numeric"
                     maxlength="1"
                     aria-label="Digit 3"
-                    class="otp-box h-14 w-full rounded-lg border border-zinc-300 bg-white text-center text-xl font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                    class="otp-box h-14 w-full rounded-lg border border-zinc-300 bg-white text-center text-xl font-semibold text-zinc-900 transition-all duration-150 hover:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-accent-500/60 focus:border-accent-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-zinc-600"
                 >
                 <input
                     type="text"
                     inputmode="numeric"
                     maxlength="1"
                     aria-label="Digit 4"
-                    class="otp-box h-14 w-full rounded-lg border border-zinc-300 bg-white text-center text-xl font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                    class="otp-box h-14 w-full rounded-lg border border-zinc-300 bg-white text-center text-xl font-semibold text-zinc-900 transition-all duration-150 hover:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-accent-500/60 focus:border-accent-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:border-zinc-600"
                 >
             </div>
         </div>
@@ -49,11 +49,11 @@
     </form>
 
     <div class="mt-6 flex items-center justify-between text-sm">
-        <a href="/admin/forgot-password" class="flex items-center gap-1.5 font-medium text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200">
-            <i class="ph ph-arrow-left text-base"></i>
+        <a href="/admin/forgot-password" class="group flex items-center gap-1.5 font-medium text-zinc-500 transition-colors duration-150 hover:text-accent-600 dark:text-zinc-400 dark:hover:text-accent-400">
+            <i class="ph ph-arrow-left text-base transition-transform duration-150 group-hover:-translate-x-0.5"></i>
             Back
         </a>
-        <button id="resend-code" type="button" class="font-medium text-accent-600 hover:text-accent-700 disabled:cursor-not-allowed disabled:text-zinc-400 dark:text-accent-400 dark:hover:text-accent-300 dark:disabled:text-zinc-600">
+        <button id="resend-code" type="button" class="link-action disabled:cursor-not-allowed disabled:text-zinc-400 disabled:after:content-none dark:disabled:text-zinc-600">
             Resend code
         </button>
     </div>

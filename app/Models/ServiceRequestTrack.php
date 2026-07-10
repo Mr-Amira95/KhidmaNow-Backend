@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class ServiceRequestTrack extends Model
 {
+    protected $table = 'service_request_track';
+
     protected $fillable = [
         'service_request_id',
         'from_status',

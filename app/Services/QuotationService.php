@@ -69,6 +69,17 @@ class QuotationService
                 'date_time'          => now(),
             ]);
 
+            $bid->loadMissing('provider');
+            if ($bid->provider) {
+                \App\Services\NotificationService::send(
+                    $bid->provider->user_id,
+                    'Bid Approved',
+                    'Your bid of ' . $bid->price . ' for "' . $quotation->title . '" has been approved.',
+                    'service_request',
+                    $serviceRequest->id
+                );
+            }
+
             return $serviceRequest;
         });
     }

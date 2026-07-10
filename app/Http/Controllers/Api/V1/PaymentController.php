@@ -56,7 +56,17 @@ class PaymentController extends Controller
 
         $payment->serviceRequest()->update(['payment_status' => 'paid']);
 
-        $payment->load('serviceRequest');
+        $payment->load(['serviceRequest.provider']);
+
+        if ($payment->serviceRequest && $payment->serviceRequest->provider) {
+            \App\Services\NotificationService::send(
+                $payment->serviceRequest->provider->user_id,
+                'Payment Confirmed',
+                'Payment of ' . $payment->amount . ' has been confirmed for service request: "' . $payment->serviceRequest->title . '".',
+                'payment',
+                $payment->id
+            );
+        }
 
         return $this->success(new PaymentResource($payment), 'Payment confirmed successfully.');
     }

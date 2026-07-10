@@ -4,10 +4,10 @@
 @section('page', 'notifications-send')
 
 @section('content')
-    <div class="mx-auto max-w-2xl rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <div class="mx-auto max-w-2xl card-surface p-6">
         <div id="send-notification-banner" class="hidden mb-4" role="alert"></div>
 
-        <form id="send-notification-form" class="space-y-4" novalidate>
+        <form id="send-notification-form" class="stagger space-y-4" novalidate>
             <x-admin.text-field name="notification_title" label="Title" required />
             <x-admin.textarea-field name="notification_description" label="Description" rows="3" />
 

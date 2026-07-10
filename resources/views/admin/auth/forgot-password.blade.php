@@ -11,7 +11,7 @@
         </p>
     </div>
 
-    <form id="forgot-password-form" class="space-y-5" novalidate>
+    <form id="forgot-password-form" class="stagger space-y-5" novalidate>
         <x-admin.text-field
             name="login"
             label="Email or phone"
@@ -24,8 +24,8 @@
         <x-admin.submit-button busyLabel="Sending code">Send code</x-admin.submit-button>
     </form>
 
-    <a href="/admin/login" class="mt-6 flex items-center justify-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200">
-        <i class="ph ph-arrow-left text-base"></i>
+    <a href="/admin/login" class="group mt-6 flex items-center justify-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors duration-150 hover:text-accent-600 dark:text-zinc-400 dark:hover:text-accent-400">
+        <i class="ph ph-arrow-left text-base transition-transform duration-150 group-hover:-translate-x-0.5"></i>
         Back to sign in
     </a>
 @endsection

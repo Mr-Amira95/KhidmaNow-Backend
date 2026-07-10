@@ -6,7 +6,7 @@
         <title>@yield('title') &middot; {{ config('app.name') }} Admin</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=cairo:400,500,600,700,900" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=cairo:400,500,600,700,900|jetbrains-mono:400,500,600" rel="stylesheet" />
         <link rel="icon" href="/brand/logo_icon.png" type="image/png">
         <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
@@ -14,14 +14,23 @@
     </head>
     <body data-page="@yield('page')" class="h-full font-sans antialiased bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
         <div class="flex min-h-[100dvh]">
+            <!-- Mobile backdrop -->
+            <div id="sidebar-backdrop" class="fixed inset-0 z-40 hidden bg-zinc-950/50 backdrop-blur-sm lg:hidden" data-sidebar-backdrop></div>
+
             <!-- Sidebar -->
-            <aside class="hidden w-64 flex-shrink-0 flex-col border-r border-zinc-200/70 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:flex">
+            <aside
+                id="admin-sidebar"
+                class="fixed inset-y-0 left-0 z-50 w-64 flex-shrink-0 -translate-x-full flex-col border-r border-zinc-200/70 bg-white transition-transform duration-300 ease-out dark:border-white/10 dark:bg-zinc-900 lg:static lg:flex lg:translate-x-0"
+            >
                 <div class="flex items-center gap-3 px-6 py-5">
                     <a href="/admin/dashboard" class="flex flex-col gap-1">
                         <img src="/brand/logo_colored.png" alt="KhidmaNow Logo" class="h-8 w-auto dark:hidden object-contain" />
                         <img src="/brand/logo_white.png" alt="KhidmaNow Logo" class="h-8 w-auto hidden dark:block object-contain" />
                         <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 pl-0.5">Admin Portal</p>
                     </a>
+                    <button type="button" data-sidebar-close class="ml-auto rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 lg:hidden dark:hover:bg-zinc-800" aria-label="Close menu">
+                        <i class="ph ph-x text-lg"></i>
+                    </button>
                 </div>
 
                 <nav class="flex-1 space-y-4 overflow-y-auto px-3 py-4">
@@ -94,7 +103,7 @@
                     </div>
                 </nav>
 
-                <div class="border-t border-zinc-200/70 px-3 py-4 dark:border-zinc-800">
+                <div class="border-t border-zinc-200/70 px-3 py-4 dark:border-white/10">
                     <button id="logout-button" type="button" class="nav-link w-full text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">
                         <i class="ph ph-sign-out text-lg"></i> Sign out
                     </button>
@@ -103,28 +112,37 @@
 
             <!-- Main -->
             <div class="flex min-w-0 flex-1 flex-col">
-                <header class="flex items-center justify-between border-b border-zinc-200/70 bg-white px-6 py-4 dark:border-zinc-800 dark:bg-zinc-900">
-                    <h1 class="text-lg font-semibold text-zinc-900 dark:text-zinc-50">@yield('title')</h1>
-                    <div class="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
-                        <i class="ph ph-user-circle text-xl"></i>
-                        <span id="topbar-user-name">Admin</span>
+                <header class="sticky top-0 z-30 flex items-center justify-between border-b border-zinc-200/70 glass-panel px-4 py-4 sm:px-6 dark:border-white/10">
+                    <div class="flex items-center gap-3">
+                        <button type="button" data-sidebar-open class="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 lg:hidden dark:text-zinc-400 dark:hover:bg-zinc-800" aria-label="Open menu">
+                            <i class="ph ph-list text-xl"></i>
+                        </button>
+                        <h1 class="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">@yield('title')</h1>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-zinc-600 dark:text-zinc-300">
+                        <span class="hidden items-center gap-1.5 rounded-full border border-zinc-200/70 px-2.5 py-1 text-xs font-medium text-zinc-500 sm:flex dark:border-white/10 dark:text-zinc-400">
+                            <span class="relative flex h-1.5 w-1.5">
+                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-green-400 opacity-75"></span>
+                                <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand-green-500"></span>
+                            </span>
+                            Live
+                        </span>
+                        <div class="flex items-center gap-2 rounded-full border border-zinc-200/70 py-1 pl-1 pr-3 dark:border-white/10">
+                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-accent-600 text-xs font-semibold text-white">
+                                <i class="ph ph-user text-sm"></i>
+                            </span>
+                            <span id="topbar-user-name" class="font-medium">Admin</span>
+                        </div>
                     </div>
                 </header>
 
-                <main class="flex-1 overflow-y-auto p-6">
+                <main class="relative flex-1 overflow-y-auto p-4 sm:p-6">
                     <div id="page-banner" class="hidden" role="alert"></div>
-                    @yield('content')
+                    <div class="animate-fade-up">
+                        @yield('content')
+                    </div>
                 </main>
             </div>
         </div>
-
-        <style>
-            .nav-link { display: flex; align-items: center; gap: 0.625rem; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.875rem; font-weight: 500; color: rgb(63 63 70); }
-            .dark .nav-link { color: rgb(212 212 216); }
-            .nav-link:hover { background-color: rgb(244 244 245); }
-            .dark .nav-link:hover { background-color: rgb(39 39 42); }
-            .nav-link-active { background-color: var(--color-accent-50); color: var(--color-accent-700); }
-            .dark .nav-link-active { background-color: rgba(30, 58, 138, 0.15); color: var(--color-accent-400); }
-        </style>
     </body>
 </html>

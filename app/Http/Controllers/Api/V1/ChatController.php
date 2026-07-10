@@ -103,6 +103,18 @@ class ChatController extends Controller
             $recipientDeletedColumn => null,
         ]);
 
+        // Send chat notification to the other participant
+        $recipientId = $user->user_type === 'provider' ? $chatRoom->user_id : ($chatRoom->provider ? $chatRoom->provider->user_id : null);
+        if ($recipientId) {
+            \App\Services\NotificationService::send(
+                $recipientId,
+                'New Message from ' . $user->name,
+                $message->message ?? 'Sent an attachment.',
+                'chat',
+                $chatRoom->id
+            );
+        }
+
         $message->load('sender');
 
         return $this->success(new MessageResource($message), 'Message sent.', 201);

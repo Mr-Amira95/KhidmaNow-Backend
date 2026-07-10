@@ -69,6 +69,17 @@ class ServiceRequestController extends Controller
             'date_time'          => now(),
         ]);
 
+        $serviceRequest->loadMissing('provider');
+        if ($serviceRequest->provider) {
+            \App\Services\NotificationService::send(
+                $serviceRequest->provider->user_id,
+                'New Service Request',
+                'You have received a new service request from ' . $user->name,
+                'service_request',
+                $serviceRequest->id
+            );
+        }
+
         return $this->success(new ServiceRequestResource($serviceRequest), 'Service request created successfully.', 201);
     }
 

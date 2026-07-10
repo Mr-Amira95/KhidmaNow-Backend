@@ -81,6 +81,19 @@ class RateController extends Controller
             'feedback'           => $request->feedback,
         ]);
 
+        // Recalculate average rating and ratings count for the ratee
+        $ratee = \App\Models\User::find($rateeId);
+        if ($ratee) {
+            $stats = Rate::where('ratee_id', $rateeId)
+                ->selectRaw('COUNT(*) as count, AVG(rate) as average')
+                ->first();
+
+            $ratee->update([
+                'average_rating' => round($stats->average ?? 0.0, 1),
+                'ratings_count'  => $stats->count ?? 0,
+            ]);
+        }
+
         $rate->load(['rater', 'ratee', 'serviceRequest']);
 
         return $this->success(new RateResource($rate), 'Feedback submitted successfully.', 201);

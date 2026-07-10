@@ -1,7 +1,40 @@
-import './bootstrap';
+﻿import './bootstrap';
 
-const BANNER_ERROR_CLASSES = 'flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300';
-const BANNER_SUCCESS_CLASSES = 'flex items-start gap-2 rounded-lg border border-accent-200 bg-accent-50 px-4 py-3 text-sm text-accent-700 dark:border-accent-900/50 dark:bg-accent-950/30 dark:text-accent-300';
+const BANNER_ERROR_CLASSES = 'animate-fade-up flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300';
+const BANNER_SUCCESS_CLASSES = 'animate-fade-up flex items-start gap-2 rounded-lg border border-accent-200 bg-accent-50 px-4 py-3 text-sm text-accent-700 dark:border-accent-900/50 dark:bg-accent-950/30 dark:text-accent-300';
+
+const BADGE_COLORS = {
+    green: ['bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400', 'bg-emerald-500'],
+    rose: ['bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400', 'bg-rose-500'],
+    amber: ['bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400', 'bg-amber-500'],
+    zinc: ['bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300', 'bg-zinc-400'],
+    accent: ['bg-accent-50 text-accent-700 dark:bg-accent-950/30 dark:text-accent-400', 'bg-accent-600'],
+};
+
+function badgeHtml(label, color = 'zinc') {
+    const [classes, dot] = BADGE_COLORS[color] || BADGE_COLORS.zinc;
+    return `<span class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors duration-150 ${classes}"><span class="h-1.5 w-1.5 shrink-0 rounded-full ${dot}"></span>${label}</span>`;
+}
+
+function loadingIndicatorHtml() {
+    return `<span class="inline-flex items-center gap-2 text-zinc-500 dark:text-zinc-400"><i class="ph ph-circle-notch animate-spin text-base text-accent-500"></i>Loading…</span>`;
+}
+
+function loadingRow(colspan) {
+    return `<tr><td colspan="${colspan}" class="py-10 text-center text-sm">${loadingIndicatorHtml()}</td></tr>`;
+}
+
+function emptyRow(colspan, message) {
+    return `<tr><td colspan="${colspan}" class="animate-fade-in py-10 text-center text-sm text-zinc-400 dark:text-zinc-500">${message}</td></tr>`;
+}
+
+function errorIndicatorHtml(message) {
+    return `<span class="inline-flex items-center gap-2 text-rose-500"><i class="ph ph-warning-circle text-base"></i>${message}</span>`;
+}
+
+function errorRow(colspan, message) {
+    return `<tr><td colspan="${colspan}" class="animate-fade-in py-10 text-center text-sm">${errorIndicatorHtml(message)}</td></tr>`;
+}
 
 function qs(selector, ctx = document) {
     return ctx.querySelector(selector);
@@ -36,6 +69,9 @@ function requireAdminAuth() {
 
     const nameEl = qs('#topbar-user-name');
     if (nameEl) nameEl.textContent = user.name || user.email || 'Admin';
+
+    const dashNameEl = qs('#dashboard-user-name');
+    if (dashNameEl) dashNameEl.textContent = user.name || user.email || 'Admin';
 
     return user;
 }
@@ -121,15 +157,55 @@ function setLoading(button, isLoading) {
 function openModal(id) {
     const modal = qs(`#${id}`);
     if (!modal) return;
+    const panel = qs('[data-modal-panel]', modal);
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    requestAnimationFrame(() => {
+        modal.classList.remove('opacity-0');
+        if (panel) panel.classList.remove('opacity-0', 'scale-95');
+    });
 }
 
 function closeModal(id) {
     const modal = qs(`#${id}`);
     if (!modal) return;
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    const panel = qs('[data-modal-panel]', modal);
+    modal.classList.add('opacity-0');
+    if (panel) panel.classList.add('opacity-0', 'scale-95');
+    window.setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 200);
+}
+
+function initSpotlight(root = document) {
+    qsa('.spotlight', root).forEach((el) => {
+        el.addEventListener('mousemove', (event) => {
+            const rect = el.getBoundingClientRect();
+            el.style.setProperty('--x', `${event.clientX - rect.left}px`);
+            el.style.setProperty('--y', `${event.clientY - rect.top}px`);
+        });
+    });
+}
+
+function initMobileNav() {
+    const sidebar = qs('#admin-sidebar');
+    const backdrop = qs('[data-sidebar-backdrop]');
+    if (!sidebar || !backdrop) return;
+
+    function openSidebar() {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+    }
+
+    function closeSidebar() {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+    }
+
+    qsa('[data-sidebar-open]').forEach((btn) => btn.addEventListener('click', openSidebar));
+    qsa('[data-sidebar-close]').forEach((btn) => btn.addEventListener('click', closeSidebar));
+    backdrop.addEventListener('click', closeSidebar);
 }
 
 function wireModalDismiss() {
@@ -153,8 +229,8 @@ function renderPagination(container, meta, onPage) {
     container.innerHTML = `
         <p class="text-sm text-zinc-500 dark:text-zinc-400">Page ${meta.current_page} of ${meta.last_page} &middot; ${meta.total} total</p>
         <div class="flex items-center gap-1">
-            <button data-page-nav="${meta.current_page - 1}" ${meta.current_page <= 1 ? 'disabled' : ''} class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-40 dark:border-zinc-700">Prev</button>
-            <button data-page-nav="${meta.current_page + 1}" ${meta.current_page >= meta.last_page ? 'disabled' : ''} class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-40 dark:border-zinc-700">Next</button>
+            <button data-page-nav="${meta.current_page - 1}" ${meta.current_page <= 1 ? 'disabled' : ''} class="btn btn-secondary px-3 py-1.5 disabled:opacity-40 disabled:hover:translate-y-0">Prev</button>
+            <button data-page-nav="${meta.current_page + 1}" ${meta.current_page >= meta.last_page ? 'disabled' : ''} class="btn btn-secondary px-3 py-1.5 disabled:opacity-40 disabled:hover:translate-y-0">Next</button>
         </div>
     `;
 
@@ -205,7 +281,7 @@ function initUsersClientsPage() {
     let page = 1;
 
     async function load() {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-sm text-zinc-500">Loading...</td></tr>`;
+        tbody.innerHTML = loadingRow(6);
         const result = await apiRequest('get', '/admin/users', {
             user_type: 'customer',
             page,
@@ -214,25 +290,25 @@ function initUsersClientsPage() {
         });
 
         if (!result.ok) {
-            tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-sm text-rose-500">Failed to load clients.</td></tr>`;
+            tbody.innerHTML = errorRow(6, 'Failed to load clients.');
             return;
         }
 
         const clients = result.data.data;
         if (!clients.length) {
-            tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-sm text-zinc-500">No clients found.</td></tr>`;
+            tbody.innerHTML = emptyRow(6, 'No clients found.');
         } else {
             tbody.innerHTML = clients.map((c) => `
-                <tr class="border-b border-zinc-100 dark:border-zinc-800">
+                <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
                     <td class="py-3 px-4 text-sm font-medium">${escapeHtml(c.name)}</td>
                     <td class="py-3 px-4 text-sm">${escapeHtml(c.phone) || '—'}</td>
                     <td class="py-3 px-4 text-sm">${escapeHtml(c.email) || '—'}</td>
-                    <td class="py-3 px-4"><x-badge>${c.status}</x-badge-placeholder>${statusBadge(c.status)}</td>
+                    <td class="py-3 px-4">${statusBadge(c.status)}</td>
                     <td class="py-3 px-4 text-sm text-zinc-500">${formatDate(c.created_at)}</td>
                     <td class="py-3 px-4 text-right text-sm">
-                        <button data-action="view" data-id="${c.id}" class="text-accent-600 hover:underline dark:text-accent-400">View</button>
-                        <button data-action="toggle-block" data-id="${c.id}" data-status="${c.status}" class="ml-3 text-accent-600 hover:underline dark:text-accent-400">${c.status === 'blocked' ? 'Unblock' : 'Block'}</button>
-                        <button data-action="delete" data-id="${c.id}" class="ml-3 text-rose-600 hover:underline dark:text-rose-400">Delete</button>
+                        <button data-action="view" data-id="${c.id}" class="link-action">View</button>
+                        <button data-action="toggle-block" data-id="${c.id}" data-status="${c.status}" class="ml-3 link-action">${c.status === 'blocked' ? 'Unblock' : 'Block'}</button>
+                        <button data-action="delete" data-id="${c.id}" class="ml-3 link-action-danger">Delete</button>
                     </td>
                 </tr>
             `).join('');
@@ -243,11 +319,7 @@ function initUsersClientsPage() {
 
     function statusBadge(status) {
         const color = status === 'active' ? 'green' : status === 'blocked' ? 'rose' : 'amber';
-        return `<span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-            color === 'green' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' :
-            color === 'rose' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400' :
-            'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
-        }">${status}</span>`;
+        return badgeHtml(status, color);
     }
 
     function wishlistItemLabel(w) {
@@ -325,7 +397,7 @@ function initUsersProvidersPage() {
     let page = 1;
 
     async function load() {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-sm text-zinc-500">Loading...</td></tr>`;
+        tbody.innerHTML = loadingRow(6);
         const result = await apiRequest('get', '/admin/providers', {
             page,
             search: qs('#providers-search').value || undefined,
@@ -333,27 +405,25 @@ function initUsersProvidersPage() {
         });
 
         if (!result.ok) {
-            tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-sm text-rose-500">Failed to load providers.</td></tr>`;
+            tbody.innerHTML = errorRow(6, 'Failed to load providers.');
             return;
         }
 
         const providers = result.data.data;
         if (!providers.length) {
-            tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-sm text-zinc-500">No providers found.</td></tr>`;
+            tbody.innerHTML = emptyRow(6, 'No providers found.');
         } else {
             tbody.innerHTML = providers.map((p) => `
-                <tr class="border-b border-zinc-100 dark:border-zinc-800">
+                <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
                     <td class="py-3 px-4 text-sm font-medium">${escapeHtml(p.business_name) || '—'}</td>
                     <td class="py-3 px-4 text-sm">${escapeHtml(p.user?.name)}<br><span class="text-zinc-400">${escapeHtml(p.user?.phone)}</span></td>
                     <td class="py-3 px-4 text-sm">${escapeHtml(p.city?.name_en) || '—'}</td>
                     <td class="py-3 px-4 text-sm">${p.availability_status}</td>
-                    <td class="py-3 px-4">${p.is_verified
-                        ? '<span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">Verified</span>'
-                        : '<span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">Pending</span>'}</td>
+                    <td class="py-3 px-4">${p.is_verified ? badgeHtml('Verified', 'green') : badgeHtml('Pending', 'amber')}</td>
                     <td class="py-3 px-4 text-right text-sm">
-                        <button data-action="view" data-id="${p.id}" class="text-accent-600 hover:underline dark:text-accent-400">View</button>
-                        <button data-action="toggle-verify" data-id="${p.id}" data-verified="${p.is_verified ? '1' : '0'}" class="ml-3 text-accent-600 hover:underline dark:text-accent-400">${p.is_verified ? 'Unverify' : 'Verify'}</button>
-                        <button data-action="delete" data-id="${p.id}" class="ml-3 text-rose-600 hover:underline dark:text-rose-400">Delete</button>
+                        <button data-action="view" data-id="${p.id}" class="link-action">View</button>
+                        <button data-action="toggle-verify" data-id="${p.id}" data-verified="${p.is_verified ? '1' : '0'}" class="ml-3 link-action">${p.is_verified ? 'Unverify' : 'Verify'}</button>
+                        <button data-action="delete" data-id="${p.id}" class="ml-3 link-action-danger">Delete</button>
                     </td>
                 </tr>
             `).join('');
@@ -384,7 +454,7 @@ function initUsersProvidersPage() {
                     <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">Documents</p>
                     ${(p.documents || []).length ? p.documents.map((doc) => `
                         <div class="flex items-center justify-between rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 mb-2">
-                            <a href="${doc.document_url}" target="_blank" class="text-accent-600 hover:underline dark:text-accent-400">${doc.type}</a>
+                            <a href="${doc.document_url}" target="_blank" class="link-action">${doc.type}</a>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-zinc-400">${doc.status}</span>
                                 ${doc.status === 'pending' ? `
@@ -455,26 +525,26 @@ function initCategoriesPage() {
     let activeCategoryId = null;
 
     async function loadCategories() {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-sm text-zinc-500">Loading...</td></tr>`;
+        tbody.innerHTML = loadingRow(5);
         const result = await apiRequest('get', '/admin/categories', { search: qs('#categories-search').value || undefined });
         if (!result.ok) return;
 
         const categories = result.data.data;
         if (!categories.length) {
-            tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-sm text-zinc-500">No categories yet.</td></tr>`;
+            tbody.innerHTML = emptyRow(5, 'No categories yet.');
             return;
         }
 
         tbody.innerHTML = categories.map((c) => `
-            <tr class="border-b border-zinc-100 dark:border-zinc-800 ${activeCategoryId === c.id ? 'bg-accent-50 dark:bg-accent-950/20' : ''}">
+            <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion ${activeCategoryId === c.id ? 'bg-accent-50 dark:bg-accent-950/20' : ''}">
                 <td class="py-3 px-4">${c.icon ? `<img src="${c.icon}" class="h-8 w-8 rounded-lg object-cover">` : '<div class="h-8 w-8 rounded-lg bg-zinc-100 dark:bg-zinc-800"></div>'}</td>
                 <td class="py-3 px-4 text-sm font-medium">${escapeHtml(c.name_en)}<br><span class="text-zinc-400">${escapeHtml(c.name_ar)}</span></td>
                 <td class="py-3 px-4 text-sm">${c.sub_categories_count ?? 0}</td>
-                <td class="py-3 px-4">${c.is_active ? '<span class="text-emerald-600 text-sm">Active</span>' : '<span class="text-zinc-400 text-sm">Inactive</span>'}</td>
+                <td class="py-3 px-4">${c.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
-                    <button data-action="manage" data-id="${c.id}" class="text-accent-600 hover:underline dark:text-accent-400">Sub-categories</button>
-                    <button data-action="edit" data-id="${c.id}" class="ml-3 text-accent-600 hover:underline dark:text-accent-400">Edit</button>
-                    <button data-action="delete" data-id="${c.id}" class="ml-3 text-rose-600 hover:underline dark:text-rose-400">Delete</button>
+                    <button data-action="manage" data-id="${c.id}" class="link-action">Sub-categories</button>
+                    <button data-action="edit" data-id="${c.id}" class="ml-3 link-action">Edit</button>
+                    <button data-action="delete" data-id="${c.id}" class="ml-3 link-action-danger">Delete</button>
                 </td>
             </tr>
         `).join('');
@@ -484,23 +554,23 @@ function initCategoriesPage() {
         activeCategoryId = categoryId;
         qs('#subcategories-panel').classList.remove('hidden');
         const tbody2 = qs('#subcategories-table-body');
-        tbody2.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-sm text-zinc-500">Loading...</td></tr>`;
+        tbody2.innerHTML = loadingRow(4);
 
         const result = await apiRequest('get', '/admin/sub-categories', { category_id: categoryId });
         if (!result.ok) return;
 
         const subCategories = result.data.data;
         tbody2.innerHTML = subCategories.length ? subCategories.map((s) => `
-            <tr class="border-b border-zinc-100 dark:border-zinc-800">
+            <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
                 <td class="py-2 px-4">${s.icon ? `<img src="${s.icon}" class="h-7 w-7 rounded-lg object-cover">` : '<div class="h-7 w-7 rounded-lg bg-zinc-100 dark:bg-zinc-800"></div>'}</td>
                 <td class="py-2 px-4 text-sm">${escapeHtml(s.name_en)}<br><span class="text-zinc-400">${escapeHtml(s.name_ar)}</span></td>
-                <td class="py-2 px-4">${s.is_active ? '<span class="text-emerald-600 text-sm">Active</span>' : '<span class="text-zinc-400 text-sm">Inactive</span>'}</td>
+                <td class="py-2 px-4">${s.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-2 px-4 text-right text-sm">
-                    <button data-action="edit-sub" data-id="${s.id}" class="text-accent-600 hover:underline dark:text-accent-400">Edit</button>
-                    <button data-action="delete-sub" data-id="${s.id}" class="ml-3 text-rose-600 hover:underline dark:text-rose-400">Delete</button>
+                    <button data-action="edit-sub" data-id="${s.id}" class="link-action">Edit</button>
+                    <button data-action="delete-sub" data-id="${s.id}" class="ml-3 link-action-danger">Delete</button>
                 </td>
             </tr>
-        `).join('') : `<tr><td colspan="4" class="py-4 text-center text-sm text-zinc-500">No sub-categories yet.</td></tr>`;
+        `).join('') : emptyRow(4, 'No sub-categories yet.');
     }
 
     function openCategoryModal(category = null) {
@@ -658,24 +728,24 @@ function initLocationsCountriesPage() {
     if (!tbody) return;
 
     async function load() {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-sm text-zinc-500">Loading...</td></tr>`;
+        tbody.innerHTML = loadingRow(6);
         const result = await apiRequest('get', '/admin/countries', { search: qs('#countries-search').value || undefined });
         if (!result.ok) return;
 
         const countries = result.data.data;
         tbody.innerHTML = countries.length ? countries.map((c) => `
-            <tr class="border-b border-zinc-100 dark:border-zinc-800">
+            <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
                 <td class="py-3 px-4">${c.flag ? `<img src="${c.flag}" class="h-6 w-9 rounded object-cover">` : '—'}</td>
                 <td class="py-3 px-4 text-sm font-medium">${escapeHtml(c.name_en)}<br><span class="text-zinc-400">${escapeHtml(c.name_ar)}</span></td>
                 <td class="py-3 px-4 text-sm">${escapeHtml(c.iso)}</td>
                 <td class="py-3 px-4 text-sm">${escapeHtml(c.phone_code)}</td>
-                <td class="py-3 px-4">${c.is_active ? '<span class="text-emerald-600 text-sm">Active</span>' : '<span class="text-zinc-400 text-sm">Inactive</span>'}</td>
+                <td class="py-3 px-4">${c.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
-                    <button data-action="edit" data-id="${c.id}" class="text-accent-600 hover:underline dark:text-accent-400">Edit</button>
-                    <button data-action="delete" data-id="${c.id}" class="ml-3 text-rose-600 hover:underline dark:text-rose-400">Delete</button>
+                    <button data-action="edit" data-id="${c.id}" class="link-action">Edit</button>
+                    <button data-action="delete" data-id="${c.id}" class="ml-3 link-action-danger">Delete</button>
                 </td>
             </tr>
-        `).join('') : `<tr><td colspan="6" class="py-6 text-center text-sm text-zinc-500">No countries yet.</td></tr>`;
+        `).join('') : emptyRow(6, 'No countries yet.');
     }
 
     function openCountryModal(country = null) {
@@ -772,7 +842,7 @@ function initLocationsCitiesPage() {
     }
 
     async function load() {
-        tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-sm text-zinc-500">Loading...</td></tr>`;
+        tbody.innerHTML = loadingRow(4);
         const result = await apiRequest('get', '/admin/cities', {
             search: qs('#cities-search').value || undefined,
             country_id: qs('#cities-country-filter').value || undefined,
@@ -781,16 +851,16 @@ function initLocationsCitiesPage() {
 
         const cities = result.data.data;
         tbody.innerHTML = cities.length ? cities.map((c) => `
-            <tr class="border-b border-zinc-100 dark:border-zinc-800">
+            <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
                 <td class="py-3 px-4 text-sm font-medium">${escapeHtml(c.name_en)}<br><span class="text-zinc-400">${escapeHtml(c.name_ar)}</span></td>
                 <td class="py-3 px-4 text-sm">${escapeHtml(c.country?.name_en) || '—'}</td>
-                <td class="py-3 px-4">${c.is_active ? '<span class="text-emerald-600 text-sm">Active</span>' : '<span class="text-zinc-400 text-sm">Inactive</span>'}</td>
+                <td class="py-3 px-4">${c.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
-                    <button data-action="edit" data-id="${c.id}" class="text-accent-600 hover:underline dark:text-accent-400">Edit</button>
-                    <button data-action="delete" data-id="${c.id}" class="ml-3 text-rose-600 hover:underline dark:text-rose-400">Delete</button>
+                    <button data-action="edit" data-id="${c.id}" class="link-action">Edit</button>
+                    <button data-action="delete" data-id="${c.id}" class="ml-3 link-action-danger">Delete</button>
                 </td>
             </tr>
-        `).join('') : `<tr><td colspan="4" class="py-6 text-center text-sm text-zinc-500">No cities yet.</td></tr>`;
+        `).join('') : emptyRow(4, 'No cities yet.');
     }
 
     function openCityModal(city = null) {
@@ -881,7 +951,7 @@ function initLocationsAreasPage() {
     }
 
     async function load() {
-        tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-sm text-zinc-500">Loading...</td></tr>`;
+        tbody.innerHTML = loadingRow(4);
         const result = await apiRequest('get', '/admin/areas', {
             search: qs('#areas-search').value || undefined,
             city_id: qs('#areas-city-filter').value || undefined,
@@ -890,16 +960,16 @@ function initLocationsAreasPage() {
 
         const areas = result.data.data;
         tbody.innerHTML = areas.length ? areas.map((a) => `
-            <tr class="border-b border-zinc-100 dark:border-zinc-800">
+            <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
                 <td class="py-3 px-4 text-sm font-medium">${escapeHtml(a.name_en)}<br><span class="text-zinc-400">${escapeHtml(a.name_ar)}</span></td>
                 <td class="py-3 px-4 text-sm">${escapeHtml(a.city?.name_en) || '—'}</td>
-                <td class="py-3 px-4">${a.is_active ? '<span class="text-emerald-600 text-sm">Active</span>' : '<span class="text-zinc-400 text-sm">Inactive</span>'}</td>
+                <td class="py-3 px-4">${a.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
-                    <button data-action="edit" data-id="${a.id}" class="text-accent-600 hover:underline dark:text-accent-400">Edit</button>
-                    <button data-action="delete" data-id="${a.id}" class="ml-3 text-rose-600 hover:underline dark:text-rose-400">Delete</button>
+                    <button data-action="edit" data-id="${a.id}" class="link-action">Edit</button>
+                    <button data-action="delete" data-id="${a.id}" class="ml-3 link-action-danger">Delete</button>
                 </td>
             </tr>
-        `).join('') : `<tr><td colspan="4" class="py-6 text-center text-sm text-zinc-500">No areas yet.</td></tr>`;
+        `).join('') : emptyRow(4, 'No areas yet.');
     }
 
     function openAreaModal(area = null) {
@@ -982,23 +1052,23 @@ function initCmsIntroScreensPage() {
     if (!tbody) return;
 
     async function load() {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-sm text-zinc-500">Loading...</td></tr>`;
+        tbody.innerHTML = loadingRow(5);
         const result = await apiRequest('get', '/admin/intro-screens');
         if (!result.ok) return;
 
         const screens = result.data.data;
         tbody.innerHTML = screens.length ? screens.map((s) => `
-            <tr class="border-b border-zinc-100 dark:border-zinc-800">
+            <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
                 <td class="py-3 px-4">${s.image ? `<img src="${s.image}" class="h-12 w-12 rounded-lg object-cover">` : '—'}</td>
                 <td class="py-3 px-4 text-sm font-medium">${escapeHtml(s.title_en)}<br><span class="text-zinc-400">${escapeHtml(s.title_ar)}</span></td>
                 <td class="py-3 px-4 text-sm">${s.order}</td>
-                <td class="py-3 px-4">${s.is_active ? '<span class="text-emerald-600 text-sm">Active</span>' : '<span class="text-zinc-400 text-sm">Inactive</span>'}</td>
+                <td class="py-3 px-4">${s.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
-                    <button data-action="edit" data-id="${s.id}" class="text-accent-600 hover:underline dark:text-accent-400">Edit</button>
-                    <button data-action="delete" data-id="${s.id}" class="ml-3 text-rose-600 hover:underline dark:text-rose-400">Delete</button>
+                    <button data-action="edit" data-id="${s.id}" class="link-action">Edit</button>
+                    <button data-action="delete" data-id="${s.id}" class="ml-3 link-action-danger">Delete</button>
                 </td>
             </tr>
-        `).join('') : `<tr><td colspan="5" class="py-6 text-center text-sm text-zinc-500">No intro screens yet.</td></tr>`;
+        `).join('') : emptyRow(5, 'No intro screens yet.');
     }
 
     function openIntroScreenModal(screen = null) {
@@ -1083,22 +1153,22 @@ function initCmsFaqsPage() {
     if (!tbody) return;
 
     async function load() {
-        tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-sm text-zinc-500">Loading...</td></tr>`;
+        tbody.innerHTML = loadingRow(4);
         const result = await apiRequest('get', '/admin/faqs');
         if (!result.ok) return;
 
         const faqs = result.data.data;
         tbody.innerHTML = faqs.length ? faqs.map((f) => `
-            <tr class="border-b border-zinc-100 dark:border-zinc-800">
+            <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
                 <td class="py-3 px-4 text-sm font-medium">${escapeHtml(f.question_en)}<br><span class="text-zinc-400">${escapeHtml(f.question_ar)}</span></td>
                 <td class="py-3 px-4 text-sm">${f.order}</td>
-                <td class="py-3 px-4">${f.is_active ? '<span class="text-emerald-600 text-sm">Active</span>' : '<span class="text-zinc-400 text-sm">Inactive</span>'}</td>
+                <td class="py-3 px-4">${f.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
-                    <button data-action="edit" data-id="${f.id}" class="text-accent-600 hover:underline dark:text-accent-400">Edit</button>
-                    <button data-action="delete" data-id="${f.id}" class="ml-3 text-rose-600 hover:underline dark:text-rose-400">Delete</button>
+                    <button data-action="edit" data-id="${f.id}" class="link-action">Edit</button>
+                    <button data-action="delete" data-id="${f.id}" class="ml-3 link-action-danger">Delete</button>
                 </td>
             </tr>
-        `).join('') : `<tr><td colspan="4" class="py-6 text-center text-sm text-zinc-500">No FAQs yet.</td></tr>`;
+        `).join('') : emptyRow(4, 'No FAQs yet.');
     }
 
     function openFaqModal(faq = null) {
@@ -1246,21 +1316,21 @@ function initChatsPage() {
     }
 
     async function loadChats() {
-        list.innerHTML = `<div class="p-4 text-center text-sm text-zinc-500">Loading...</div>`;
+        list.innerHTML = `${loadingIndicatorHtml()}`;
         const result = await apiRequest('get', '/admin/chats', {
             page: listPage,
             search: qs('#chats-search').value || undefined,
         });
 
         if (!result.ok) {
-            list.innerHTML = `<div class="p-4 text-center text-sm text-rose-500">Failed to load chats.</div>`;
+            list.innerHTML = errorIndicatorHtml('Failed to load chats.');
             return;
         }
 
         const chats = result.data.data;
         list.innerHTML = chats.length ? chats.map((chat) => `
             <button type="button" data-chat-id="${chat.id}" data-label="${escapeHtml(chatLabel(chat))}"
-                class="chat-row block w-full px-4 py-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 ${activeChatId == chat.id ? 'bg-accent-50 dark:bg-accent-950/20' : ''}">
+                class="chat-row animate-fade-up block w-full border-l-2 border-transparent px-4 py-3 text-left transition-colors duration-150 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 ${activeChatId == chat.id ? 'border-accent-600 bg-accent-50 dark:bg-accent-950/20' : ''}">
                 <div class="flex items-center justify-between gap-2">
                     <p class="truncate text-sm font-medium">${escapeHtml(chatLabel(chat))}</p>
                     <span class="flex-shrink-0 text-xs text-zinc-400">${formatDate(chat.last_message_at)}</span>
@@ -1274,15 +1344,20 @@ function initChatsPage() {
 
     async function loadThread(chatId, label, page = 1) {
         activeChatId = chatId;
-        qsa('.chat-row', list).forEach((row) => row.classList.toggle('bg-accent-50', row.dataset.chatId == chatId));
+        qsa('.chat-row', list).forEach((row) => {
+            const isActive = row.dataset.chatId == chatId;
+            row.classList.toggle('bg-accent-50', isActive);
+            row.classList.toggle('dark:bg-accent-950/20', isActive);
+            row.classList.toggle('border-accent-600', isActive);
+        });
 
         qs('#chat-thread-header').innerHTML = `<p class="text-sm font-semibold">${escapeHtml(label)}</p>`;
         const container = qs('#chat-thread-messages');
-        container.innerHTML = `<p class="text-center text-sm text-zinc-500">Loading...</p>`;
+        container.innerHTML = `<p class="text-center text-sm">${loadingIndicatorHtml()}</p>`;
 
         const result = await apiRequest('get', `/admin/chats/${chatId}/messages`, { page });
         if (!result.ok) {
-            container.innerHTML = `<p class="text-center text-sm text-rose-500">Failed to load messages.</p>`;
+            container.innerHTML = `<p class="text-center text-sm">${errorIndicatorHtml('Failed to load messages.')}</p>`;
             return;
         }
 
@@ -1291,7 +1366,7 @@ function initChatsPage() {
 
         const messages = result.data.data.slice().reverse();
         const bubbles = messages.map((m) => `
-            <div class="max-w-[75%] rounded-2xl px-4 py-2 text-sm ${m.sender?.user_type === 'provider' ? 'ml-auto bg-accent-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800'}">
+            <div class="animate-fade-up max-w-[75%] rounded-2xl px-4 py-2 text-sm ${m.sender?.user_type === 'provider' ? 'ml-auto bg-accent-600 text-white shadow-lg shadow-accent-600/20' : 'bg-zinc-100 dark:bg-zinc-800'}">
                 <p class="mb-0.5 text-xs font-medium opacity-70">${escapeHtml(m.sender?.name)}</p>
                 ${m.media_type === 'text' ? `<p>${escapeHtml(m.message)}</p>` : renderAttachment(m)}
                 <p class="mt-1 text-right text-[10px] opacity-60">${new Date(m.created_at).toLocaleString()}</p>
@@ -1299,7 +1374,7 @@ function initChatsPage() {
         `).join('');
 
         const loadOlderButton = threadHasMore
-            ? `<button id="load-older-messages" class="mx-auto block text-xs text-accent-600 hover:underline dark:text-accent-400">Load older messages</button>`
+            ? `<button id="load-older-messages" class="mx-auto block text-xs link-action">Load older messages</button>`
             : '';
 
         container.innerHTML = messages.length ? loadOlderButton + bubbles : `<p class="text-center text-sm text-zinc-500">No messages in this chat yet.</p>`;
@@ -1333,9 +1408,7 @@ function initSupportTicketsPage() {
     let activeTicketStatus = null;
 
     function statusBadge(status) {
-        return status === 'closed'
-            ? `<span class="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">Closed</span>`
-            : `<span class="rounded-full bg-accent-50 px-2 py-0.5 text-[11px] font-medium text-accent-700 dark:bg-accent-950/30 dark:text-accent-400">Open</span>`;
+        return status === 'closed' ? badgeHtml('Closed', 'zinc') : badgeHtml('Open', 'accent');
     }
 
     function renderAttachment(item) {
@@ -1346,7 +1419,7 @@ function initSupportTicketsPage() {
     }
 
     async function loadTickets() {
-        list.innerHTML = `<div class="p-4 text-center text-sm text-zinc-500">Loading...</div>`;
+        list.innerHTML = `${loadingIndicatorHtml()}`;
         const result = await apiRequest('get', '/admin/support-tickets', {
             page: listPage,
             search: qs('#tickets-search').value || undefined,
@@ -1354,14 +1427,14 @@ function initSupportTicketsPage() {
         });
 
         if (!result.ok) {
-            list.innerHTML = `<div class="p-4 text-center text-sm text-rose-500">Failed to load tickets.</div>`;
+            list.innerHTML = errorIndicatorHtml('Failed to load tickets.');
             return;
         }
 
         const tickets = result.data.data;
         list.innerHTML = tickets.length ? tickets.map((ticket) => `
             <button type="button" data-ticket-id="${ticket.id}"
-                class="ticket-row block w-full px-4 py-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 ${activeTicketId == ticket.id ? 'bg-accent-50 dark:bg-accent-950/20' : ''}">
+                class="ticket-row animate-fade-up block w-full border-l-2 border-transparent px-4 py-3 text-left transition-colors duration-150 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 ${activeTicketId == ticket.id ? 'border-accent-600 bg-accent-50 dark:bg-accent-950/20' : ''}">
                 <div class="flex items-center justify-between gap-2">
                     <p class="truncate text-sm font-medium">${escapeHtml(ticket.subject)}</p>
                     ${statusBadge(ticket.status)}
@@ -1383,10 +1456,10 @@ function initSupportTicketsPage() {
         composer.innerHTML = `
             <form id="ticket-reply-form" class="space-y-2">
                 <textarea id="ticket-reply-message" rows="2" placeholder="Write a reply..."
-                    class="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"></textarea>
+                    class="w-full input-field-sm"></textarea>
                 <div class="flex items-center justify-between gap-2">
                     <input id="ticket-reply-attachment" type="file" class="text-xs">
-                    <button type="submit" class="rounded-lg bg-accent-600 px-4 py-2 text-sm font-medium text-white hover:bg-accent-700">
+                    <button type="submit" class="btn btn-primary">
                         <span data-label-idle>Send</span>
                         <span data-label-busy class="hidden">Sending...</span>
                     </button>
@@ -1419,12 +1492,17 @@ function initSupportTicketsPage() {
 
     async function loadThread(ticketId) {
         activeTicketId = ticketId;
-        qsa('.ticket-row', list).forEach((row) => row.classList.toggle('bg-accent-50', row.dataset.ticketId == ticketId));
+        qsa('.ticket-row', list).forEach((row) => {
+            const isActive = row.dataset.ticketId == ticketId;
+            row.classList.toggle('bg-accent-50', isActive);
+            row.classList.toggle('dark:bg-accent-950/20', isActive);
+            row.classList.toggle('border-accent-600', isActive);
+        });
 
         const header = qs('#ticket-thread-header');
         const container = qs('#ticket-thread-messages');
-        header.innerHTML = `<p class="text-sm text-zinc-500">Loading...</p>`;
-        container.innerHTML = `<p class="text-center text-sm text-zinc-500">Loading...</p>`;
+        header.innerHTML = `<p class="text-sm">${loadingIndicatorHtml()}</p>`;
+        container.innerHTML = `<p class="text-center text-sm">${loadingIndicatorHtml()}</p>`;
         qs('#ticket-thread-composer').innerHTML = '';
 
         const [ticketResult, repliesResult] = await Promise.all([
@@ -1433,7 +1511,7 @@ function initSupportTicketsPage() {
         ]);
 
         if (!ticketResult.ok || !repliesResult.ok) {
-            container.innerHTML = `<p class="text-center text-sm text-rose-500">Failed to load ticket.</p>`;
+            container.innerHTML = `<p class="text-center text-sm">${errorIndicatorHtml('Failed to load ticket.')}</p>`;
             return;
         }
 
@@ -1448,7 +1526,7 @@ function initSupportTicketsPage() {
             <div class="flex items-center gap-2">
                 ${statusBadge(ticket.status)}
                 <button id="ticket-toggle-status" data-action="${ticket.status === 'closed' ? 'reopen' : 'close'}"
-                    class="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800">
+                    class="btn btn-secondary px-3 py-1.5 text-xs">
                     ${ticket.status === 'closed' ? 'Reopen' : 'Close'}
                 </button>
             </div>
@@ -1467,7 +1545,7 @@ function initSupportTicketsPage() {
 
         const replies = repliesResult.data.data.slice().reverse();
         const descriptionBubble = `
-            <div class="max-w-[85%] rounded-2xl bg-zinc-100 px-4 py-2 text-sm dark:bg-zinc-800">
+            <div class="animate-fade-up max-w-[85%] rounded-2xl bg-zinc-100 px-4 py-2 text-sm dark:bg-zinc-800">
                 <p class="mb-0.5 text-xs font-medium opacity-70">${escapeHtml(ticket.user?.name)}</p>
                 <p>${escapeHtml(ticket.description)}</p>
                 ${renderAttachment(ticket)}
@@ -1475,7 +1553,7 @@ function initSupportTicketsPage() {
             </div>
         `;
         const bubbles = replies.map((r) => `
-            <div class="max-w-[85%] rounded-2xl px-4 py-2 text-sm ${r.sender?.user_type === 'admin' ? 'ml-auto bg-accent-600 text-white' : 'bg-zinc-100 dark:bg-zinc-800'}">
+            <div class="animate-fade-up max-w-[85%] rounded-2xl px-4 py-2 text-sm ${r.sender?.user_type === 'admin' ? 'ml-auto bg-accent-600 text-white shadow-lg shadow-accent-600/20' : 'bg-zinc-100 dark:bg-zinc-800'}">
                 <p class="mb-0.5 text-xs font-medium opacity-70">${escapeHtml(r.sender?.name)}</p>
                 ${r.message ? `<p>${escapeHtml(r.message)}</p>` : ''}
                 ${renderAttachment(r)}
@@ -1580,7 +1658,7 @@ function initNotificationsIndexPage() {
     }
 
     async function load() {
-        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-sm text-zinc-500">Loading...</td></tr>`;
+        tbody.innerHTML = loadingRow(7);
         const result = await apiRequest('get', '/admin/notifications', {
             page,
             user_id: qs('#notifications-user-id-filter').value || undefined,
@@ -1589,22 +1667,22 @@ function initNotificationsIndexPage() {
         });
 
         if (!result.ok) {
-            tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-sm text-rose-500">Failed to load notifications.</td></tr>`;
+            tbody.innerHTML = errorRow(7, 'Failed to load notifications.');
             return;
         }
 
         const notifications = result.data.data;
         tbody.innerHTML = notifications.length ? notifications.map((n) => `
-            <tr class="border-b border-zinc-100 dark:border-zinc-800">
+            <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
                 <td class="py-3 px-4">${renderIcon(n.icon)}</td>
                 <td class="py-3 px-4 text-sm font-medium">${escapeHtml(n.title)}</td>
                 <td class="py-3 px-4 max-w-xs truncate text-sm text-zinc-500 dark:text-zinc-400">${escapeHtml(n.description)}</td>
                 <td class="py-3 px-4 text-sm">${actionLabels[n.action] || escapeHtml(n.action)}</td>
                 <td class="py-3 px-4 text-sm">${escapeHtml(n.user?.name || '—')}</td>
                 <td class="py-3 px-4 text-sm text-zinc-500 dark:text-zinc-400">${formatDate(n.timestamp)}</td>
-                <td class="py-3 px-4">${n.is_read ? '<span class="text-sm text-emerald-600">Read</span>' : '<span class="text-sm text-zinc-400">Unread</span>'}</td>
+                <td class="py-3 px-4">${n.is_read ? badgeHtml('Read', 'green') : badgeHtml('Unread', 'zinc')}</td>
             </tr>
-        `).join('') : `<tr><td colspan="7" class="py-6 text-center text-sm text-zinc-500">No notifications found.</td></tr>`;
+        `).join('') : emptyRow(7, 'No notifications found.');
 
         renderPagination(qs('#notifications-pagination'), result.data.meta, (p) => { page = p; load(); });
     }
@@ -1624,6 +1702,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initLogout();
     wireModalDismiss();
     initFilePreviews();
+    initMobileNav();
+    initSpotlight();
 
     switch (document.body.dataset.page) {
         case 'users-clients':

@@ -35,11 +35,44 @@ class PayoutController extends Controller
 
     public function updateStatus(UpdatePayoutStatusRequest $request, Payout $payout)
     {
+        if ($request->status === 'paid' && $payout->status === 'paid') {
+            return $this->error('This payout has already been marked as paid.', 422);
+        }
+
         $data = ['status' => $request->status];
         if ($request->status === 'paid') {
             $data['paid_at'] = now();
         }
-        $payout->update($data);
-        return $this->success(new PayoutResource($payout), 'Payout status updated.');
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($payout, $request, $data) {
+            $oldStatus = $payout->status;
+            $payout->update($data);
+
+            if ($request->status === 'paid' && $oldStatus !== 'paid') {
+                $provider = $payout->provider;
+                if ($provider) {
+                    $wallet = \App\Models\Wallet::firstOrCreate(['user_id' => $provider->user_id]);
+                    $wallet->decrement('balance', $payout->amount);
+
+                    \App\Models\WalletTransaction::create([
+                        'wallet_id'   => $wallet->id,
+                        'type'        => 'debit',
+                        'amount'      => $payout->amount,
+                        'source_type' => 'payout',
+                        'source_id'   => $payout->id,
+                    ]);
+
+                    \App\Services\NotificationService::send(
+                        $provider->user_id,
+                        'Payout Processed',
+                        'Your payout request of ' . $payout->amount . ' has been marked as paid.',
+                        'payment',
+                        $payout->id
+                    );
+                }
+            }
+        });
+
+        return $this->success(new PayoutResource($payout->load(['provider.user', 'serviceRequest'])), 'Payout status updated.');
     }
 }
