@@ -49,7 +49,7 @@ class CallController extends Controller
     public function end(Request $request, ChatRoom $chatRoom, Call $call)
     {
         $user = $request->user();
-        if (!$chatRoom->hasParticipant($user) || $call->chat_id !== $chatRoom->id) {
+        if (!$chatRoom->hasParticipant($user) || (int) $call->chat_id !== (int) $chatRoom->id) {
             return $this->error('You are not a participant in this call.', 403);
         }
 

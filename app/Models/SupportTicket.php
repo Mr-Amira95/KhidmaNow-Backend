@@ -49,6 +49,6 @@ class SupportTicket extends Model
      */
     public function isParticipant(User $user): bool
     {
-        return $this->user_id === $user->id || $user->user_type === 'admin';
+        return (int) $this->user_id === (int) $user->id || $user->user_type === 'admin';
     }
 }

@@ -1,4 +1,7 @@
 import './bootstrap';
+import { initThemeToggle } from './theme';
+
+const I18N = window.AUTH_I18N || {};
 
 const BANNER_ERROR_CLASSES = 'mb-5 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300';
 const BANNER_SUCCESS_CLASSES = 'mb-5 flex items-start gap-2 rounded-lg border border-accent-200 bg-accent-50 px-4 py-3 text-sm text-accent-700 dark:border-accent-900/50 dark:bg-accent-950/30 dark:text-accent-300';
@@ -19,8 +22,22 @@ async function apiPost(path, body) {
         if (error.response) {
             return { ok: false, status: error.response.status, data: error.response.data || {} };
         }
-        return { ok: false, status: 0, data: { message: 'Could not reach the server. Check your connection and try again.' } };
+        return { ok: false, status: 0, data: { message: I18N.common?.network_error || 'Could not reach the server. Check your connection and try again.' } };
     }
+}
+
+function triggerShake(el) {
+    if (!el) return;
+    el.classList.remove('animate-shake');
+    void el.offsetWidth;
+    el.classList.add('animate-shake');
+}
+
+function triggerFadeDown(el) {
+    if (!el) return;
+    el.classList.remove('animate-fade-down');
+    void el.offsetWidth;
+    el.classList.add('animate-fade-down');
 }
 
 function showBanner(message, type = 'error') {
@@ -29,6 +46,8 @@ function showBanner(message, type = 'error') {
     banner.className = type === 'error' ? BANNER_ERROR_CLASSES : BANNER_SUCCESS_CLASSES;
     const icon = type === 'error' ? 'ph-warning-circle' : 'ph-check-circle';
     banner.innerHTML = `<i class="ph ${icon} mt-0.5 text-base"></i><span>${message}</span>`;
+    triggerFadeDown(banner);
+    if (type === 'error') triggerShake(banner);
 }
 
 function hideBanner() {
@@ -54,9 +73,11 @@ function setFieldErrors(form, errors = {}) {
         if (errorEl) {
             errorEl.textContent = message;
             errorEl.classList.remove('hidden');
+            triggerFadeDown(errorEl);
         }
         if (input) {
             input.classList.add('border-rose-400', 'focus:ring-rose-500', 'focus:border-rose-500');
+            triggerShake(input.closest('.group') || input);
         }
     });
 }
@@ -104,9 +125,19 @@ function initLoginPage() {
     const form = qs('#login-form');
     if (!form) return;
 
+    const t = I18N.login || {};
+
     const params = new URLSearchParams(window.location.search);
     if (params.get('reset') === 'success') {
-        showBanner('Your password has been reset. Sign in with your new password.', 'success');
+        showBanner(t.reset_success || 'Your password has been reset. Sign in with your new password.', 'success');
+    }
+
+    const rememberedLogin = localStorage.getItem('admin_remember_login');
+    if (rememberedLogin) {
+        const loginInput = qs('#login', form);
+        const rememberInput = qs('#remember', form);
+        if (loginInput) loginInput.value = rememberedLogin;
+        if (rememberInput) rememberInput.checked = true;
     }
 
     form.addEventListener('submit', async (event) => {
@@ -117,8 +148,11 @@ function initLoginPage() {
         const button = qs('button[type="submit"]', form);
         setLoading(button, true);
 
+        const loginValue = qs('#login', form).value.trim();
+        const remember = qs('#remember', form)?.checked;
+
         const payload = {
-            login: qs('#login', form).value.trim(),
+            login: loginValue,
             password: qs('#password', form).value,
             device_name: 'Admin Web Portal',
         };
@@ -127,6 +161,11 @@ function initLoginPage() {
         setLoading(button, false);
 
         if (result.ok) {
+            if (remember) {
+                localStorage.setItem('admin_remember_login', loginValue);
+            } else {
+                localStorage.removeItem('admin_remember_login');
+            }
             localStorage.setItem('admin_token', result.data.data.token);
             localStorage.setItem('admin_user', JSON.stringify(result.data.data.user));
             window.location.href = '/admin/dashboard';
@@ -135,13 +174,13 @@ function initLoginPage() {
 
         if (result.status === 422) {
             setFieldErrors(form, result.data.errors);
-            showBanner('Please fix the highlighted fields.');
+            showBanner(t.fix_fields || 'Please fix the highlighted fields.');
         } else if (result.status === 401) {
-            showBanner('That email/phone or password is incorrect.');
+            showBanner(t.invalid_credentials || 'That email/phone or password is incorrect.');
         } else if (result.status === 403) {
-            showBanner(result.data.message || 'This account is inactive. Contact an administrator.');
+            showBanner(result.data.message || t.inactive_account || 'This account is inactive. Contact an administrator.');
         } else {
-            showBanner(result.data.message || 'Something went wrong. Please try again.');
+            showBanner(result.data.message || I18N.common?.generic_error || 'Something went wrong. Please try again.');
         }
     });
 }
@@ -149,6 +188,11 @@ function initLoginPage() {
 function initForgotPasswordPage() {
     const form = qs('#forgot-password-form');
     if (!form) return;
+
+    const t = I18N.forgot_password || {};
+    const panel = qs('#forgot-password-panel');
+    const successPanel = qs('#forgot-password-success');
+    const successMasked = qs('#success-masked-login');
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -164,16 +208,27 @@ function initForgotPasswordPage() {
 
         if (result.ok) {
             sessionStorage.setItem('admin_reset_login', login);
-            window.location.href = '/admin/verify-code';
+
+            if (panel && successPanel) {
+                if (successMasked) successMasked.textContent = maskLogin(login);
+                panel.classList.add('hidden');
+                successPanel.classList.remove('hidden');
+                successPanel.classList.add('animate-scale-in');
+                setTimeout(() => {
+                    window.location.href = '/admin/verify-code';
+                }, 1100);
+            } else {
+                window.location.href = '/admin/verify-code';
+            }
             return;
         }
 
         if (result.status === 422) {
             setFieldErrors(form, result.data.errors);
         } else if (result.status === 404) {
-            showBanner('We could not find an account with that email or phone.');
+            showBanner(t.not_found || 'We could not find an account with that email or phone.');
         } else {
-            showBanner(result.data.message || 'Something went wrong. Please try again.');
+            showBanner(result.data.message || I18N.common?.generic_error || 'Something went wrong. Please try again.');
         }
     });
 }
@@ -181,6 +236,8 @@ function initForgotPasswordPage() {
 function initVerifyCodePage() {
     const form = qs('#verify-code-form');
     if (!form) return;
+
+    const t = I18N.verify_code || {};
 
     const login = sessionStorage.getItem('admin_reset_login');
     if (!login) {
@@ -215,20 +272,25 @@ function initVerifyCodePage() {
     let cooldownTimer = null;
     const resendButton = qs('#resend-code');
 
+    function resendLabel(seconds) {
+        const template = t.resend_countdown || 'Resend code (:seconds s)';
+        return template.replace(':seconds', seconds);
+    }
+
     function startCooldown(seconds = 30) {
         let remaining = seconds;
         if (!resendButton) return;
         resendButton.disabled = true;
-        resendButton.textContent = `Resend code (${remaining}s)`;
+        resendButton.textContent = resendLabel(remaining);
         cooldownTimer = setInterval(() => {
             remaining -= 1;
             if (remaining <= 0) {
                 clearInterval(cooldownTimer);
                 resendButton.disabled = false;
-                resendButton.textContent = 'Resend code';
+                resendButton.textContent = t.resend || 'Resend code';
                 return;
             }
-            resendButton.textContent = `Resend code (${remaining}s)`;
+            resendButton.textContent = resendLabel(remaining);
         }, 1000);
     }
 
@@ -240,10 +302,10 @@ function initVerifyCodePage() {
             hideBanner();
             const result = await apiPost('/forget-password', { login });
             if (result.ok) {
-                showBanner('A new code has been sent.', 'success');
+                showBanner(t.resend_success || 'A new code has been sent.', 'success');
                 startCooldown();
             } else {
-                showBanner(result.data.message || 'Could not resend the code. Try again shortly.');
+                showBanner(result.data.message || t.resend_error || 'Could not resend the code. Try again shortly.');
             }
         });
     }
@@ -254,7 +316,8 @@ function initVerifyCodePage() {
 
         const code = boxes.map((box) => box.value).join('');
         if (code.length < boxes.length) {
-            showBanner('Enter the full 4-digit code.');
+            showBanner(t.incomplete_code || 'Enter the full 4-digit code.');
+            triggerShake(boxes[0]?.parentElement);
             return;
         }
 
@@ -270,7 +333,8 @@ function initVerifyCodePage() {
             return;
         }
 
-        showBanner(result.data.message || 'That code is invalid or has expired.');
+        showBanner(result.data.message || t.invalid_code || 'That code is invalid or has expired.');
+        triggerShake(boxes[0]?.parentElement);
         boxes.forEach((box) => { box.value = ''; });
         if (boxes[0]) boxes[0].focus();
     });
@@ -279,6 +343,8 @@ function initVerifyCodePage() {
 function initResetPasswordPage() {
     const form = qs('#reset-password-form');
     if (!form) return;
+
+    const t = I18N.reset_password || {};
 
     const login = sessionStorage.getItem('admin_reset_login');
     const code = sessionStorage.getItem('admin_reset_code');
@@ -296,11 +362,11 @@ function initResetPasswordPage() {
         const confirmation = qs('#password_confirmation', form).value;
 
         if (password.length < 8) {
-            setFieldErrors(form, { password: ['Password must be at least 8 characters.'] });
+            setFieldErrors(form, { password: [t.password_too_short || 'Password must be at least 8 characters.'] });
             return;
         }
         if (password !== confirmation) {
-            setFieldErrors(form, { password_confirmation: ['Passwords do not match.'] });
+            setFieldErrors(form, { password_confirmation: [t.password_mismatch || 'Passwords do not match.'] });
             return;
         }
 
@@ -325,7 +391,7 @@ function initResetPasswordPage() {
         if (result.status === 422 && result.data.errors) {
             setFieldErrors(form, result.data.errors);
         } else {
-            showBanner(result.data.message || 'That code has expired. Please request a new one.');
+            showBanner(result.data.message || t.expired || 'That code has expired. Please request a new one.');
         }
     });
 }
@@ -363,6 +429,7 @@ function initDashboardPage() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initPasswordToggles();
+    initThemeToggle();
 
     switch (document.body.dataset.page) {
         case 'login':

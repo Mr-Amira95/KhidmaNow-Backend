@@ -18,7 +18,7 @@ class PaymentController extends Controller
     public function checkout(CheckoutRequest $request, ServiceRequest $serviceRequest)
     {
         $user = $request->user();
-        if ($user->user_type !== 'customer' || $serviceRequest->user_id !== $user->id) {
+        if ($user->user_type !== 'customer' || (int) $serviceRequest->user_id !== (int) $user->id) {
             return $this->error('You are not allowed to pay for this request.', 403);
         }
 
@@ -41,7 +41,7 @@ class PaymentController extends Controller
     public function confirm(Request $request, Payment $payment)
     {
         $user = $request->user();
-        if ($user->user_type !== 'customer' || $payment->user_id !== $user->id) {
+        if ($user->user_type !== 'customer' || (int) $payment->user_id !== (int) $user->id) {
             return $this->error('You are not allowed to confirm this payment.', 403);
         }
 

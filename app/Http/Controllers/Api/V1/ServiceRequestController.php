@@ -86,7 +86,7 @@ class ServiceRequestController extends Controller
     public function updateStatus(UpdateServiceRequestStatusRequest $request, ServiceRequest $serviceRequest, ServiceRequestStatusService $statusService)
     {
         $user = $request->user();
-        if ($user->user_type !== 'customer' || $serviceRequest->user_id !== $user->id) {
+        if ($user->user_type !== 'customer' || (int) $serviceRequest->user_id !== (int) $user->id) {
             return $this->error('You are not allowed to change this request.', 403);
         }
 
@@ -102,9 +102,9 @@ class ServiceRequestController extends Controller
     private function isParticipant($user, ServiceRequest $serviceRequest): bool
     {
         if ($user->user_type === 'provider') {
-            return $user->provider && $serviceRequest->provider_id === $user->provider->id;
+            return $user->provider && (int) $serviceRequest->provider_id === (int) $user->provider->id;
         }
 
-        return $serviceRequest->user_id === $user->id;
+        return (int) $serviceRequest->user_id === (int) $user->id;
     }
 }

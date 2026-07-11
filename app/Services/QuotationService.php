@@ -19,7 +19,7 @@ class QuotationService
             throw new InvalidArgumentException("This quotation is already '{$quotation->status}'.");
         }
 
-        if ($bid->quotation_id !== $quotation->id) {
+        if ((int) $bid->quotation_id !== (int) $quotation->id) {
             throw new InvalidArgumentException('This bid does not belong to the given quotation.');
         }
 

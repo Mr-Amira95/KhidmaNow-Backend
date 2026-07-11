@@ -42,7 +42,7 @@ class ServiceRequestController extends Controller
     public function updateStatus(UpdateServiceRequestStatusRequest $request, ServiceRequest $serviceRequest, ServiceRequestStatusService $statusService)
     {
         $provider = $request->user()->provider;
-        if (!$provider || $serviceRequest->provider_id !== $provider->id) {
+        if (!$provider || (int) $serviceRequest->provider_id !== (int) $provider->id) {
             return $this->error('You are not allowed to change this request.', 403);
         }
 

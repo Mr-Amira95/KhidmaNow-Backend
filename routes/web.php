@@ -1,10 +1,27 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/locale/{locale}', function (Request $request, string $locale) {
+    if (in_array($locale, ['en', 'ar'], true)) {
+        $request->session()->put('locale', $locale);
+    }
+
+    $redirect = $request->query('redirect');
+    $allowed = [
+        '/admin/login',
+        '/admin/forgot-password',
+        '/admin/verify-code',
+        '/admin/reset-password',
+    ];
+
+    return redirect(in_array($redirect, $allowed, true) ? $redirect : '/admin/login');
+})->name('locale.switch');
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::view('/login', 'admin.auth.login')->name('login');

@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'provider' => \App\Http\Middleware\ProviderMiddleware::class,
             'customer' => \App\Http\Middleware\CustomerMiddleware::class,
         ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

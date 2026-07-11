@@ -53,11 +53,11 @@ class ChatRoom extends Model
      */
     public function hasParticipant(User $user): bool
     {
-        if ($this->user_id === $user->id) {
+        if ((int) $this->user_id === (int) $user->id) {
             return true;
         }
 
-        return $user->user_type === 'provider' && $user->provider && $this->provider_id === $user->provider->id;
+        return $user->user_type === 'provider' && $user->provider && (int) $this->provider_id === (int) $user->provider->id;
     }
 
     /**

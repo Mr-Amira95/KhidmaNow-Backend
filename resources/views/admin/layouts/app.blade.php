@@ -2,12 +2,14 @@
 <html lang="en" class="h-full">
     <head>
         <meta charset="utf-8">
+        @include('partials.theme-init')
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>@yield('title') &middot; {{ config('app.name') }} Admin</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=cairo:400,500,600,700,900|jetbrains-mono:400,500,600" rel="stylesheet" />
         <link rel="icon" href="/brand/logo_icon.png" type="image/png">
+        <meta name="color-scheme" content="light dark">
         <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
         @vite(['resources/css/app.css', 'resources/js/admin-app.js'])
@@ -127,6 +129,15 @@
                             </span>
                             Live
                         </span>
+                        <button
+                            type="button"
+                            id="theme-toggle"
+                            aria-label="Toggle color theme"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-zinc-200/70 text-zinc-500 transition-colors duration-150 hover:text-accent-600 dark:border-white/10 dark:text-zinc-400 dark:hover:text-accent-400"
+                        >
+                            <i class="ph ph-sun text-base dark:hidden"></i>
+                            <i class="ph ph-moon hidden text-base dark:block"></i>
+                        </button>
                         <div class="flex items-center gap-2 rounded-full border border-zinc-200/70 py-1 pl-1 pr-3 dark:border-white/10">
                             <span class="flex h-6 w-6 items-center justify-center rounded-full bg-accent-600 text-xs font-semibold text-white">
                                 <i class="ph ph-user text-sm"></i>

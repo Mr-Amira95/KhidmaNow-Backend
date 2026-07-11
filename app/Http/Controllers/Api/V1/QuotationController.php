@@ -53,7 +53,7 @@ class QuotationController extends Controller
     {
         $user = $request->user();
 
-        if ($user->user_type === 'customer' && $quotation->user_id !== $user->id) {
+        if ($user->user_type === 'customer' && (int) $quotation->user_id !== (int) $user->id) {
             return $this->error('You are not part of this quotation.', 403);
         }
 
@@ -98,7 +98,7 @@ class QuotationController extends Controller
     public function approveBid(Request $request, Quotation $quotation, QuotationBid $bid, QuotationService $quotationService)
     {
         $user = $request->user();
-        if ($user->user_type !== 'customer' || $quotation->user_id !== $user->id) {
+        if ($user->user_type !== 'customer' || (int) $quotation->user_id !== (int) $user->id) {
             return $this->error('You are not allowed to approve bids on this quotation.', 403);
         }
 

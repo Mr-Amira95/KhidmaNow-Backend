@@ -97,7 +97,7 @@ class ServiceRequestStatusService
 
         // Notify the other participant
         $notifyUserId = null;
-        if ($changedBy->id === $serviceRequest->user_id) {
+        if ((int) $changedBy->id === (int) $serviceRequest->user_id) {
             $notifyUserId = $serviceRequest->provider ? $serviceRequest->provider->user_id : null;
         } else {
             $notifyUserId = $serviceRequest->user_id;

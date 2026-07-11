@@ -33,7 +33,7 @@ class RateController extends Controller
     public function show(Request $request, Rate $rate)
     {
         $user = $request->user();
-        if ($rate->rater_id !== $user->id && $rate->ratee_id !== $user->id) {
+        if ((int) $rate->rater_id !== (int) $user->id && (int) $rate->ratee_id !== (int) $user->id) {
             return $this->error('You are not part of this feedback.', 403);
         }
 
@@ -50,13 +50,13 @@ class RateController extends Controller
         }
 
         if ($user->user_type === 'provider') {
-            if (!$user->provider || $serviceRequest->provider_id !== $user->provider->id) {
+            if (!$user->provider || (int) $serviceRequest->provider_id !== (int) $user->provider->id) {
                 return $this->error('You are not part of this request.', 403);
             }
             $ratingType = 'customer';
             $rateeId = $serviceRequest->user_id;
         } else {
-            if ($serviceRequest->user_id !== $user->id) {
+            if ((int) $serviceRequest->user_id !== (int) $user->id) {
                 return $this->error('You are not part of this request.', 403);
             }
             $serviceRequest->loadMissing('provider');
