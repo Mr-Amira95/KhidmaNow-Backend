@@ -1019,8 +1019,22 @@
                 "key": "Accept",
                 "value": "application/json",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_token\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
               "raw": "{{base_url}}/api/v1/logout",
               "host": [
@@ -1032,7 +1046,7 @@
                 "logout"
               ]
             },
-            "description": "Revokes the current access token."
+            "description": "Revokes the current access token. Optionally pass device_token to remove the device's push-notification token."
           },
           "response": [
             {

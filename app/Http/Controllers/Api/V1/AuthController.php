@@ -128,7 +128,22 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'device_token' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
         $request->user()->currentAccessToken()->delete();
+
+        if ($request->filled('device_token')) {
+            DeviceToken::where('user_id', $request->user()->id)
+                ->where('token', $request->device_token)
+                ->delete();
+        }
+
         return response()->json(['message' => 'Logged out successfully']);
     }
 
