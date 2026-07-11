@@ -11,7 +11,6 @@ use App\Services\SocialAuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class AuthController extends Controller
@@ -65,7 +64,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'provider' => 'required|string|in:google,apple',
             'id_token' => 'required|string',
-            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email',
             'device_name' => 'required|string',
             'device_token' => 'nullable|string',
             'platform' => 'required_with:device_token|in:ios,android',
@@ -87,7 +86,7 @@ class AuthController extends Controller
 
         $providerIdField = $request->provider === 'google' ? 'google_id' : 'apple_id';
         $providerId = $claims['sub'] ?? null;
-        $email = $claims['email'] ?? null;
+        $email = $request->email ?? $claims['email'] ?? null;
 
         if (!$providerId) {
             return response()->json(['message' => 'Invalid social login token.'], 401);
@@ -97,21 +96,14 @@ class AuthController extends Controller
 
         if (!$user && $email) {
             $user = User::where('email', $email)->first();
+
+            if ($user) {
+                $user->update([$providerIdField => $providerId]);
+            }
         }
 
-        if ($user) {
-            if (!$user->{$providerIdField}) {
-                $user->update([$providerIdField => $providerId, 'email' => $user->email ?? $email]);
-            }
-        } else {
-            $user = User::create([
-                'name' => $request->name ?? $claims['name'] ?? 'KhidmaNow User',
-                'email' => $email,
-                $providerIdField => $providerId,
-                'password' => Hash::make(Str::random(32)),
-                'user_type' => 'customer',
-                'status' => 'active',
-            ]);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
         }
 
         if ($user->status !== 'active') {

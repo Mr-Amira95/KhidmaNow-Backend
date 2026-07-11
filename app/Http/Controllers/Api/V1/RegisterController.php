@@ -10,10 +10,12 @@ use App\Models\ProviderDocument;
 use App\Models\ProviderSubCategory;
 use App\Models\User;
 use App\Models\VerificationCode;
+use App\Services\SocialAuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class RegisterController extends Controller
@@ -29,7 +31,9 @@ class RegisterController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|unique:users,phone',
             'email' => 'nullable|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required_without:id_token|string|min:8|confirmed',
+            'provider' => 'required_with:id_token|string|in:google,apple',
+            'id_token' => 'required_without:password|string',
             'code' => 'required|string',
             'device_name' => 'required|string',
             'device_token' => 'nullable|string',
@@ -45,14 +49,20 @@ class RegisterController extends Controller
             return response()->json(['message' => 'Invalid or expired code'], 422);
         }
 
-        $user = User::create([
+        try {
+            $social = $this->resolveSocialAccount($request);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Invalid social login token.'], 401);
+        }
+
+        $user = User::create(array_merge([
             'name' => $request->name,
             'phone' => $request->phone,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => $request->filled('password') ? Hash::make($request->password) : Hash::make(Str::random(32)),
             'user_type' => 'customer',
             'status' => 'active',
-        ]);
+        ], $social));
 
         $verification->delete();
         $this->registerDeviceToken($user, $request);
@@ -74,7 +84,9 @@ class RegisterController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|unique:users,phone',
             'email' => 'nullable|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required_without:id_token|string|min:8|confirmed',
+            'provider' => 'required_with:id_token|string|in:google,apple',
+            'id_token' => 'required_without:password|string',
             'code' => 'required|string',
             'city_id' => 'required|integer|exists:cities,id',
             'business_name' => 'required|string|max:255',
@@ -99,15 +111,21 @@ class RegisterController extends Controller
             return response()->json(['message' => 'Invalid or expired code'], 422);
         }
 
-        $user = DB::transaction(function () use ($request) {
-            $user = User::create([
+        try {
+            $social = $this->resolveSocialAccount($request);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Invalid social login token.'], 401);
+        }
+
+        $user = DB::transaction(function () use ($request, $social) {
+            $user = User::create(array_merge([
                 'name' => $request->name,
                 'phone' => $request->phone,
                 'email' => $request->email,
-                'password' => Hash::make($request->password),
+                'password' => $request->filled('password') ? Hash::make($request->password) : Hash::make(Str::random(32)),
                 'user_type' => 'provider',
                 'status' => 'active',
-            ]);
+            ], $social));
 
             $provider = Provider::create([
                 'user_id' => $user->id,
@@ -153,6 +171,33 @@ class RegisterController extends Controller
             'status' => 'success',
             'data' => ['user' => $user, 'token' => $token],
         ], 201);
+    }
+
+    /**
+     * Verify the optional id_token and return the ['google_id'|'apple_id' => sub] pair to merge into User::create().
+     * Returns an empty array when no id_token was submitted.
+     */
+    private function resolveSocialAccount(Request $request): array
+    {
+        if (!$request->filled('id_token')) {
+            return [];
+        }
+
+        $service = new SocialAuthService();
+
+        $claims = $request->provider === 'google'
+            ? $service->verifyGoogleToken($request->id_token)
+            : $service->verifyAppleToken($request->id_token);
+
+        $providerId = $claims['sub'] ?? null;
+
+        if (!$providerId) {
+            throw new \RuntimeException('Invalid social login token.');
+        }
+
+        $providerIdField = $request->provider === 'google' ? 'google_id' : 'apple_id';
+
+        return [$providerIdField => $providerId];
     }
 
     private function consumeRegistrationCode(string $phone, string $code): ?VerificationCode
