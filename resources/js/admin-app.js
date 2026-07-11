@@ -1,4 +1,6 @@
 ﻿import './bootstrap';
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
 
 const BANNER_ERROR_CLASSES = 'animate-fade-up flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300';
 const BANNER_SUCCESS_CLASSES = 'animate-fade-up flex items-start gap-2 rounded-lg border border-accent-200 bg-accent-50 px-4 py-3 text-sm text-accent-700 dark:border-accent-900/50 dark:bg-accent-950/30 dark:text-accent-300';
@@ -1247,15 +1249,46 @@ function initCmsFaqsPage() {
 // Page: cms/terms & cms/privacy-policy (singleton content pages)
 // ═══════════════════════════════════════════════════════════════════════════
 
+function createHtmlEditor(hiddenInputSelector) {
+    const container = qs(`${hiddenInputSelector}_editor`);
+    const direction = container.dataset.direction === 'rtl' ? 'rtl' : 'ltr';
+
+    const quill = new Quill(container, {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ header: [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                ['link'],
+                ['clean'],
+            ],
+        },
+    });
+
+    quill.root.setAttribute('dir', direction);
+    quill.root.style.textAlign = direction === 'rtl' ? 'right' : 'left';
+
+    return {
+        getHtml: () => (quill.getText().trim() ? quill.root.innerHTML : ''),
+        setHtml: (html) => {
+            quill.root.innerHTML = html || '';
+        },
+    };
+}
+
 function initCmsSingletonPage({ pageEl, endpoint, contentArId, contentEnId, formId, bannerSelector }) {
     const page = qs(pageEl);
     if (!page) return;
 
+    const arEditor = createHtmlEditor(contentArId);
+    const enEditor = createHtmlEditor(contentEnId);
+
     async function load() {
         const result = await apiRequest('get', endpoint);
         if (!result.ok) return;
-        qs(contentArId).value = result.data.data.content_ar || '';
-        qs(contentEnId).value = result.data.data.content_en || '';
+        arEditor.setHtml(result.data.data.content_ar || '');
+        enEditor.setHtml(result.data.data.content_en || '');
     }
 
     qs(formId).addEventListener('submit', async (event) => {
@@ -1267,8 +1300,8 @@ function initCmsSingletonPage({ pageEl, endpoint, contentArId, contentEnId, form
         hideBanner(bannerSelector);
 
         const result = await apiRequest('put', endpoint, {
-            content_ar: qs(contentArId).value,
-            content_en: qs(contentEnId).value,
+            content_ar: arEditor.getHtml(),
+            content_en: enEditor.getHtml(),
         });
 
         setLoading(button, false);
