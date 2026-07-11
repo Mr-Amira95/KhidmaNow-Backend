@@ -51,7 +51,7 @@
                 <p class="font-semibold text-zinc-900 dark:text-zinc-50">Categories</p>
                 <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Organize the service catalog and sub-categories.</p>
             </div>
-            <i class="ph ph-arrow-up-right ml-auto text-zinc-300 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent-600 dark:group-hover:text-accent-400"></i>
+            <i class="ph ph-arrow-up-right ml-auto text-zinc-300 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand-orange-600 dark:group-hover:text-brand-orange-400"></i>
         </a>
 
         <a href="/admin/chats" class="spotlight card-surface card-surface-hover group flex items-start gap-4 p-5">
@@ -62,18 +62,18 @@
                 <p class="font-semibold text-zinc-900 dark:text-zinc-50">Chats</p>
                 <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Review conversations between clients and providers.</p>
             </div>
-            <i class="ph ph-arrow-up-right ml-auto text-zinc-300 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent-600 dark:group-hover:text-accent-400"></i>
+            <i class="ph ph-arrow-up-right ml-auto text-zinc-300 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand-green-700 dark:group-hover:text-brand-green-400"></i>
         </a>
 
         <a href="/admin/support-tickets" class="spotlight card-surface card-surface-hover group flex items-start gap-4 p-5">
-            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-700 transition-transform duration-200 group-hover:scale-110 dark:bg-accent-950/40 dark:text-accent-400">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-orange-50 text-brand-orange-600 transition-transform duration-200 group-hover:scale-110 dark:bg-brand-orange-900/20">
                 <i class="ph ph-lifebuoy text-xl"></i>
             </span>
             <div>
                 <p class="font-semibold text-zinc-900 dark:text-zinc-50">Support tickets</p>
                 <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Respond to open tickets and track resolutions.</p>
             </div>
-            <i class="ph ph-arrow-up-right ml-auto text-zinc-300 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent-600 dark:group-hover:text-accent-400"></i>
+            <i class="ph ph-arrow-up-right ml-auto text-zinc-300 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand-orange-600 dark:group-hover:text-brand-orange-400"></i>
         </a>
 
         <a href="/admin/notifications/send" class="spotlight card-surface card-surface-hover group flex items-start gap-4 p-5">
@@ -84,7 +84,7 @@
                 <p class="font-semibold text-zinc-900 dark:text-zinc-50">Send notification</p>
                 <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">Broadcast an announcement to clients or providers.</p>
             </div>
-            <i class="ph ph-arrow-up-right ml-auto text-zinc-300 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent-600 dark:group-hover:text-accent-400"></i>
+            <i class="ph ph-arrow-up-right ml-auto text-zinc-300 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand-orange-600 dark:group-hover:text-brand-orange-400"></i>
         </a>
     </div>
 @endsection

@@ -7,9 +7,9 @@ const BANNER_ERROR_CLASSES = 'animate-fade-up flex items-start gap-2 rounded-lg 
 const BANNER_SUCCESS_CLASSES = 'animate-fade-up flex items-start gap-2 rounded-lg border border-accent-200 bg-accent-50 px-4 py-3 text-sm text-accent-700 dark:border-accent-900/50 dark:bg-accent-950/30 dark:text-accent-300';
 
 const BADGE_COLORS = {
-    green: ['bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400', 'bg-emerald-500'],
+    green: ['bg-brand-green-50 text-brand-green-800 dark:bg-brand-green-900/25 dark:text-brand-green-400', 'bg-brand-green-500'],
+    orange: ['bg-brand-orange-50 text-brand-orange-700 dark:bg-brand-orange-900/20 dark:text-brand-orange-400', 'bg-brand-orange-500'],
     rose: ['bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400', 'bg-rose-500'],
-    amber: ['bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400', 'bg-amber-500'],
     zinc: ['bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300', 'bg-zinc-400'],
     accent: ['bg-accent-50 text-accent-700 dark:bg-accent-950/30 dark:text-accent-400', 'bg-accent-600'],
 };
@@ -55,7 +55,29 @@ function debounce(fn, delay = 350) {
     };
 }
 
-// ─── Auth guard ─────────────────────────────────────────────────────────────
+// ─── Auth guard / permissions ───────────────────────────────────────────────
+
+function isSuperAdmin() {
+    try { return !!JSON.parse(localStorage.getItem('admin_is_super_admin') || 'false'); } catch (e) { return false; }
+}
+
+function getPermissions() {
+    try { return JSON.parse(localStorage.getItem('admin_permissions') || '[]'); } catch (e) { return []; }
+}
+
+function hasPermission(key) {
+    if (isSuperAdmin()) return true;
+    return getPermissions().includes(key);
+}
+
+function applyPermissionVisibility() {
+    qsa('[data-permission]').forEach((el) => {
+        if (!hasPermission(el.dataset.permission)) el.classList.add('hidden');
+    });
+    qsa('[data-requires-super-admin]').forEach((el) => {
+        if (!isSuperAdmin()) el.classList.add('hidden');
+    });
+}
 
 function requireAdminAuth() {
     const token = localStorage.getItem('admin_token');
@@ -76,6 +98,8 @@ function requireAdminAuth() {
     const dashNameEl = qs('#dashboard-user-name');
     if (dashNameEl) dashNameEl.textContent = user.name || user.email || 'Admin';
 
+    applyPermissionVisibility();
+
     return user;
 }
 
@@ -86,6 +110,8 @@ function initLogout() {
         try { await window.axios.post('/api/v1/logout'); } catch (e) { /* ignore */ }
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
+        localStorage.removeItem('admin_is_super_admin');
+        localStorage.removeItem('admin_permissions');
         window.location.href = '/admin/login';
     });
 }
@@ -310,8 +336,8 @@ function initUsersClientsPage() {
                     <td class="py-3 px-4 text-sm text-zinc-500">${formatDate(c.created_at)}</td>
                     <td class="py-3 px-4 text-right text-sm">
                         <button data-action="view" data-id="${c.id}" class="link-action">View</button>
-                        <button data-action="toggle-block" data-id="${c.id}" data-status="${c.status}" class="ml-3 link-action">${c.status === 'blocked' ? 'Unblock' : 'Block'}</button>
-                        <button data-action="delete" data-id="${c.id}" class="ml-3 link-action-danger">Delete</button>
+                        ${hasPermission('clients.block') ? `<button data-action="toggle-block" data-id="${c.id}" data-status="${c.status}" class="ml-3 link-action">${c.status === 'blocked' ? 'Unblock' : 'Block'}</button>` : ''}
+                        ${hasPermission('clients.delete') ? `<button data-action="delete" data-id="${c.id}" class="ml-3 link-action-danger">Delete</button>` : ''}
                     </td>
                 </tr>
             `).join('');
@@ -321,7 +347,7 @@ function initUsersClientsPage() {
     }
 
     function statusBadge(status) {
-        const color = status === 'active' ? 'green' : status === 'blocked' ? 'rose' : 'amber';
+        const color = status === 'active' ? 'green' : status === 'blocked' ? 'rose' : 'orange';
         return badgeHtml(status, color);
     }
 
@@ -422,11 +448,11 @@ function initUsersProvidersPage() {
                     <td class="py-3 px-4 text-sm">${escapeHtml(p.user?.name)}<br><span class="text-zinc-400">${escapeHtml(p.user?.phone)}</span></td>
                     <td class="py-3 px-4 text-sm">${escapeHtml(p.city?.name_en) || '—'}</td>
                     <td class="py-3 px-4 text-sm">${p.availability_status}</td>
-                    <td class="py-3 px-4">${p.is_verified ? badgeHtml('Verified', 'green') : badgeHtml('Pending', 'amber')}</td>
+                    <td class="py-3 px-4">${p.is_verified ? badgeHtml('Verified', 'green') : badgeHtml('Pending', 'orange')}</td>
                     <td class="py-3 px-4 text-right text-sm">
                         <button data-action="view" data-id="${p.id}" class="link-action">View</button>
-                        <button data-action="toggle-verify" data-id="${p.id}" data-verified="${p.is_verified ? '1' : '0'}" class="ml-3 link-action">${p.is_verified ? 'Unverify' : 'Verify'}</button>
-                        <button data-action="delete" data-id="${p.id}" class="ml-3 link-action-danger">Delete</button>
+                        ${hasPermission('providers.verify') ? `<button data-action="toggle-verify" data-id="${p.id}" data-verified="${p.is_verified ? '1' : '0'}" class="ml-3 link-action">${p.is_verified ? 'Unverify' : 'Verify'}</button>` : ''}
+                        ${hasPermission('providers.delete') ? `<button data-action="delete" data-id="${p.id}" class="ml-3 link-action-danger">Delete</button>` : ''}
                     </td>
                 </tr>
             `).join('');
@@ -459,9 +485,9 @@ function initUsersProvidersPage() {
                         <div class="flex items-center justify-between rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-700 mb-2">
                             <a href="${doc.document_url}" target="_blank" class="link-action">${doc.type}</a>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs text-zinc-400">${doc.status}</span>
-                                ${doc.status === 'pending' ? `
-                                    <button data-doc-action="approve" data-doc-id="${doc.id}" class="text-emerald-600 hover:underline">Approve</button>
+                                ${badgeHtml(doc.status, doc.status === 'approved' ? 'green' : doc.status === 'rejected' ? 'rose' : 'orange')}
+                                ${doc.status === 'pending' && hasPermission('providers.manage_documents') ? `
+                                    <button data-doc-action="approve" data-doc-id="${doc.id}" class="text-brand-green-700 hover:underline dark:text-brand-green-400">Approve</button>
                                     <button data-doc-action="reject" data-doc-id="${doc.id}" class="text-rose-600 hover:underline">Reject</button>
                                 ` : ''}
                             </div>
@@ -546,8 +572,8 @@ function initCategoriesPage() {
                 <td class="py-3 px-4">${c.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
                     <button data-action="manage" data-id="${c.id}" class="link-action">Sub-categories</button>
-                    <button data-action="edit" data-id="${c.id}" class="ml-3 link-action">Edit</button>
-                    <button data-action="delete" data-id="${c.id}" class="ml-3 link-action-danger">Delete</button>
+                    ${hasPermission('categories.edit') ? `<button data-action="edit" data-id="${c.id}" class="ml-3 link-action">Edit</button>` : ''}
+                    ${hasPermission('categories.delete') ? `<button data-action="delete" data-id="${c.id}" class="ml-3 link-action-danger">Delete</button>` : ''}
                 </td>
             </tr>
         `).join('');
@@ -569,8 +595,8 @@ function initCategoriesPage() {
                 <td class="py-2 px-4 text-sm">${escapeHtml(s.name_en)}<br><span class="text-zinc-400">${escapeHtml(s.name_ar)}</span></td>
                 <td class="py-2 px-4">${s.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-2 px-4 text-right text-sm">
-                    <button data-action="edit-sub" data-id="${s.id}" class="link-action">Edit</button>
-                    <button data-action="delete-sub" data-id="${s.id}" class="ml-3 link-action-danger">Delete</button>
+                    ${hasPermission('categories.edit') ? `<button data-action="edit-sub" data-id="${s.id}" class="link-action">Edit</button>` : ''}
+                    ${hasPermission('categories.delete') ? `<button data-action="delete-sub" data-id="${s.id}" class="ml-3 link-action-danger">Delete</button>` : ''}
                 </td>
             </tr>
         `).join('') : emptyRow(4, 'No sub-categories yet.');
@@ -744,8 +770,8 @@ function initLocationsCountriesPage() {
                 <td class="py-3 px-4 text-sm">${escapeHtml(c.phone_code)}</td>
                 <td class="py-3 px-4">${c.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
-                    <button data-action="edit" data-id="${c.id}" class="link-action">Edit</button>
-                    <button data-action="delete" data-id="${c.id}" class="ml-3 link-action-danger">Delete</button>
+                    ${hasPermission('countries.edit') ? `<button data-action="edit" data-id="${c.id}" class="link-action">Edit</button>` : ''}
+                    ${hasPermission('countries.delete') ? `<button data-action="delete" data-id="${c.id}" class="ml-3 link-action-danger">Delete</button>` : ''}
                 </td>
             </tr>
         `).join('') : emptyRow(6, 'No countries yet.');
@@ -859,8 +885,8 @@ function initLocationsCitiesPage() {
                 <td class="py-3 px-4 text-sm">${escapeHtml(c.country?.name_en) || '—'}</td>
                 <td class="py-3 px-4">${c.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
-                    <button data-action="edit" data-id="${c.id}" class="link-action">Edit</button>
-                    <button data-action="delete" data-id="${c.id}" class="ml-3 link-action-danger">Delete</button>
+                    ${hasPermission('cities.edit') ? `<button data-action="edit" data-id="${c.id}" class="link-action">Edit</button>` : ''}
+                    ${hasPermission('cities.delete') ? `<button data-action="delete" data-id="${c.id}" class="ml-3 link-action-danger">Delete</button>` : ''}
                 </td>
             </tr>
         `).join('') : emptyRow(4, 'No cities yet.');
@@ -968,8 +994,8 @@ function initLocationsAreasPage() {
                 <td class="py-3 px-4 text-sm">${escapeHtml(a.city?.name_en) || '—'}</td>
                 <td class="py-3 px-4">${a.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
-                    <button data-action="edit" data-id="${a.id}" class="link-action">Edit</button>
-                    <button data-action="delete" data-id="${a.id}" class="ml-3 link-action-danger">Delete</button>
+                    ${hasPermission('areas.edit') ? `<button data-action="edit" data-id="${a.id}" class="link-action">Edit</button>` : ''}
+                    ${hasPermission('areas.delete') ? `<button data-action="delete" data-id="${a.id}" class="ml-3 link-action-danger">Delete</button>` : ''}
                 </td>
             </tr>
         `).join('') : emptyRow(4, 'No areas yet.');
@@ -1067,8 +1093,8 @@ function initCmsIntroScreensPage() {
                 <td class="py-3 px-4 text-sm">${s.order}</td>
                 <td class="py-3 px-4">${s.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
-                    <button data-action="edit" data-id="${s.id}" class="link-action">Edit</button>
-                    <button data-action="delete" data-id="${s.id}" class="ml-3 link-action-danger">Delete</button>
+                    ${hasPermission('intro_screens.edit') ? `<button data-action="edit" data-id="${s.id}" class="link-action">Edit</button>` : ''}
+                    ${hasPermission('intro_screens.delete') ? `<button data-action="delete" data-id="${s.id}" class="ml-3 link-action-danger">Delete</button>` : ''}
                 </td>
             </tr>
         `).join('') : emptyRow(5, 'No intro screens yet.');
@@ -1167,8 +1193,8 @@ function initCmsFaqsPage() {
                 <td class="py-3 px-4 text-sm">${f.order}</td>
                 <td class="py-3 px-4">${f.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
-                    <button data-action="edit" data-id="${f.id}" class="link-action">Edit</button>
-                    <button data-action="delete" data-id="${f.id}" class="ml-3 link-action-danger">Delete</button>
+                    ${hasPermission('faqs.edit') ? `<button data-action="edit" data-id="${f.id}" class="link-action">Edit</button>` : ''}
+                    ${hasPermission('faqs.delete') ? `<button data-action="delete" data-id="${f.id}" class="ml-3 link-action-danger">Delete</button>` : ''}
                 </td>
             </tr>
         `).join('') : emptyRow(4, 'No FAQs yet.');
@@ -1442,7 +1468,7 @@ function initSupportTicketsPage() {
     let activeTicketStatus = null;
 
     function statusBadge(status) {
-        return status === 'closed' ? badgeHtml('Closed', 'zinc') : badgeHtml('Open', 'accent');
+        return status === 'closed' ? badgeHtml('Closed', 'zinc') : badgeHtml('Open', 'orange');
     }
 
     function renderAttachment(item) {
@@ -1482,6 +1508,10 @@ function initSupportTicketsPage() {
 
     function renderComposer(ticketId) {
         const composer = qs('#ticket-thread-composer');
+        if (!hasPermission('support_tickets.reply')) {
+            composer.innerHTML = '';
+            return;
+        }
         if (activeTicketStatus === 'closed') {
             composer.innerHTML = `<p class="text-center text-sm text-zinc-500">This ticket is closed. Reopen it to add a reply.</p>`;
             return;
@@ -1559,14 +1589,16 @@ function initSupportTicketsPage() {
             </div>
             <div class="flex items-center gap-2">
                 ${statusBadge(ticket.status)}
-                <button id="ticket-toggle-status" data-action="${ticket.status === 'closed' ? 'reopen' : 'close'}"
-                    class="btn btn-secondary px-3 py-1.5 text-xs">
-                    ${ticket.status === 'closed' ? 'Reopen' : 'Close'}
-                </button>
+                ${hasPermission('support_tickets.close') ? `
+                    <button id="ticket-toggle-status" data-action="${ticket.status === 'closed' ? 'reopen' : 'close'}"
+                        class="btn btn-secondary px-3 py-1.5 text-xs">
+                        ${ticket.status === 'closed' ? 'Reopen' : 'Close'}
+                    </button>
+                ` : ''}
             </div>
         `;
 
-        qs('#ticket-toggle-status').addEventListener('click', async (event) => {
+        qs('#ticket-toggle-status')?.addEventListener('click', async (event) => {
             const action = event.currentTarget.dataset.action;
             const result = await apiRequest('patch', `/admin/support-tickets/${ticketId}/${action}`);
             if (result.ok) {
@@ -1728,10 +1760,348 @@ function initNotificationsIndexPage() {
     load();
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Page: admins
+// ═══════════════════════════════════════════════════════════════════════════
+
+function initAdminsPage() {
+    const tbody = qs('#admins-table-body');
+    if (!tbody) return;
+
+    let page = 1;
+    let roles = [];
+    let currentAdminId = null;
+    try { currentAdminId = JSON.parse(localStorage.getItem('admin_user') || 'null')?.id ?? null; } catch (e) { currentAdminId = null; }
+
+    async function populateRoleOptions() {
+        const result = await apiRequest('get', '/admin/roles', { per_page: 100 });
+        if (!result.ok) return;
+        roles = result.data.data;
+        const options = roles.map((r) => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+        qs('#admin_role_id').innerHTML = '<option value="">Select a role</option>' + options;
+    }
+
+    function roleNames(admin) {
+        return (admin.roles || []).map((r) => escapeHtml(r.name)).join(', ') || '—';
+    }
+
+    function statusBadge(status) {
+        const color = status === 'active' ? 'green' : status === 'blocked' ? 'rose' : 'orange';
+        return badgeHtml(status, color);
+    }
+
+    async function load() {
+        tbody.innerHTML = loadingRow(6);
+        const result = await apiRequest('get', '/admin/admins', {
+            page,
+            search: qs('#admins-search').value || undefined,
+        });
+
+        if (!result.ok) {
+            tbody.innerHTML = errorRow(6, 'Failed to load admins.');
+            return;
+        }
+
+        const admins = result.data.data;
+        tbody.innerHTML = admins.length ? admins.map((a) => `
+            <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
+                <td class="py-3 px-4 text-sm font-medium">${escapeHtml(a.name)} ${a.is_super_admin ? badgeHtml('Super Admin', 'accent') : ''}</td>
+                <td class="py-3 px-4 text-sm">${escapeHtml(a.phone) || '—'}</td>
+                <td class="py-3 px-4 text-sm">${escapeHtml(a.email) || '—'}</td>
+                <td class="py-3 px-4 text-sm">${a.is_super_admin ? 'Full access' : roleNames(a)}</td>
+                <td class="py-3 px-4">${statusBadge(a.status)}</td>
+                <td class="py-3 px-4 text-right text-sm">
+                    ${a.is_super_admin ? '' : `<button data-action="edit" data-id="${a.id}" class="link-action">Edit</button>`}
+                    ${(!a.is_super_admin && a.id !== currentAdminId) ? `<button data-action="delete" data-id="${a.id}" class="ml-3 link-action-danger">Delete</button>` : ''}
+                </td>
+            </tr>
+        `).join('') : emptyRow(6, 'No admins found.');
+
+        renderPagination(qs('#admins-pagination'), result.data.meta, (p) => { page = p; load(); });
+    }
+
+    function openAdminModal(admin = null) {
+        const form = qs('#admin-form');
+        form.reset();
+        clearFieldErrors(form);
+        hideBanner('#admin-modal-banner');
+        qs('#admin-id').value = admin?.id || '';
+        qs('#admin_name').value = admin?.name || '';
+        qs('#admin_phone').value = admin?.phone || '';
+        qs('#admin_email').value = admin?.email || '';
+        qs('#admin_password').value = '';
+        qs('#admin_password').required = !admin;
+        qs('#admin-password-hint').classList.toggle('hidden', !admin);
+        qs('#admin_role_id').value = admin?.roles?.[0]?.id || '';
+        qs('#admin_status').value = admin?.status || 'active';
+        qs('#admin-modal-title').textContent = admin ? 'Edit Admin' : 'New Admin';
+        openModal('admin-modal');
+    }
+
+    qs('#new-admin-button').addEventListener('click', () => openAdminModal());
+
+    tbody.addEventListener('click', async (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const id = button.dataset.id;
+
+        if (button.dataset.action === 'edit') {
+            const result = await apiRequest('get', `/admin/admins/${id}`);
+            if (result.ok) openAdminModal(result.data.data);
+        }
+
+        if (button.dataset.action === 'delete') {
+            confirmAndRun('Delete this admin? This cannot be undone.', async () => {
+                const result = await apiRequest('delete', `/admin/admins/${id}`);
+                if (!result.ok) {
+                    alert(result.data.message || 'Failed to delete admin.');
+                    return;
+                }
+                load();
+            });
+        }
+    });
+
+    qs('#admin-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const id = qs('#admin-id').value;
+        const form = event.target;
+        const button = qs('button[type="submit"]', form);
+        setLoading(button, true);
+        clearFieldErrors(form);
+
+        const payload = {
+            name: qs('#admin_name').value,
+            phone: qs('#admin_phone').value,
+            email: qs('#admin_email').value || null,
+            role_id: qs('#admin_role_id').value,
+            status: qs('#admin_status').value,
+        };
+        if (qs('#admin_password').value) payload.password = qs('#admin_password').value;
+
+        const result = id
+            ? await apiRequest('put', `/admin/admins/${id}`, payload)
+            : await apiRequest('post', '/admin/admins', payload);
+
+        setLoading(button, false);
+
+        if (result.ok) {
+            closeModal('admin-modal');
+            load();
+        } else if (result.status === 422) {
+            setFieldErrors(form, result.data.errors);
+        } else {
+            showBanner('#admin-modal-banner', result.data.message || 'Something went wrong.');
+        }
+    });
+
+    qs('#admins-search').addEventListener('input', debounce(() => { page = 1; load(); }));
+
+    populateRoleOptions().then(load);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Page: roles
+// ═══════════════════════════════════════════════════════════════════════════
+
+function initRolesPage() {
+    const tbody = qs('#roles-table-body');
+    if (!tbody) return;
+
+    let page = 1;
+    let allPermissions = [];
+
+    async function loadPermissions() {
+        const result = await apiRequest('get', '/admin/permissions', { per_page: 200 });
+        if (!result.ok) return;
+        allPermissions = result.data.data;
+        renderMatrix();
+    }
+
+    function actionLabel(key) {
+        const action = key.split('.')[1] || key;
+        return action.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+    }
+
+    function renderMatrix() {
+        const groups = {};
+        allPermissions.forEach((perm) => {
+            const groupKey = perm.key.split('.')[0];
+            groups[groupKey] = groups[groupKey] || { label: perm.group || groupKey, items: [] };
+            groups[groupKey].items.push(perm);
+        });
+
+        const container = qs('#role-permission-matrix');
+        container.innerHTML = Object.entries(groups).map(([groupKey, group]) => `
+            <div data-permission-group="${groupKey}">
+                <p class="mb-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300">${escapeHtml(group.label)}</p>
+                <div class="flex flex-wrap gap-x-4 gap-y-1.5">
+                    ${group.items.map((perm) => `
+                        <label class="flex items-center gap-1.5 text-sm">
+                            <input type="checkbox" value="${perm.id}" data-permission-checkbox
+                                data-key="${perm.key}" data-group="${groupKey}" data-is-view="${perm.key.endsWith('.view') ? '1' : '0'}">
+                            ${escapeHtml(actionLabel(perm.key))}
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+
+        qsa('input[data-permission-checkbox]', container).forEach((checkbox) => {
+            checkbox.addEventListener('change', () => {
+                if (checkbox.dataset.isView === '1' && !checkbox.checked) {
+                    qsa(`input[data-group="${checkbox.dataset.group}"]`, container).forEach((sibling) => {
+                        if (sibling !== checkbox) sibling.checked = false;
+                    });
+                }
+            });
+        });
+    }
+
+    function getCheckedPermissionIds() {
+        return qsa('input[data-permission-checkbox]:checked', qs('#role-permission-matrix')).map((c) => c.value);
+    }
+
+    function setCheckedPermissionIds(ids) {
+        const idSet = new Set((ids || []).map(String));
+        qsa('input[data-permission-checkbox]', qs('#role-permission-matrix')).forEach((c) => {
+            c.checked = idSet.has(c.value);
+        });
+    }
+
+    async function load() {
+        tbody.innerHTML = loadingRow(3);
+        const result = await apiRequest('get', '/admin/roles', {
+            page,
+            search: qs('#roles-search').value || undefined,
+        });
+
+        if (!result.ok) {
+            tbody.innerHTML = errorRow(3, 'Failed to load roles.');
+            return;
+        }
+
+        const roles = result.data.data;
+        tbody.innerHTML = roles.length ? roles.map((r) => `
+            <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
+                <td class="py-3 px-4 text-sm font-medium">${escapeHtml(r.name)}</td>
+                <td class="py-3 px-4 text-sm">${r.permissions_count ?? 0} permissions</td>
+                <td class="py-3 px-4 text-right text-sm">
+                    <button data-action="edit" data-id="${r.id}" class="link-action">Edit</button>
+                    <button data-action="delete" data-id="${r.id}" class="ml-3 link-action-danger">Delete</button>
+                </td>
+            </tr>
+        `).join('') : emptyRow(3, 'No roles yet.');
+
+        renderPagination(qs('#roles-pagination'), result.data.meta, (p) => { page = p; load(); });
+    }
+
+    function openRoleModal(role = null) {
+        const form = qs('#role-form');
+        form.reset();
+        clearFieldErrors(form);
+        hideBanner('#role-modal-banner');
+        qs('#role-id').value = role?.id || '';
+        qs('#role_name').value = role?.name || '';
+        setCheckedPermissionIds((role?.permissions || []).map((p) => p.id));
+        qs('#role-modal-title').textContent = role ? 'Edit Role' : 'New Role';
+        openModal('role-modal');
+    }
+
+    qs('#new-role-button').addEventListener('click', () => openRoleModal());
+
+    tbody.addEventListener('click', async (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const id = button.dataset.id;
+
+        if (button.dataset.action === 'edit') {
+            const result = await apiRequest('get', `/admin/roles/${id}`);
+            if (result.ok) openRoleModal(result.data.data);
+        }
+
+        if (button.dataset.action === 'delete') {
+            confirmAndRun('Delete this role?', async () => {
+                const result = await apiRequest('delete', `/admin/roles/${id}`);
+                if (!result.ok) {
+                    alert(result.data.message || 'Failed to delete role.');
+                    return;
+                }
+                load();
+            });
+        }
+    });
+
+    qs('#role-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const id = qs('#role-id').value;
+        const form = event.target;
+        const button = qs('button[type="submit"]', form);
+        setLoading(button, true);
+        clearFieldErrors(form);
+
+        const payload = {
+            name: qs('#role_name').value,
+            permission_ids: getCheckedPermissionIds(),
+        };
+
+        const result = id
+            ? await apiRequest('put', `/admin/roles/${id}`, payload)
+            : await apiRequest('post', '/admin/roles', payload);
+
+        setLoading(button, false);
+
+        if (result.ok) {
+            closeModal('role-modal');
+            load();
+        } else if (result.status === 422) {
+            setFieldErrors(form, result.data.errors);
+        } else {
+            showBanner('#role-modal-banner', result.data.message || 'Something went wrong.');
+        }
+    });
+
+    qs('#roles-search').addEventListener('input', debounce(() => { page = 1; load(); }));
+
+    loadPermissions().then(load);
+}
+
 // ─── Dispatcher ─────────────────────────────────────────────────────────────
+
+const PAGE_VIEW_PERMISSION = {
+    'users-clients': 'clients.view',
+    'users-providers': 'providers.view',
+    'categories': 'categories.view',
+    'chats': 'chats.view',
+    'support-tickets': 'support_tickets.view',
+    'notifications-send': 'notifications.send',
+    'notifications-index': 'notifications.view',
+    'locations-countries': 'countries.view',
+    'locations-cities': 'cities.view',
+    'locations-areas': 'areas.view',
+    'cms-intro-screens': 'intro_screens.view',
+    'cms-faqs': 'faqs.view',
+    'cms-terms': 'terms.view',
+    'cms-privacy-policy': 'privacy.view',
+    'admins': null, // super-admin only, checked separately
+    'roles': null,  // super-admin only, checked separately
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     if (!requireAdminAuth()) return;
+
+    const page = document.body.dataset.page;
+    const requiresSuperAdmin = ['admins', 'roles'].includes(page);
+    const requiredPermission = PAGE_VIEW_PERMISSION[page];
+
+    if (requiresSuperAdmin && !isSuperAdmin()) {
+        window.location.href = '/admin/dashboard';
+        return;
+    }
+    if (requiredPermission && !hasPermission(requiredPermission)) {
+        window.location.href = '/admin/dashboard';
+        return;
+    }
 
     initLogout();
     wireModalDismiss();
@@ -1796,6 +2166,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 formId: '#privacy-form',
                 bannerSelector: '#privacy-banner',
             });
+            break;
+        case 'admins':
+            initAdminsPage();
+            break;
+        case 'roles':
+            initRolesPage();
             break;
         default:
             break;

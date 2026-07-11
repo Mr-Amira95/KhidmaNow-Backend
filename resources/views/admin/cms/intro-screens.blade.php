@@ -7,7 +7,7 @@
     <div class="card-surface">
         <div class="card-header">
             <p class="text-sm text-zinc-500 dark:text-zinc-400">Shown to first-time users when they open the mobile app.</p>
-            <button id="new-intro-screen-button" type="button" class="btn btn-primary">
+            <button id="new-intro-screen-button" type="button" data-permission="intro_screens.create" class="btn btn-primary">
                 <i class="ph ph-plus"></i> New Intro Screen
             </button>
         </div>

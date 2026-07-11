@@ -15,7 +15,7 @@ class StoreUserRequest extends FormRequest
             'phone'     => 'required|string|unique:users,phone',
             'email'     => 'nullable|email|unique:users,email',
             'password'  => 'required|string|min:8',
-            'user_type' => 'required|in:admin,customer,provider',
+            'user_type' => 'required|in:customer,provider',
             'status'    => 'nullable|in:active,inactive,blocked',
         ];
     }

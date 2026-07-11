@@ -23,6 +23,7 @@ class CallResource extends JsonResource
                 'channel' => $this->agora_channel,
                 'token' => $this->token ?? null,
                 'uid' => $this->uid ?? null,
+                'expire_at' => $this->expire_at ?? null,
             ],
         ];
     }

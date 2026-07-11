@@ -13,7 +13,7 @@
                     <option value="">All countries</option>
                 </select>
             </div>
-            <button id="new-city-button" type="button" class="btn btn-primary">
+            <button id="new-city-button" type="button" data-permission="cities.create" class="btn btn-primary">
                 <i class="ph ph-plus"></i> New City
             </button>
         </div>

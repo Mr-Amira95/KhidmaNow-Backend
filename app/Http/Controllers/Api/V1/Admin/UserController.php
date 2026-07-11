@@ -21,7 +21,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::where('user_type', '!=', 'admin');
 
         if ($request->filled('user_type')) {
             $query->where('user_type', $request->user_type);
@@ -48,36 +48,48 @@ class UserController extends Controller
 
     public function show(User $user)
     {
+        $this->rejectAdmin($user);
+
         $user->load('provider');
         return $this->success(new UserResource($user));
     }
 
     public function update(UpdateUserRequest $request, User $user)
     {
+        $this->rejectAdmin($user);
+
         $user->update($request->validated());
         return $this->success(new UserResource($user), 'User updated successfully.');
     }
 
     public function destroy(User $user)
     {
+        $this->rejectAdmin($user);
+
         $user->delete();
         return $this->success([], 'User deleted successfully.');
     }
 
     public function block(User $user)
     {
+        $this->rejectAdmin($user);
+
         $user->update(['status' => 'blocked']);
         return $this->success(new UserResource($user), 'User blocked successfully.');
     }
 
     public function unblock(User $user)
     {
+        $this->rejectAdmin($user);
+
         $user->update(['status' => 'active']);
         return $this->success(new UserResource($user), 'User unblocked successfully.');
     }
 
     public function changePassword(ChangeUserPasswordRequest $request, User $user)
     {
+        $this->rejectAdmin($user);
+
         $user->update(['password' => Hash::make($request->password)]);
         $user->tokens()->delete();
 
@@ -86,6 +98,8 @@ class UserController extends Controller
 
     public function wishlist(Request $request, User $user)
     {
+        $this->rejectAdmin($user);
+
         $query = Wishlist::where('user_id', $user->id);
 
         if ($request->filled('item_type')) {
@@ -98,5 +112,10 @@ class UserController extends Controller
             15,
             fn ($items) => $this->hydrateWishlistItems($items)
         );
+    }
+
+    private function rejectAdmin(User $user): void
+    {
+        abort_if($user->user_type === 'admin', 403, 'Forbidden.');
     }
 }

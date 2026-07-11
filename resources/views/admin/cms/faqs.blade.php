@@ -7,7 +7,7 @@
     <div class="card-surface">
         <div class="card-header">
             <p class="text-sm text-zinc-500 dark:text-zinc-400">Shown to users in the mobile app's help section.</p>
-            <button id="new-faq-button" type="button" class="btn btn-primary">
+            <button id="new-faq-button" type="button" data-permission="faqs.create" class="btn btn-primary">
                 <i class="ph ph-plus"></i> New FAQ
             </button>
         </div>

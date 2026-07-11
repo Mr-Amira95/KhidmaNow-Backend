@@ -14,21 +14,20 @@
 
         @vite(['resources/css/app.css', 'resources/js/admin-app.js'])
     </head>
-    <body data-page="@yield('page')" class="h-full font-sans antialiased bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
-        <div class="flex min-h-[100dvh]">
+    <body data-page="@yield('page')" class="h-full overflow-hidden font-sans antialiased bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+        <div class="flex h-[100dvh] overflow-hidden">
             <!-- Mobile backdrop -->
             <div id="sidebar-backdrop" class="fixed inset-0 z-40 hidden bg-zinc-950/50 backdrop-blur-sm lg:hidden" data-sidebar-backdrop></div>
 
             <!-- Sidebar -->
             <aside
                 id="admin-sidebar"
-                class="fixed inset-y-0 left-0 z-50 w-64 flex-shrink-0 -translate-x-full flex-col border-r border-zinc-200/70 bg-white transition-transform duration-300 ease-out dark:border-white/10 dark:bg-zinc-900 lg:static lg:flex lg:translate-x-0"
+                class="fixed inset-y-0 left-0 z-50 flex w-64 flex-shrink-0 -translate-x-full flex-col border-r border-zinc-200/70 bg-white transition-transform duration-300 ease-out dark:border-white/10 dark:bg-zinc-900 lg:static lg:translate-x-0"
             >
                 <div class="flex items-center gap-3 px-6 py-5">
-                    <a href="/admin/dashboard" class="flex flex-col gap-1">
-                        <img src="/brand/logo_colored.png" alt="KhidmaNow Logo" class="h-8 w-auto dark:hidden object-contain" />
-                        <img src="/brand/logo_white.png" alt="KhidmaNow Logo" class="h-8 w-auto hidden dark:block object-contain" />
-                        <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 pl-0.5">Admin Portal</p>
+                    <a href="/admin/dashboard" class="flex items-center">
+                        <img src="/brand/logo_colored.png" alt="KhidmaNow Logo" class="h-16 w-auto dark:hidden object-contain" />
+                        <img src="/brand/logo_white.png" alt="KhidmaNow Logo" class="h-16 w-auto hidden dark:block object-contain" />
                     </a>
                     <button type="button" data-sidebar-close class="ml-auto rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 lg:hidden dark:hover:bg-zinc-800" aria-label="Close menu">
                         <i class="ph ph-x text-lg"></i>
@@ -44,63 +43,73 @@
 
                     <div>
                         <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">Users</p>
-                        <a href="/admin/users/clients" class="nav-link {{ request()->is('admin/users/clients') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/users/clients" data-permission="clients.view" class="nav-link {{ request()->is('admin/users/clients') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-users text-lg"></i> Clients
                         </a>
-                        <a href="/admin/users/providers" class="nav-link {{ request()->is('admin/users/providers') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/users/providers" data-permission="providers.view" class="nav-link {{ request()->is('admin/users/providers') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-briefcase text-lg"></i> Service Providers
                         </a>
                     </div>
 
                     <div>
                         <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">Catalog</p>
-                        <a href="/admin/categories" class="nav-link {{ request()->is('admin/categories') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/categories" data-permission="categories.view" class="nav-link {{ request()->is('admin/categories') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-squares-four text-lg"></i> Categories
                         </a>
                     </div>
 
                     <div>
                         <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">Communication</p>
-                        <a href="/admin/chats" class="nav-link {{ request()->is('admin/chats') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/chats" data-permission="chats.view" class="nav-link {{ request()->is('admin/chats') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-chats-circle text-lg"></i> Chats
                         </a>
-                        <a href="/admin/support-tickets" class="nav-link {{ request()->is('admin/support-tickets') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/support-tickets" data-permission="support_tickets.view" class="nav-link {{ request()->is('admin/support-tickets') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-lifebuoy text-lg"></i> Support Tickets
                         </a>
-                        <a href="/admin/notifications/send" class="nav-link {{ request()->is('admin/notifications/send') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/notifications/send" data-permission="notifications.send" class="nav-link {{ request()->is('admin/notifications/send') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-paper-plane-tilt text-lg"></i> Send Notification
                         </a>
-                        <a href="/admin/notifications" class="nav-link {{ request()->is('admin/notifications') && !request()->is('admin/notifications/send') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/notifications" data-permission="notifications.view" class="nav-link {{ request()->is('admin/notifications') && !request()->is('admin/notifications/send') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-bell text-lg"></i> Notifications
                         </a>
                     </div>
 
                     <div>
                         <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">Locations</p>
-                        <a href="/admin/locations/countries" class="nav-link {{ request()->is('admin/locations/countries') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/locations/countries" data-permission="countries.view" class="nav-link {{ request()->is('admin/locations/countries') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-flag text-lg"></i> Countries
                         </a>
-                        <a href="/admin/locations/cities" class="nav-link {{ request()->is('admin/locations/cities') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/locations/cities" data-permission="cities.view" class="nav-link {{ request()->is('admin/locations/cities') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-buildings text-lg"></i> Cities
                         </a>
-                        <a href="/admin/locations/areas" class="nav-link {{ request()->is('admin/locations/areas') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/locations/areas" data-permission="areas.view" class="nav-link {{ request()->is('admin/locations/areas') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-map-pin text-lg"></i> Areas
                         </a>
                     </div>
 
                     <div>
                         <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">CMS</p>
-                        <a href="/admin/cms/intro-screens" class="nav-link {{ request()->is('admin/cms/intro-screens') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/cms/intro-screens" data-permission="intro_screens.view" class="nav-link {{ request()->is('admin/cms/intro-screens') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-images text-lg"></i> Intro Screens
                         </a>
-                        <a href="/admin/cms/terms" class="nav-link {{ request()->is('admin/cms/terms') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/cms/terms" data-permission="terms.view" class="nav-link {{ request()->is('admin/cms/terms') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-file-text text-lg"></i> Terms & Conditions
                         </a>
-                        <a href="/admin/cms/privacy-policy" class="nav-link {{ request()->is('admin/cms/privacy-policy') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/cms/privacy-policy" data-permission="privacy.view" class="nav-link {{ request()->is('admin/cms/privacy-policy') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-shield-check text-lg"></i> Privacy Policy
                         </a>
-                        <a href="/admin/cms/faqs" class="nav-link {{ request()->is('admin/cms/faqs') ? 'nav-link-active' : '' }}">
+                        <a href="/admin/cms/faqs" data-permission="faqs.view" class="nav-link {{ request()->is('admin/cms/faqs') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-question text-lg"></i> FAQs
+                        </a>
+                    </div>
+
+                    <div data-requires-super-admin>
+                        <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">Administration</p>
+                        <a href="/admin/admins" class="nav-link {{ request()->is('admin/admins') ? 'nav-link-active' : '' }}">
+                            <i class="ph ph-user-gear text-lg"></i> Admins
+                        </a>
+                        <a href="/admin/roles" class="nav-link {{ request()->is('admin/roles') ? 'nav-link-active' : '' }}">
+                            <i class="ph ph-shield-star text-lg"></i> Roles & Permissions
                         </a>
                     </div>
                 </nav>

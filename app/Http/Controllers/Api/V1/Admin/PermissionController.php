@@ -25,7 +25,9 @@ class PermissionController extends Controller
             });
         }
 
-        return $this->paginated(PermissionResource::class, $query->orderBy('name'));
+        $perPage = min((int) $request->input('per_page', 15), 200);
+
+        return $this->paginated(PermissionResource::class, $query->orderBy('group')->orderBy('name'), $perPage);
     }
 
     public function store(StorePermissionRequest $request)

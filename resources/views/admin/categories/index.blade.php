@@ -8,7 +8,7 @@
         <div class="card-header">
             <input id="categories-search" type="text" placeholder="Search categories..."
                 class="w-64 input-field-sm">
-            <button id="new-category-button" type="button" class="btn btn-primary">
+            <button id="new-category-button" type="button" data-permission="categories.create" class="btn btn-primary">
                 <i class="ph ph-plus"></i> New Category
             </button>
         </div>
@@ -32,7 +32,7 @@
     <div id="subcategories-panel" class="mt-6 hidden card-surface">
         <div class="card-header">
             <h2 class="text-sm font-semibold">Sub-categories</h2>
-            <button id="new-sub-category-button" type="button" class="btn btn-primary">
+            <button id="new-sub-category-button" type="button" data-permission="categories.create" class="btn btn-primary">
                 <i class="ph ph-plus"></i> New Sub-category
             </button>
         </div>

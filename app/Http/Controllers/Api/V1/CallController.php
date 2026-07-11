@@ -24,9 +24,10 @@ class CallController extends Controller
         }
 
         $channel = 'chat_' . $chatRoom->id . '_' . now()->timestamp;
+        $expireSeconds = (int) config('services.agora.token_ttl', 3600);
 
         try {
-            $token = AgoraTokenBuilder::buildRtcToken($channel, $user->id);
+            $token = AgoraTokenBuilder::buildRtcToken($channel, $user->id, $expireSeconds);
         } catch (RuntimeException $e) {
             return $this->error($e->getMessage(), 500);
         }
@@ -42,6 +43,7 @@ class CallController extends Controller
 
         $call->token = $token;
         $call->uid = $user->id;
+        $call->expire_at = now()->addSeconds($expireSeconds);
 
         return $this->success(new CallResource($call), 'Call started.', 201);
     }

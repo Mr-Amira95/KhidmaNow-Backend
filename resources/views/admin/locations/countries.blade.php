@@ -8,7 +8,7 @@
         <div class="card-header">
             <input id="countries-search" type="text" placeholder="Search countries..."
                 class="w-64 input-field-sm">
-            <button id="new-country-button" type="button" class="btn btn-primary">
+            <button id="new-country-button" type="button" data-permission="countries.create" class="btn btn-primary">
                 <i class="ph ph-plus"></i> New Country
             </button>
         </div>

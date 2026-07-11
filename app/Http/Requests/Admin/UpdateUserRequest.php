@@ -16,7 +16,7 @@ class UpdateUserRequest extends FormRequest
             'phone'     => "sometimes|string|unique:users,phone,{$userId}",
             'email'     => "sometimes|nullable|email|unique:users,email,{$userId}",
             'password'  => 'sometimes|string|min:8',
-            'user_type' => 'sometimes|in:admin,customer,provider',
+            'user_type' => 'sometimes|in:customer,provider',
             'status'    => 'sometimes|in:active,inactive,blocked',
             'address'   => 'nullable|string',
         ];

@@ -22,6 +22,7 @@ class User extends Authenticatable
         'password',
         'profile_image',
         'user_type',
+        'is_super_admin',
         'average_rating',
         'ratings_count',
         'status',
@@ -45,6 +46,7 @@ class User extends Authenticatable
             'longitude'      => 'decimal:8',
             'last_login_at'  => 'datetime',
             'receive_notifications' => 'boolean',
+            'is_super_admin' => 'boolean',
         ];
     }
 
@@ -61,6 +63,36 @@ class User extends Authenticatable
     public function userRoles()
     {
         return $this->hasMany(UserRole::class);
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles');
+    }
+
+    public function hasPermission(string $key): bool
+    {
+        if ($this->is_super_admin) {
+            return true;
+        }
+
+        return $this->roles()
+            ->whereHas('permissions', fn ($q) => $q->where('key', $key))
+            ->exists();
+    }
+
+    public function permissionKeys()
+    {
+        if ($this->is_super_admin) {
+            return Permission::pluck('key');
+        }
+
+        return $this->roles()
+            ->with('permissions')
+            ->get()
+            ->flatMap(fn ($role) => $role->permissions->pluck('key'))
+            ->unique()
+            ->values();
     }
 
     public function wallet()

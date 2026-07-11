@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AgoraTokenController;
 use App\Http\Controllers\Api\V1\AreaController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CallController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Api\V1\CategoryController as PublicCategoryController;
 use App\Http\Controllers\Api\V1\SubCategoryController as PublicSubCategoryController;
 use App\Http\Controllers\Api\V1\CityController as PublicCityController;
 use App\Http\Controllers\Api\V1\CountryController as PublicCountryController;
+use App\Http\Controllers\Api\V1\Admin\AdminController;
 use App\Http\Controllers\Api\V1\Admin\AreaController as AdminAreaController;
 use App\Http\Controllers\Api\V1\Admin\CategoryController;
 use App\Http\Controllers\Api\V1\Admin\CityController;
@@ -109,9 +111,14 @@ Route::prefix('v1')->group(function () {
             Route::get('/{chatRoom}/messages', [ChatController::class, 'messages']);
             Route::post('/{chatRoom}/messages', [ChatController::class, 'sendMessage']);
             Route::delete('/{chatRoom}', [ChatController::class, 'destroy']);
-            Route::post('/{chatRoom}/calls/start', [CallController::class, 'start']);
-            Route::patch('/{chatRoom}/calls/{call}/end', [CallController::class, 'end']);
+            Route::middleware('throttle:20,1')->group(function () {
+                Route::post('/{chatRoom}/calls/start', [CallController::class, 'start']);
+                Route::patch('/{chatRoom}/calls/{call}/end', [CallController::class, 'end']);
+            });
         });
+
+        // ─── Agora RTC Token Service ───────────────────────────────────────────
+        Route::middleware('throttle:20,1')->post('/agora/token', [AgoraTokenController::class, 'issue']);
 
         // ─── Notifications (self-service) ─────────────────────────────────────
         Route::prefix('notifications')->group(function () {
@@ -172,112 +179,115 @@ Route::prefix('v1')->group(function () {
         Route::prefix('admin')->middleware('admin')->group(function () {
 
             // Dashboard
-            Route::get('dashboard', [DashboardController::class, 'index']);
+            Route::get('dashboard', [DashboardController::class, 'index'])->middleware('permission:dashboard');
 
-            // Users
-            Route::patch('users/{user}/block', [UserController::class, 'block']);
-            Route::patch('users/{user}/unblock', [UserController::class, 'unblock']);
-            Route::patch('users/{user}/change-password', [UserController::class, 'changePassword']);
-            Route::get('users/{user}/wishlist', [UserController::class, 'wishlist']);
-            Route::apiResource('users', UserController::class);
+            // Users (Clients)
+            Route::patch('users/{user}/block', [UserController::class, 'block'])->middleware('permission:clients.block');
+            Route::patch('users/{user}/unblock', [UserController::class, 'unblock'])->middleware('permission:clients.block');
+            Route::patch('users/{user}/change-password', [UserController::class, 'changePassword'])->middleware('permission:clients.change_password');
+            Route::get('users/{user}/wishlist', [UserController::class, 'wishlist'])->middleware('permission:clients.view');
+            Route::apiResource('users', UserController::class)->middleware('permission:clients');
 
             // Providers
-            Route::patch('providers/{provider}/verify', [AdminProviderController::class, 'verify']);
-            Route::patch('providers/{provider}/unverify', [AdminProviderController::class, 'unverify']);
-            Route::apiResource('providers', AdminProviderController::class)->only(['index', 'show', 'update', 'destroy']);
+            Route::patch('providers/{provider}/verify', [AdminProviderController::class, 'verify'])->middleware('permission:providers.verify');
+            Route::patch('providers/{provider}/unverify', [AdminProviderController::class, 'unverify'])->middleware('permission:providers.verify');
+            Route::apiResource('providers', AdminProviderController::class)->only(['index', 'show', 'update', 'destroy'])->middleware('permission:providers');
 
             // Provider Documents
-            Route::patch('provider-documents/{providerDocument}/approve', [ProviderDocumentController::class, 'approve']);
-            Route::patch('provider-documents/{providerDocument}/reject', [ProviderDocumentController::class, 'reject']);
-            Route::get('provider-documents', [ProviderDocumentController::class, 'index']);
-            Route::get('provider-documents/{providerDocument}', [ProviderDocumentController::class, 'show']);
+            Route::patch('provider-documents/{providerDocument}/approve', [ProviderDocumentController::class, 'approve'])->middleware('permission:providers.manage_documents');
+            Route::patch('provider-documents/{providerDocument}/reject', [ProviderDocumentController::class, 'reject'])->middleware('permission:providers.manage_documents');
+            Route::get('provider-documents', [ProviderDocumentController::class, 'index'])->middleware('permission:providers.view');
+            Route::get('provider-documents/{providerDocument}', [ProviderDocumentController::class, 'show'])->middleware('permission:providers.view');
 
             // Categories
-            Route::apiResource('categories', CategoryController::class);
+            Route::apiResource('categories', CategoryController::class)->middleware('permission:categories');
 
             // Sub-Categories
-            Route::apiResource('sub-categories', SubCategoryController::class);
+            Route::apiResource('sub-categories', SubCategoryController::class)->middleware('permission:categories');
 
             // Countries
-            Route::apiResource('countries', CountryController::class);
+            Route::apiResource('countries', CountryController::class)->middleware('permission:countries');
 
             // Cities
-            Route::apiResource('cities', CityController::class);
+            Route::apiResource('cities', CityController::class)->middleware('permission:cities');
 
             // Areas
-            Route::apiResource('areas', AdminAreaController::class);
+            Route::apiResource('areas', AdminAreaController::class)->middleware('permission:areas');
 
             // CMS: Intro Screens
-            Route::apiResource('intro-screens', AdminIntroScreenController::class);
+            Route::apiResource('intro-screens', AdminIntroScreenController::class)->middleware('permission:intro_screens');
 
             // CMS: Terms & Conditions / Privacy Policy (singleton)
-            Route::get('terms-and-conditions', [TermsController::class, 'show']);
-            Route::put('terms-and-conditions', [TermsController::class, 'update']);
-            Route::get('privacy-policy', [PrivacyPolicyController::class, 'show']);
-            Route::put('privacy-policy', [PrivacyPolicyController::class, 'update']);
+            Route::get('terms-and-conditions', [TermsController::class, 'show'])->middleware('permission:terms.view');
+            Route::put('terms-and-conditions', [TermsController::class, 'update'])->middleware('permission:terms.edit');
+            Route::get('privacy-policy', [PrivacyPolicyController::class, 'show'])->middleware('permission:privacy.view');
+            Route::put('privacy-policy', [PrivacyPolicyController::class, 'update'])->middleware('permission:privacy.edit');
 
             // CMS: FAQs
-            Route::apiResource('faqs', FaqController::class);
+            Route::apiResource('faqs', FaqController::class)->middleware('permission:faqs');
 
             // Service Requests
-            Route::patch('service-requests/{serviceRequest}/status', [ServiceRequestController::class, 'updateStatus']);
-            Route::get('service-requests', [ServiceRequestController::class, 'index']);
-            Route::get('service-requests/{serviceRequest}', [ServiceRequestController::class, 'show']);
-            Route::post('service-requests', [ServiceRequestController::class, 'store']);
+            Route::patch('service-requests/{serviceRequest}/status', [ServiceRequestController::class, 'updateStatus'])->middleware('permission:service_requests.edit');
+            Route::get('service-requests', [ServiceRequestController::class, 'index'])->middleware('permission:service_requests.view');
+            Route::get('service-requests/{serviceRequest}', [ServiceRequestController::class, 'show'])->middleware('permission:service_requests.view');
+            Route::post('service-requests', [ServiceRequestController::class, 'store'])->middleware('permission:service_requests.create');
 
             // Quotations
-            Route::get('quotations', [AdminQuotationController::class, 'index']);
-            Route::get('quotations/{quotation}', [AdminQuotationController::class, 'show']);
-            Route::post('quotations', [AdminQuotationController::class, 'store']);
-            Route::post('quotations/{quotation}/bids', [AdminQuotationController::class, 'storeBid']);
-            Route::patch('quotations/{quotation}/bids/{bid}/approve', [AdminQuotationController::class, 'approveBid']);
+            Route::get('quotations', [AdminQuotationController::class, 'index'])->middleware('permission:quotations.view');
+            Route::get('quotations/{quotation}', [AdminQuotationController::class, 'show'])->middleware('permission:quotations.view');
+            Route::post('quotations', [AdminQuotationController::class, 'store'])->middleware('permission:quotations.create');
+            Route::post('quotations/{quotation}/bids', [AdminQuotationController::class, 'storeBid'])->middleware('permission:quotations.create');
+            Route::patch('quotations/{quotation}/bids/{bid}/approve', [AdminQuotationController::class, 'approveBid'])->middleware('permission:quotations.edit');
 
             // Payments
-            Route::get('payments', [PaymentController::class, 'index']);
-            Route::get('payments/{payment}', [PaymentController::class, 'show']);
+            Route::get('payments', [PaymentController::class, 'index'])->middleware('permission:payments.view');
+            Route::get('payments/{payment}', [PaymentController::class, 'show'])->middleware('permission:payments.view');
 
             // Payouts
-            Route::patch('payouts/{payout}/status', [PayoutController::class, 'updateStatus']);
-            Route::get('payouts', [PayoutController::class, 'index']);
-            Route::get('payouts/{payout}', [PayoutController::class, 'show']);
+            Route::patch('payouts/{payout}/status', [PayoutController::class, 'updateStatus'])->middleware('permission:payouts.edit');
+            Route::get('payouts', [PayoutController::class, 'index'])->middleware('permission:payouts.view');
+            Route::get('payouts/{payout}', [PayoutController::class, 'show'])->middleware('permission:payouts.view');
 
             // Wallets
-            Route::get('wallets', [WalletController::class, 'index']);
-            Route::get('wallets/{wallet}', [WalletController::class, 'show']);
+            Route::get('wallets', [WalletController::class, 'index'])->middleware('permission:wallets.view');
+            Route::get('wallets/{wallet}', [WalletController::class, 'show'])->middleware('permission:wallets.view');
 
             // Rates / Reviews
-            Route::get('rates', [RateController::class, 'index']);
-            Route::get('rates/{rate}', [RateController::class, 'show']);
-            Route::post('rates', [RateController::class, 'store']);
-            Route::delete('rates/{rate}', [RateController::class, 'destroy']);
+            Route::get('rates', [RateController::class, 'index'])->middleware('permission:rates.view');
+            Route::get('rates/{rate}', [RateController::class, 'show'])->middleware('permission:rates.view');
+            Route::post('rates', [RateController::class, 'store'])->middleware('permission:rates.create');
+            Route::delete('rates/{rate}', [RateController::class, 'destroy'])->middleware('permission:rates.delete');
+
+            // Admins (sub-admin accounts)
+            Route::apiResource('admins', AdminController::class)->middleware('super_admin');
 
             // Roles
-            Route::apiResource('roles', RoleController::class);
+            Route::apiResource('roles', RoleController::class)->middleware('super_admin');
 
             // Permissions
-            Route::apiResource('permissions', PermissionController::class);
+            Route::apiResource('permissions', PermissionController::class)->middleware('super_admin');
 
             // Settings
-            Route::get('settings', [SettingController::class, 'index']);
-            Route::post('settings', [SettingController::class, 'store']);
-            Route::put('settings', [SettingController::class, 'update']);
-            Route::delete('settings/{setting}', [SettingController::class, 'destroy']);
+            Route::get('settings', [SettingController::class, 'index'])->middleware('permission:settings.view');
+            Route::post('settings', [SettingController::class, 'store'])->middleware('permission:settings.create');
+            Route::put('settings', [SettingController::class, 'update'])->middleware('permission:settings.edit');
+            Route::delete('settings/{setting}', [SettingController::class, 'destroy'])->middleware('permission:settings.delete');
 
             // Notifications
-            Route::post('notifications/send', [NotificationController::class, 'send']);
-            Route::get('notifications', [NotificationController::class, 'index']);
+            Route::post('notifications/send', [NotificationController::class, 'send'])->middleware('permission:notifications.send');
+            Route::get('notifications', [NotificationController::class, 'index'])->middleware('permission:notifications.view');
 
             // Chats (view-only)
-            Route::get('chats', [AdminChatController::class, 'index']);
-            Route::get('chats/{chatRoom}/messages', [AdminChatController::class, 'messages']);
+            Route::get('chats', [AdminChatController::class, 'index'])->middleware('permission:chats.view');
+            Route::get('chats/{chatRoom}/messages', [AdminChatController::class, 'messages'])->middleware('permission:chats.view');
 
             // Support Tickets
-            Route::get('support-tickets', [AdminSupportTicketController::class, 'index']);
-            Route::get('support-tickets/{supportTicket}', [AdminSupportTicketController::class, 'show']);
-            Route::get('support-tickets/{supportTicket}/replies', [AdminSupportTicketController::class, 'replies']);
-            Route::post('support-tickets/{supportTicket}/replies', [AdminSupportTicketController::class, 'sendReply']);
-            Route::patch('support-tickets/{supportTicket}/close', [AdminSupportTicketController::class, 'close']);
-            Route::patch('support-tickets/{supportTicket}/reopen', [AdminSupportTicketController::class, 'reopen']);
+            Route::get('support-tickets', [AdminSupportTicketController::class, 'index'])->middleware('permission:support_tickets.view');
+            Route::get('support-tickets/{supportTicket}', [AdminSupportTicketController::class, 'show'])->middleware('permission:support_tickets.view');
+            Route::get('support-tickets/{supportTicket}/replies', [AdminSupportTicketController::class, 'replies'])->middleware('permission:support_tickets.view');
+            Route::post('support-tickets/{supportTicket}/replies', [AdminSupportTicketController::class, 'sendReply'])->middleware('permission:support_tickets.reply');
+            Route::patch('support-tickets/{supportTicket}/close', [AdminSupportTicketController::class, 'close'])->middleware('permission:support_tickets.close');
+            Route::patch('support-tickets/{supportTicket}/reopen', [AdminSupportTicketController::class, 'reopen'])->middleware('permission:support_tickets.close');
         });
     });
 });

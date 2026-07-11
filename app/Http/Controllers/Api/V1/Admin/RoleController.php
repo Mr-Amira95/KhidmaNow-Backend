@@ -9,6 +9,7 @@ use App\Http\Resources\RoleResource;
 use App\Http\Traits\ApiResponse;
 use App\Models\Role;
 use App\Models\RolePermission;
+use App\Models\UserRole;
 use Illuminate\Http\Request;
 
 class RoleController extends Controller
@@ -23,7 +24,9 @@ class RoleController extends Controller
             $query->where('name', 'like', "%{$request->search}%");
         }
 
-        return $this->paginated(RoleResource::class, $query->latest());
+        $perPage = min((int) $request->input('per_page', 15), 200);
+
+        return $this->paginated(RoleResource::class, $query->latest(), $perPage);
     }
 
     public function store(StoreRoleRequest $request)
@@ -59,6 +62,8 @@ class RoleController extends Controller
 
     public function destroy(Role $role)
     {
+        abort_if(UserRole::where('role_id', $role->id)->exists(), 422, 'This role is assigned to one or more admins and cannot be deleted.');
+
         $role->delete();
         return $this->success([], 'Role deleted successfully.');
     }

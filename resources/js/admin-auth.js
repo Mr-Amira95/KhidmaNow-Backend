@@ -168,6 +168,8 @@ function initLoginPage() {
             }
             localStorage.setItem('admin_token', result.data.data.token);
             localStorage.setItem('admin_user', JSON.stringify(result.data.data.user));
+            localStorage.setItem('admin_is_super_admin', JSON.stringify(!!result.data.data.is_super_admin));
+            localStorage.setItem('admin_permissions', JSON.stringify(result.data.data.permissions || []));
             window.location.href = '/admin/dashboard';
             return;
         }

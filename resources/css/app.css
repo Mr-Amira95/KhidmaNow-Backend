@@ -29,19 +29,28 @@
     --color-accent-800: #13265B;
     --color-accent-900: #0A1433;
 
-    /* Secondary Orange brand color scale */
+    /* Secondary Orange brand color scale ("Speed · Action") */
     --color-brand-orange-50: #FFE9D6;
+    --color-brand-orange-100: #FDD3AD;
     --color-brand-orange-200: #FCBE85;
+    --color-brand-orange-300: #FBAB68;
     --color-brand-orange-400: #FB984B;
     --color-brand-orange-500: #F97316;
     --color-brand-orange-600: #EA6A0F;
+    --color-brand-orange-700: #D05E0F;
+    --color-brand-orange-800: #C3590F;
     --color-brand-orange-900: #B7530F;
 
-    /* Accent Green brand color scale */
+    /* Accent Green brand color scale ("Success · Completion") */
     --color-brand-green-50: #D9F7E4;
+    --color-brand-green-100: #B3EDC9;
     --color-brand-green-200: #8DE3AE;
+    --color-brand-green-300: #6EDA97;
     --color-brand-green-400: #4FD17F;
     --color-brand-green-500: #22C55E;
+    --color-brand-green-600: #1FB657;
+    --color-brand-green-700: #1CA750;
+    --color-brand-green-800: #199948;
     --color-brand-green-900: #168A41;
 
     --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);

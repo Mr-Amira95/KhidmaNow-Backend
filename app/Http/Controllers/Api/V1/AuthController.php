@@ -52,6 +52,8 @@ class AuthController extends Controller
             'data' => [
                 'user' => $user,
                 'token' => $token,
+                'is_super_admin' => $user->user_type === 'admin' ? $user->is_super_admin : false,
+                'permissions' => $user->user_type === 'admin' ? $user->permissionKeys() : [],
             ]
         ]);
     }

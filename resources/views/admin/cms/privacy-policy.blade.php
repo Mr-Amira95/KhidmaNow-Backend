@@ -9,7 +9,7 @@
         <form id="privacy-form" class="stagger space-y-4" novalidate>
             <x-admin.html-editor-field name="privacy_content_en" label="Content (English)" direction="ltr" />
             <x-admin.html-editor-field name="privacy_content_ar" label="Content (Arabic)" direction="rtl" />
-            <x-admin.submit-button>Save Changes</x-admin.submit-button>
+            <x-admin.submit-button data-permission="privacy.edit">Save Changes</x-admin.submit-button>
         </form>
     </div>
 @endsection

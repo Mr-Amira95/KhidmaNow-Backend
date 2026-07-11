@@ -13,7 +13,7 @@
                     <option value="">All cities</option>
                 </select>
             </div>
-            <button id="new-area-button" type="button" class="btn btn-primary">
+            <button id="new-area-button" type="button" data-permission="areas.create" class="btn btn-primary">
                 <i class="ph ph-plus"></i> New Area
             </button>
         </div>
