@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\WishlistStatusResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -18,6 +19,8 @@ class CategoryResource extends JsonResource
             'description_en'  => $this->description_en,
             'icon'            => $this->icon ? (str_starts_with($this->icon, 'http') ? $this->icon : Storage::disk('public')->url($this->icon)) : null,
             'is_active'       => $this->is_active,
+            'is_wishlist'     => app(WishlistStatusResolver::class)
+                ->isWishlisted($request->user('sanctum')?->id, 'category', $this->id),
             'created_at'      => $this->created_at,
             'updated_at'      => $this->updated_at,
             'sub_categories'  => SubCategoryResource::collection($this->whenLoaded('subCategories')),

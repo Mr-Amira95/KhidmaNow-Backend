@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\WishlistStatusResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,6 +19,8 @@ class ProviderResource extends JsonResource
             'experience_years'    => $this->experience_years,
             'availability_status' => $this->availability_status,
             'is_verified'         => $this->is_verified,
+            'is_wishlist'         => app(WishlistStatusResolver::class)
+                ->isWishlisted($request->user('sanctum')?->id, 'provider', $this->id),
             'created_at'          => $this->created_at,
             'updated_at'          => $this->updated_at,
             'user'                => new UserResource($this->whenLoaded('user')),
