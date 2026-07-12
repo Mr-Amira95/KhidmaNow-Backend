@@ -9,6 +9,7 @@ use App\Http\Traits\ApiResponse;
 use App\Models\Call;
 use App\Models\ChatRoom;
 use App\Services\AgoraTokenBuilder;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use RuntimeException;
 
@@ -45,7 +46,28 @@ class CallController extends Controller
         $call->uid = $user->id;
         $call->expire_at = now()->addSeconds($expireSeconds);
 
+        $recipientId = $user->user_type === 'provider' ? $chatRoom->user_id : ($chatRoom->provider ? $chatRoom->provider->user_id : null);
+        if ($recipientId) {
+            NotificationService::send(
+                $recipientId,
+                'Incoming call from ' . $user->name,
+                ucfirst($call->call_type) . ' call',
+                'call',
+                $call->id
+            );
+        }
+
         return $this->success(new CallResource($call), 'Call started.', 201);
+    }
+
+    public function show(Request $request, ChatRoom $chatRoom, Call $call)
+    {
+        $user = $request->user();
+        if (!$chatRoom->hasParticipant($user) || (int) $call->chat_id !== (int) $chatRoom->id) {
+            return $this->error('You are not a participant in this call.', 403);
+        }
+
+        return $this->success(new CallResource($call), 'Call retrieved.');
     }
 
     public function end(Request $request, ChatRoom $chatRoom, Call $call)

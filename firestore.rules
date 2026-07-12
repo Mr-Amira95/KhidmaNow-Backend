@@ -1,0 +1,26 @@
+rules_version = '2';
+
+// Firestore here only mirrors chat data written by the Laravel backend (via the
+// Admin SDK, which bypasses these rules entirely). Mobile clients are read-only —
+// all writes go through the existing REST API (POST /chats/{id}/messages) so
+// validation, moderation, and the notifications pipeline stay centralized.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isChatParticipant(chatId) {
+      let chat = get(/databases/$(database)/documents/chats/$(chatId)).data;
+      return request.auth != null &&
+        (request.auth.uid == chat.customerId || request.auth.uid == chat.providerUserId);
+    }
+
+    match /chats/{chatId} {
+      allow read: if request.auth != null &&
+        (request.auth.uid == resource.data.customerId || request.auth.uid == resource.data.providerUserId);
+      allow write: if false;
+
+      match /messages/{messageId} {
+        allow read: if isChatParticipant(chatId);
+        allow write: if false;
+      }
+    }
+  }
+}

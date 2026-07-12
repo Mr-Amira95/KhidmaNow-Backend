@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CallController;
 use App\Http\Controllers\Api\V1\ChatController;
 use App\Http\Controllers\Api\V1\CmsController;
+use App\Http\Controllers\Api\V1\FirebaseTokenController;
 use App\Http\Controllers\Api\V1\FaqController as PublicFaqController;
 use App\Http\Controllers\Api\V1\IntroScreenController;
 use App\Http\Controllers\Api\V1\ProviderController;
@@ -111,6 +112,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/{chatRoom}/messages', [ChatController::class, 'messages']);
             Route::post('/{chatRoom}/messages', [ChatController::class, 'sendMessage']);
             Route::delete('/{chatRoom}', [ChatController::class, 'destroy']);
+            Route::get('/{chatRoom}/calls/{call}', [CallController::class, 'show']);
             Route::middleware('throttle:20,1')->group(function () {
                 Route::post('/{chatRoom}/calls/start', [CallController::class, 'start']);
                 Route::patch('/{chatRoom}/calls/{call}/end', [CallController::class, 'end']);
@@ -119,6 +121,9 @@ Route::prefix('v1')->group(function () {
 
         // ─── Agora RTC Token Service ───────────────────────────────────────────
         Route::middleware('throttle:20,1')->post('/agora/token', [AgoraTokenController::class, 'issue']);
+
+        // ─── Firebase Custom Token (mobile Firestore auth) ─────────────────────
+        Route::middleware('throttle:20,1')->post('/firebase/token', [FirebaseTokenController::class, 'issue']);
 
         // ─── Notifications (self-service) ─────────────────────────────────────
         Route::prefix('notifications')->group(function () {

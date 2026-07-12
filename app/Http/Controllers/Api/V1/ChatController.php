@@ -11,6 +11,7 @@ use App\Http\Traits\ApiResponse;
 use App\Http\Traits\HandlesUploads;
 use App\Models\ChatRoom;
 use App\Models\Message;
+use App\Services\FirestoreService;
 use Illuminate\Http\Request;
 
 class ChatController extends Controller
@@ -52,6 +53,8 @@ class ChatController extends Controller
             $chatRoom->update(['deleted_by_user_at' => null]);
         }
 
+        FirestoreService::upsertChatRoom($chatRoom);
+
         $chatRoom->load(['user', 'provider.user', 'latestMessage']);
 
         return $this->success(new ChatRoomResource($chatRoom), 'Chat started.', 201);
@@ -64,10 +67,15 @@ class ChatController extends Controller
             return $this->error('You are not a participant in this chat.', 403);
         }
 
-        $chatRoom->messages()
+        $unreadMessageIds = $chatRoom->messages()
             ->where('sender_id', '!=', $user->id)
             ->where('is_read', false)
-            ->update(['is_read' => true]);
+            ->pluck('id');
+
+        if ($unreadMessageIds->isNotEmpty()) {
+            $chatRoom->messages()->whereIn('id', $unreadMessageIds)->update(['is_read' => true]);
+            FirestoreService::markMessagesRead($chatRoom, $unreadMessageIds->all());
+        }
 
         $query = $chatRoom->messages()->with('sender')->latest();
 
@@ -102,6 +110,9 @@ class ChatController extends Controller
             'last_message_at' => $message->created_at,
             $recipientDeletedColumn => null,
         ]);
+
+        FirestoreService::writeMessage($message);
+        FirestoreService::upsertChatRoom($chatRoom);
 
         // Send chat notification to the other participant
         $recipientId = $user->user_type === 'provider' ? $chatRoom->user_id : ($chatRoom->provider ? $chatRoom->provider->user_id : null);

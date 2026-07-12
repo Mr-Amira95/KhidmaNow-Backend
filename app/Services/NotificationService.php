@@ -6,6 +6,9 @@ use App\Models\Notification;
 use App\Models\User;
 use App\Models\DeviceToken;
 use Illuminate\Support\Facades\Log;
+use Kreait\Firebase\Contract\Messaging;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
 
 class NotificationService
 {
@@ -41,16 +44,30 @@ class NotificationService
     }
 
     /**
-     * Mock function representing real push notification dispatching.
+     * Dispatch a push notification to the given device tokens via Firebase Cloud Messaging.
      */
     protected static function sendPushNotification(array $tokens, string $title, string $body, string $type, ?int $typeId): void
     {
-        Log::info("Push Notification Dispatched:", [
+        $message = CloudMessage::new()
+            ->withNotification(FirebaseNotification::create($title, $body))
+            ->withData([
+                'type'    => $type,
+                'type_id' => (string) $typeId,
+            ]);
+
+        $report = app(Messaging::class)->sendMulticast($message, $tokens);
+
+        Log::info('Push Notification Dispatched:', [
             'tokens_count' => count($tokens),
+            'success'      => $report->successes()->count(),
+            'failures'     => $report->failures()->count(),
             'title'        => $title,
-            'body'         => $body,
             'type'         => $type,
             'type_id'      => $typeId,
         ]);
+
+        foreach ($report->invalidTokens() as $invalidToken) {
+            DeviceToken::where('token', $invalidToken)->update(['is_active' => false]);
+        }
     }
 }
