@@ -20,7 +20,6 @@ class UpdateProfileRequest extends FormRequest
             'address'               => 'nullable|string',
             'latitude'              => 'nullable|numeric|between:-90,90',
             'longitude'             => 'nullable|numeric|between:-180,180',
-            'receive_notifications' => 'sometimes|boolean',
         ];
     }
 }

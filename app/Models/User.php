@@ -26,7 +26,6 @@ class User extends Authenticatable
         'average_rating',
         'ratings_count',
         'status',
-        'receive_notifications',
         'latitude',
         'longitude',
         'address',
@@ -45,7 +44,6 @@ class User extends Authenticatable
             'latitude'       => 'decimal:8',
             'longitude'      => 'decimal:8',
             'last_login_at'  => 'datetime',
-            'receive_notifications' => 'boolean',
             'is_super_admin' => 'boolean',
         ];
     }

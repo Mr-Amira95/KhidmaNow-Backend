@@ -23,6 +23,7 @@ class UserResource extends JsonResource
             'latitude'       => $this->latitude,
             'longitude'      => $this->longitude,
             'address'        => $this->address,
+            'receive_notifications' => $this->receive_notifications,
             'last_login_at'  => $this->last_login_at,
             'created_at'     => $this->created_at,
             'updated_at'     => $this->updated_at,

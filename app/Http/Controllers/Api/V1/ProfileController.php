@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Http\Traits\ApiResponse;
 use App\Http\Traits\HandlesUploads;
+use App\Models\DeviceToken;
 use Illuminate\Http\Request;
 
 class ProfileController extends Controller
@@ -16,6 +17,15 @@ class ProfileController extends Controller
     public function show(Request $request)
     {
         $user = $request->user()->load('provider');
+
+        $receiveNotifications = null;
+        if ($request->filled('fcm_token')) {
+            $receiveNotifications = DeviceToken::where('user_id', $user->id)
+                ->where('token', $request->fcm_token)
+                ->value('receive_notifications');
+        }
+        $user->receive_notifications = $receiveNotifications;
+
         return $this->success(new UserResource($user));
     }
 

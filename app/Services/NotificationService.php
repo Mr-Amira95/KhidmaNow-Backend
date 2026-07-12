@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Notification;
-use App\Models\User;
 use App\Models\DeviceToken;
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Contract\Messaging;
@@ -28,16 +27,14 @@ class NotificationService
             'is_read' => false,
         ]);
 
-        // 2. Fetch user's notification preferences and tokens
-        $user = User::find($userId);
-        if ($user && $user->receive_notifications) {
-            $tokens = DeviceToken::where('user_id', $userId)
-                ->where('is_active', true)
-                ->pluck('token');
+        // 2. Fetch this user's device tokens that have notifications enabled
+        $tokens = DeviceToken::where('user_id', $userId)
+            ->where('is_active', true)
+            ->where('receive_notifications', true)
+            ->pluck('token');
 
-            if ($tokens->isNotEmpty()) {
-                self::sendPushNotification($tokens->toArray(), $title, $body, $type, $typeId);
-            }
+        if ($tokens->isNotEmpty()) {
+            self::sendPushNotification($tokens->toArray(), $title, $body, $type, $typeId);
         }
 
         return $notification;

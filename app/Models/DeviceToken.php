@@ -11,12 +11,14 @@ class DeviceToken extends Model
         'token',
         'platform',
         'is_active',
+        'receive_notifications',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'receive_notifications' => 'boolean',
         ];
     }
 
