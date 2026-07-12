@@ -77,7 +77,7 @@ class ChatController extends Controller
             FirestoreService::markMessagesRead($chatRoom, $unreadMessageIds->all());
         }
 
-        $query = $chatRoom->messages()->with('sender')->latest();
+        $query = $chatRoom->messages()->with(['sender', 'call'])->latest();
 
         return $this->paginated(MessageResource::class, $query);
     }

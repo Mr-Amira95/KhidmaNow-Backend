@@ -21,6 +21,14 @@ class MessageResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'sender' => new UserResource($this->whenLoaded('sender')),
+            'call' => $this->when($this->media_type === 'call', function () {
+                return [
+                    'id' => $this->call_id,
+                    'call_type' => $this->call?->call_type,
+                    'status' => $this->call?->status,
+                    'duration_seconds' => $this->call?->duration_seconds,
+                ];
+            }),
         ];
     }
 }

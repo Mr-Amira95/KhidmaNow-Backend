@@ -9,6 +9,7 @@ class Message extends Model
     protected $fillable = [
         'chat_id',
         'sender_id',
+        'call_id',
         'message',
         'media_type',
         'media_url',
@@ -30,5 +31,10 @@ class Message extends Model
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    public function call()
+    {
+        return $this->belongsTo(Call::class);
     }
 }

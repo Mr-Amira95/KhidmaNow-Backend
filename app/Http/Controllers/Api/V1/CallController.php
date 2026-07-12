@@ -8,7 +8,9 @@ use App\Http\Resources\CallResource;
 use App\Http\Traits\ApiResponse;
 use App\Models\Call;
 use App\Models\ChatRoom;
+use App\Models\Message;
 use App\Services\AgoraTokenBuilder;
+use App\Services\FirestoreService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use RuntimeException;
@@ -87,6 +89,25 @@ class CallController extends Controller
             'ended_at' => $endedAt,
             'duration_seconds' => max(0, $endedAt->getTimestamp() - $call->started_at->getTimestamp()),
         ]);
+
+        $duration = $call->duration_seconds;
+        $message = Message::create([
+            'chat_id' => $chatRoom->id,
+            'sender_id' => $call->initiated_by,
+            'call_id' => $call->id,
+            'message' => ucfirst($call->call_type) . ' call (' . sprintf('%02d:%02d', intdiv($duration, 60), $duration % 60) . ')',
+            'media_type' => 'call',
+            'media_url' => null,
+        ]);
+
+        $chatRoom->update([
+            'last_message_at' => $message->created_at,
+            'deleted_by_user_at' => null,
+            'deleted_by_provider_at' => null,
+        ]);
+
+        FirestoreService::writeMessage($message);
+        FirestoreService::upsertChatRoom($chatRoom);
 
         return $this->success(new CallResource($call), 'Call ended.');
     }

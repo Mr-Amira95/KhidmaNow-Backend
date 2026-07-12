@@ -31,14 +31,23 @@ class FirestoreService
 
     public static function writeMessage(Message $message): void
     {
-        self::patch("chats/{$message->chat_id}/messages/{$message->id}", [
+        $fields = [
             'senderId' => self::stringValue((string) $message->sender_id),
             'message' => self::stringValue($message->message),
             'mediaType' => self::stringValue($message->media_type),
             'mediaUrl' => self::stringValue($message->media_url),
             'isRead' => self::boolValue((bool) $message->is_read),
             'createdAt' => self::timestampValue($message->created_at),
-        ]);
+        ];
+
+        if ($message->call_id) {
+            $message->loadMissing('call');
+            $fields['callId'] = self::stringValue((string) $message->call_id);
+            $fields['callType'] = self::stringValue($message->call?->call_type);
+            $fields['callDurationSeconds'] = self::stringValue((string) $message->call?->duration_seconds);
+        }
+
+        self::patch("chats/{$message->chat_id}/messages/{$message->id}", $fields);
     }
 
     public static function markMessagesRead(ChatRoom $chatRoom, array $messageIds): void
