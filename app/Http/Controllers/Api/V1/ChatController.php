@@ -99,7 +99,8 @@ class ChatController extends Controller
 
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
-            $data['media_type'] = str_starts_with($file->getMimeType(), 'audio/') ? 'audio' : 'image';
+            $mime = $file->getMimeType();
+            $data['media_type'] = str_starts_with($mime, 'audio/') ? 'audio' : ($this->attachmentType($file) === 'video' ? 'video' : 'image');
             $data['media_url'] = $this->storeUpload($file, 'chats');
         }
 
