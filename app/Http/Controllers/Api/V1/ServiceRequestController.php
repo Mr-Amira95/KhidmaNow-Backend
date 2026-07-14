@@ -23,7 +23,7 @@ class ServiceRequestController extends Controller
     {
         $user = $request->user();
 
-        $query = ServiceRequest::with(['user', 'provider.user'])
+        $query = ServiceRequest::with(['user', 'provider.user', 'rates'])
             ->when($user->user_type === 'provider', fn ($q) => $q->where('provider_id', $user->provider->id))
             ->when($user->user_type !== 'provider', fn ($q) => $q->where('user_id', $user->id));
 

@@ -34,6 +34,17 @@ class ServiceRequestResource extends JsonResource
             'payment'        => new PaymentResource($this->whenLoaded('payment')),
             'track'          => ServiceRequestTrackResource::collection($this->whenLoaded('track')),
             'rates'          => RateResource::collection($this->whenLoaded('rates')),
+            'feedback'       => $this->whenLoaded('rates', function ($rates) use ($request) {
+                $rate = $rates->firstWhere('rater_id', $request->user()?->id);
+
+                return $rate ? [
+                    'id'          => $rate->id,
+                    'rate'        => $rate->rate,
+                    'feedback'    => $rate->feedback,
+                    'rating_type' => $rate->rating_type,
+                    'created_at'  => $rate->created_at,
+                ] : null;
+            }, null),
         ];
     }
 }
