@@ -66,4 +66,9 @@ class Quotation extends Model
     {
         return $this->hasOne(ServiceRequest::class);
     }
+
+    public function attachments()
+    {
+        return $this->hasMany(QuotationAttachment::class);
+    }
 }

@@ -53,7 +53,7 @@ class HomeController extends Controller
             $data['active_service_requests'] = ServiceRequestResource::collection(
                 $user->serviceRequests()
                     ->whereIn('status', $activeStatuses)
-                    ->with(['provider.user', 'subCategory'])
+                    ->with(['provider.user'])
                     ->latest()
                     ->take(5)
                     ->get()

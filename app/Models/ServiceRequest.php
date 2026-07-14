@@ -9,7 +9,6 @@ class ServiceRequest extends Model
     protected $fillable = [
         'user_id',
         'provider_id',
-        'sub_category_id',
         'quotation_id',
         'chat_room_id',
         'source',
@@ -43,11 +42,6 @@ class ServiceRequest extends Model
     public function provider()
     {
         return $this->belongsTo(Provider::class);
-    }
-
-    public function subCategory()
-    {
-        return $this->belongsTo(SubCategory::class);
     }
 
     public function quotation()

@@ -29,14 +29,14 @@ class HomeController extends Controller
 
         $incomingServiceRequests = $provider->serviceRequests()
             ->where('status', 'pending')
-            ->with(['user', 'subCategory'])
+            ->with(['user'])
             ->latest()
             ->take(5)
             ->get();
 
         $activeJobs = $provider->serviceRequests()
             ->whereIn('status', self::ACTIVE_JOB_STATUSES)
-            ->with(['user', 'subCategory'])
+            ->with(['user'])
             ->latest()
             ->take(5)
             ->get();

@@ -7,7 +7,9 @@ use App\Http\Requests\StoreServiceRequestRequest;
 use App\Http\Requests\UpdateServiceRequestStatusRequest;
 use App\Http\Resources\ServiceRequestResource;
 use App\Http\Traits\ApiResponse;
+use App\Http\Traits\HandlesUploads;
 use App\Models\ServiceRequest;
+use App\Models\ServiceRequestAttachment;
 use App\Models\ServiceRequestTrack;
 use App\Services\ServiceRequestStatusService;
 use Illuminate\Http\Request;
@@ -15,13 +17,13 @@ use InvalidArgumentException;
 
 class ServiceRequestController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, HandlesUploads;
 
     public function index(Request $request)
     {
         $user = $request->user();
 
-        $query = ServiceRequest::with(['user', 'provider.user', 'subCategory'])
+        $query = ServiceRequest::with(['user', 'provider.user'])
             ->when($user->user_type === 'provider', fn ($q) => $q->where('provider_id', $user->provider->id))
             ->when($user->user_type !== 'provider', fn ($q) => $q->where('user_id', $user->id));
 
@@ -42,7 +44,7 @@ class ServiceRequestController extends Controller
             return $this->error('You are not part of this request.', 403);
         }
 
-        $serviceRequest->load(['user', 'provider.user', 'subCategory', 'attachments', 'payment', 'track.changedBy', 'rates']);
+        $serviceRequest->load(['user', 'provider.user', 'attachments', 'payment', 'track.changedBy', 'rates']);
         return $this->success(new ServiceRequestResource($serviceRequest));
     }
 
@@ -53,8 +55,11 @@ class ServiceRequestController extends Controller
             return $this->error('Only clients can create a request this way.', 403);
         }
 
+        $data = $request->validated();
+        unset($data['attachments']);
+
         $serviceRequest = ServiceRequest::create([
-            ...$request->validated(),
+            ...$data,
             'user_id'        => $user->id,
             'status'         => 'pending',
             'payment_status' => 'unpaid',
@@ -69,6 +74,14 @@ class ServiceRequestController extends Controller
             'date_time'          => now(),
         ]);
 
+        foreach ($request->file('attachments', []) as $file) {
+            ServiceRequestAttachment::create([
+                'service_request_id' => $serviceRequest->id,
+                'url'                => $this->storeUpload($file, 'service-requests'),
+                'type'               => $this->attachmentType($file),
+            ]);
+        }
+
         $serviceRequest->loadMissing('provider');
         if ($serviceRequest->provider) {
             \App\Services\NotificationService::send(
@@ -79,6 +92,8 @@ class ServiceRequestController extends Controller
                 $serviceRequest->id
             );
         }
+
+        $serviceRequest->load('attachments');
 
         return $this->success(new ServiceRequestResource($serviceRequest), 'Service request created successfully.', 201);
     }

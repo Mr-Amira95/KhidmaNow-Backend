@@ -21,6 +21,8 @@ class StoreQuotationRequest extends FormRequest
             'longitude'       => 'nullable|numeric',
             'address'         => 'nullable|string|max:255',
             'scheduled_at'    => 'nullable|date',
+            'attachments'     => 'nullable|array',
+            'attachments.*'   => 'file|mimes:jpg,jpeg,png,webp,mp4,mov,pdf,doc,docx|max:10240',
         ];
     }
 }

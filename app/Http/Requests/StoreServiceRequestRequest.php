@@ -12,7 +12,6 @@ class StoreServiceRequestRequest extends FormRequest
     {
         return [
             'provider_id'     => 'required|integer|exists:providers,id',
-            'sub_category_id' => 'nullable|exists:sub_categories,id',
             'title'           => 'nullable|string|max:255',
             'description'     => 'nullable|string',
             'price'           => 'nullable|numeric|min:0',
@@ -21,6 +20,8 @@ class StoreServiceRequestRequest extends FormRequest
             'address'         => 'nullable|string|max:255',
             'note'            => 'nullable|string|max:255',
             'scheduled_at'    => 'nullable|date',
+            'attachments'     => 'nullable|array',
+            'attachments.*'   => 'file|mimes:jpg,jpeg,png,webp,mp4,mov,pdf,doc,docx|max:10240',
         ];
     }
 }

@@ -11,7 +11,6 @@ use App\Models\ServiceRequest;
 use App\Models\ServiceRequestAttachment;
 use App\Models\ServiceRequestTrack;
 use App\Models\Setting;
-use App\Models\SubCategory;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
@@ -61,14 +60,12 @@ class ServiceRequestSeeder extends Seeder
     {
         $customer = User::where('email', 'customer' . ($customerIndex + 1) . '@khidmanow.com')->firstOrFail();
         $provider = Provider::where('business_name', $businessName)->with('user')->firstOrFail();
-        $subCategoryId = SubCategory::where('name_en', $subCategoryName)->value('id');
 
         $createdAt = Carbon::now()->subDays(30 - $seq)->setTime(9, 0);
 
         $serviceRequest = ServiceRequest::create([
             'user_id' => $customer->id,
             'provider_id' => $provider->id,
-            'sub_category_id' => $subCategoryId,
             'source' => 'direct',
             'title' => $title,
             'description' => $description,

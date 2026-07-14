@@ -2609,7 +2609,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"user_id\": 2,\n  \"sub_category_id\": 1,\n  \"title\": \"Emergency Electric Line Repair\",\n  \"description\": \"Short circuit repair in the living room.\",\n  \"price\": 120.0,\n  \"scheduled_at\": \"2026-07-15 10:00:00\"\n}",
+              "raw": "{\n  \"user_id\": 2,\n  \"title\": \"Emergency Electric Line Repair\",\n  \"description\": \"Short circuit repair in the living room.\",\n  \"price\": 120.0,\n  \"scheduled_at\": \"2026-07-15 10:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2648,7 +2648,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"user_id\": 2,\n  \"sub_category_id\": 1,\n  \"title\": \"Emergency Electric Line Repair\",\n  \"description\": \"Short circuit repair in the living room.\",\n  \"price\": 120.0,\n  \"scheduled_at\": \"2026-07-15 10:00:00\"\n}",
+                  "raw": "{\n  \"user_id\": 2,\n  \"title\": \"Emergency Electric Line Repair\",\n  \"description\": \"Short circuit repair in the living room.\",\n  \"price\": 120.0,\n  \"scheduled_at\": \"2026-07-15 10:00:00\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3047,13 +3047,19 @@
                 },
                 "description": "",
                 "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"provider_id\": 1,\n  \"sub_category_id\": 1,\n  \"title\": \"Leaking sink pipe repair\",\n  \"description\": \"Main kitchen water sink pipeline is leaking heavily.\",\n  \"price\": 80.0,\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"address\": \"Olaya District, Riyadh\",\n  \"note\": \"Knock before entering please.\",\n  \"scheduled_at\": \"2026-07-12 14:00:00\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "provider_id", "value": "1", "type": "text" },
+                    { "key": "title", "value": "Leaking sink pipe repair", "type": "text" },
+                    { "key": "description", "value": "Main kitchen water sink pipeline is leaking heavily.", "type": "text" },
+                    { "key": "price", "value": "80.0", "type": "text" },
+                    { "key": "latitude", "value": "24.7136", "type": "text" },
+                    { "key": "longitude", "value": "46.6753", "type": "text" },
+                    { "key": "address", "value": "Olaya District, Riyadh", "type": "text" },
+                    { "key": "note", "value": "Knock before entering please.", "type": "text" },
+                    { "key": "scheduled_at", "value": "2026-07-12 14:00:00", "type": "text" },
+                    { "key": "attachments[]", "type": "file", "src": [], "description": "Optional. One or more image/video/document files." }
+                  ]
                 }
               },
               "response": [
@@ -3085,13 +3091,19 @@
                       ]
                     },
                     "body": {
-                      "mode": "raw",
-                      "raw": "{\n  \"provider_id\": 1,\n  \"sub_category_id\": 1,\n  \"title\": \"Leaking sink pipe repair\",\n  \"description\": \"Main kitchen water sink pipeline is leaking heavily.\",\n  \"price\": 80.0,\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"address\": \"Olaya District, Riyadh\",\n  \"note\": \"Knock before entering please.\",\n  \"scheduled_at\": \"2026-07-12 14:00:00\"\n}",
-                      "options": {
-                        "raw": {
-                          "language": "json"
-                        }
-                      }
+                      "mode": "formdata",
+                      "formdata": [
+                        { "key": "provider_id", "value": "1", "type": "text" },
+                        { "key": "title", "value": "Leaking sink pipe repair", "type": "text" },
+                        { "key": "description", "value": "Main kitchen water sink pipeline is leaking heavily.", "type": "text" },
+                        { "key": "price", "value": "80.0", "type": "text" },
+                        { "key": "latitude", "value": "24.7136", "type": "text" },
+                        { "key": "longitude", "value": "46.6753", "type": "text" },
+                        { "key": "address", "value": "Olaya District, Riyadh", "type": "text" },
+                        { "key": "note", "value": "Knock before entering please.", "type": "text" },
+                        { "key": "scheduled_at", "value": "2026-07-12 14:00:00", "type": "text" },
+                        { "key": "attachments[]", "type": "file", "src": [] }
+                      ]
                     }
                   },
                   "status": "Created",
@@ -3623,13 +3635,20 @@
                 },
                 "description": "",
                 "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"category_id\": 2,\n  \"sub_category_id\": 3,\n  \"title\": \"AC Installation\",\n  \"description\": \"Require installation of 3 split AC units in my apartment.\",\n  \"price\": 600.0,\n  \"note\": \"Please include material costs.\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"address\": \"Olaya District, Riyadh\",\n  \"scheduled_at\": \"2026-07-20 09:00:00\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "category_id", "value": "2", "type": "text" },
+                    { "key": "sub_category_id", "value": "3", "type": "text" },
+                    { "key": "title", "value": "AC Installation", "type": "text" },
+                    { "key": "description", "value": "Require installation of 3 split AC units in my apartment.", "type": "text" },
+                    { "key": "price", "value": "600.0", "type": "text" },
+                    { "key": "note", "value": "Please include material costs.", "type": "text" },
+                    { "key": "latitude", "value": "24.7136", "type": "text" },
+                    { "key": "longitude", "value": "46.6753", "type": "text" },
+                    { "key": "address", "value": "Olaya District, Riyadh", "type": "text" },
+                    { "key": "scheduled_at", "value": "2026-07-20 09:00:00", "type": "text" },
+                    { "key": "attachments[]", "type": "file", "src": [], "description": "Optional. One or more image/video/document files." }
+                  ]
                 }
               },
               "response": [
@@ -3661,13 +3680,20 @@
                       ]
                     },
                     "body": {
-                      "mode": "raw",
-                      "raw": "{\n  \"category_id\": 2,\n  \"sub_category_id\": 3,\n  \"title\": \"AC Installation\",\n  \"description\": \"Require installation of 3 split AC units in my apartment.\",\n  \"price\": 600.0,\n  \"note\": \"Please include material costs.\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"address\": \"Olaya District, Riyadh\",\n  \"scheduled_at\": \"2026-07-20 09:00:00\"\n}",
-                      "options": {
-                        "raw": {
-                          "language": "json"
-                        }
-                      }
+                      "mode": "formdata",
+                      "formdata": [
+                        { "key": "category_id", "value": "2", "type": "text" },
+                        { "key": "sub_category_id", "value": "3", "type": "text" },
+                        { "key": "title", "value": "AC Installation", "type": "text" },
+                        { "key": "description", "value": "Require installation of 3 split AC units in my apartment.", "type": "text" },
+                        { "key": "price", "value": "600.0", "type": "text" },
+                        { "key": "note", "value": "Please include material costs.", "type": "text" },
+                        { "key": "latitude", "value": "24.7136", "type": "text" },
+                        { "key": "longitude", "value": "46.6753", "type": "text" },
+                        { "key": "address", "value": "Olaya District, Riyadh", "type": "text" },
+                        { "key": "scheduled_at", "value": "2026-07-20 09:00:00", "type": "text" },
+                        { "key": "attachments[]", "type": "file", "src": [] }
+                      ]
                     }
                   },
                   "status": "Created",

@@ -17,7 +17,7 @@ class ServiceRequestController extends Controller
 
     public function index(Request $request)
     {
-        $query = ServiceRequest::with(['user', 'provider.user', 'subCategory']);
+        $query = ServiceRequest::with(['user', 'provider.user']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -43,7 +43,7 @@ class ServiceRequestController extends Controller
 
     public function show(ServiceRequest $serviceRequest)
     {
-        $serviceRequest->load(['user', 'provider.user', 'subCategory', 'attachments', 'payment', 'track.changedBy', 'rates']);
+        $serviceRequest->load(['user', 'provider.user', 'attachments', 'payment', 'track.changedBy', 'rates']);
         return $this->success(new ServiceRequestResource($serviceRequest));
     }
 

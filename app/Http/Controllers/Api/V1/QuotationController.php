@@ -7,9 +7,11 @@ use App\Http\Requests\StoreQuotationRequest;
 use App\Http\Resources\QuotationResource;
 use App\Http\Resources\ServiceRequestResource;
 use App\Http\Traits\ApiResponse;
+use App\Http\Traits\HandlesUploads;
 use App\Models\Notification;
 use App\Models\Provider;
 use App\Models\Quotation;
+use App\Models\QuotationAttachment;
 use App\Models\QuotationBid;
 use App\Models\QuotationTrack;
 use App\Services\QuotationService;
@@ -18,7 +20,7 @@ use InvalidArgumentException;
 
 class QuotationController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, HandlesUploads;
 
     public function index(Request $request)
     {
@@ -65,7 +67,7 @@ class QuotationController extends Controller
             }
         }
 
-        $quotation->load(['user', 'category', 'subCategory', 'bids.provider.user', 'track.changedBy', 'serviceRequest']);
+        $quotation->load(['user', 'category', 'subCategory', 'bids.provider.user', 'track.changedBy', 'serviceRequest', 'attachments']);
         return $this->success(new QuotationResource($quotation));
     }
 
@@ -76,8 +78,11 @@ class QuotationController extends Controller
             return $this->error('Only clients can create a quotation.', 403);
         }
 
+        $data = $request->validated();
+        unset($data['attachments']);
+
         $quotation = Quotation::create([
-            ...$request->validated(),
+            ...$data,
             'user_id' => $user->id,
             'status'  => 'open',
         ]);
@@ -90,7 +95,17 @@ class QuotationController extends Controller
             'date_time'    => now(),
         ]);
 
+        foreach ($request->file('attachments', []) as $file) {
+            QuotationAttachment::create([
+                'quotation_id' => $quotation->id,
+                'url'          => $this->storeUpload($file, 'quotations'),
+                'type'         => $this->attachmentType($file),
+            ]);
+        }
+
         $this->notifyMatchingProviders($quotation);
+
+        $quotation->load('attachments');
 
         return $this->success(new QuotationResource($quotation), 'Quotation created successfully.', 201);
     }

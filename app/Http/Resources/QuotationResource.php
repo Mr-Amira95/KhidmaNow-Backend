@@ -32,6 +32,7 @@ class QuotationResource extends JsonResource
             'bids'             => QuotationBidResource::collection($this->whenLoaded('bids')),
             'track'            => QuotationTrackResource::collection($this->whenLoaded('track')),
             'service_request'  => new ServiceRequestResource($this->whenLoaded('serviceRequest')),
+            'attachments'      => QuotationAttachmentResource::collection($this->whenLoaded('attachments')),
         ];
     }
 }

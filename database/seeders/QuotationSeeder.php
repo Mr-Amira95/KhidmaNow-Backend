@@ -131,7 +131,6 @@ class QuotationSeeder extends Seeder
         $serviceRequest = ServiceRequest::create([
             'user_id' => $quotation->user_id,
             'provider_id' => $winningBid->provider_id,
-            'sub_category_id' => $quotation->sub_category_id,
             'quotation_id' => $quotation->id,
             'source' => 'quotation',
             'title' => $quotation->title,

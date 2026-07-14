@@ -13,7 +13,6 @@ class StoreServiceRequestRequest extends FormRequest
         return [
             'user_id'         => 'required|exists:users,id',
             'provider_id'     => 'required|exists:providers,id',
-            'sub_category_id' => 'nullable|exists:sub_categories,id',
             'title'           => 'nullable|string|max:255',
             'description'     => 'nullable|string',
             'price'           => 'nullable|numeric|min:0',
