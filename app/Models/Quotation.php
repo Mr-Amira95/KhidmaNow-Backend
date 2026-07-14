@@ -12,7 +12,8 @@ class Quotation extends Model
         'sub_category_id',
         'title',
         'description',
-        'budget',
+        'price',
+        'note',
         'latitude',
         'longitude',
         'address',
@@ -24,7 +25,7 @@ class Quotation extends Model
     protected function casts(): array
     {
         return [
-            'budget'       => 'decimal:2',
+            'price'        => 'decimal:2',
             'latitude'     => 'decimal:8',
             'longitude'    => 'decimal:8',
             'scheduled_at' => 'datetime',

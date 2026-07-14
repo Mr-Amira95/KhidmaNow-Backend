@@ -3515,7 +3515,7 @@
                     }
                   ],
                   "cookie": [],
-                  "body": "[\n  {\n    \"id\": 1,\n    \"title\": \"Whole villa painting\",\n    \"budget\": \"2000.00\",\n    \"status\": \"pending\"\n  }\n]"
+                  "body": "[\n  {\n    \"id\": 1,\n    \"title\": \"Whole villa painting\",\n    \"price\": \"2000.00\",\n    \"note\": \"Please include material costs.\",\n    \"status\": \"pending\"\n  }\n]"
                 }
               ]
             },
@@ -3590,7 +3590,7 @@
                     }
                   ],
                   "cookie": [],
-                  "body": "{\n  \"id\": 1,\n  \"title\": \"Whole villa painting\",\n  \"budget\": \"2000.00\",\n  \"status\": \"pending\",\n  \"bids\": [\n    {\n      \"id\": 4,\n      \"provider_id\": 1,\n      \"price\": \"1950.00\",\n      \"note\": \"I can paint the villa.\",\n      \"provider\": {\n        \"business_name\": \"Ali Electric\"\n      }\n    }\n  ]\n}"
+                  "body": "{\n  \"id\": 1,\n  \"title\": \"Whole villa painting\",\n  \"price\": \"2000.00\",\n  \"note\": \"Please include material costs.\",\n  \"status\": \"pending\",\n  \"bids\": [\n    {\n      \"id\": 4,\n      \"provider_id\": 1,\n      \"price\": \"1950.00\",\n      \"note\": \"I can paint the villa.\",\n      \"provider\": {\n        \"business_name\": \"Ali Electric\"\n      }\n    }\n  ]\n}"
                 }
               ]
             },
@@ -3624,7 +3624,7 @@
                 "description": "",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"category_id\": 2,\n  \"sub_category_id\": 3,\n  \"title\": \"AC Installation\",\n  \"description\": \"Require installation of 3 split AC units in my apartment.\",\n  \"budget\": 600.0,\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"address\": \"Olaya District, Riyadh\",\n  \"scheduled_at\": \"2026-07-20 09:00:00\"\n}",
+                  "raw": "{\n  \"category_id\": 2,\n  \"sub_category_id\": 3,\n  \"title\": \"AC Installation\",\n  \"description\": \"Require installation of 3 split AC units in my apartment.\",\n  \"price\": 600.0,\n  \"note\": \"Please include material costs.\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"address\": \"Olaya District, Riyadh\",\n  \"scheduled_at\": \"2026-07-20 09:00:00\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -3662,7 +3662,7 @@
                     },
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n  \"category_id\": 2,\n  \"sub_category_id\": 3,\n  \"title\": \"AC Installation\",\n  \"description\": \"Require installation of 3 split AC units in my apartment.\",\n  \"budget\": 600.0,\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"address\": \"Olaya District, Riyadh\",\n  \"scheduled_at\": \"2026-07-20 09:00:00\"\n}",
+                      "raw": "{\n  \"category_id\": 2,\n  \"sub_category_id\": 3,\n  \"title\": \"AC Installation\",\n  \"description\": \"Require installation of 3 split AC units in my apartment.\",\n  \"price\": 600.0,\n  \"note\": \"Please include material costs.\",\n  \"latitude\": 24.7136,\n  \"longitude\": 46.6753,\n  \"address\": \"Olaya District, Riyadh\",\n  \"scheduled_at\": \"2026-07-20 09:00:00\"\n}",
                       "options": {
                         "raw": {
                           "language": "json"
@@ -3680,7 +3680,7 @@
                     }
                   ],
                   "cookie": [],
-                  "body": "{\n  \"status\": \"success\",\n  \"message\": \"Quotation request created successfully\",\n  \"data\": {\n    \"id\": 15,\n    \"title\": \"AC Installation\",\n    \"budget\": \"600.00\",\n    \"status\": \"pending\"\n  }\n}"
+                  "body": "{\n  \"status\": \"success\",\n  \"message\": \"Quotation request created successfully\",\n  \"data\": {\n    \"id\": 15,\n    \"title\": \"AC Installation\",\n    \"price\": \"600.00\",\n    \"note\": \"Please include material costs.\",\n    \"status\": \"pending\"\n  }\n}"
                 }
               ]
             },

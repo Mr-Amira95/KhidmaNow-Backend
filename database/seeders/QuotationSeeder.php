@@ -53,7 +53,7 @@ class QuotationSeeder extends Seeder
             'sub_category_id' => $subCategory->id,
             'title' => $title,
             'description' => $description,
-            'budget' => $budget,
+            'price' => $budget,
             'latitude' => $customer->latitude,
             'longitude' => $customer->longitude,
             'address' => $customer->address,
