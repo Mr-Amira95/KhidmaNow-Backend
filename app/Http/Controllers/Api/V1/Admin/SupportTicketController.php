@@ -44,7 +44,7 @@ class SupportTicketController extends Controller
 
     public function replies(Request $request, SupportTicket $supportTicket)
     {
-        $query = $supportTicket->replies()->with('sender')->latest();
+        $query = $supportTicket->replies()->with('sender')->oldest();
 
         return $this->paginated(SupportTicketReplyResource::class, $query);
     }

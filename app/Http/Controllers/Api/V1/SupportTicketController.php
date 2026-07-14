@@ -91,7 +91,7 @@ class SupportTicketController extends Controller
             return $this->error('You are not allowed to view this ticket.', 403);
         }
 
-        $query = $supportTicket->replies()->with('sender')->latest();
+        $query = $supportTicket->replies()->with('sender')->oldest();
 
         return $this->paginated(SupportTicketReplyResource::class, $query);
     }
