@@ -8,8 +8,10 @@ use App\Http\Controllers\Api\V1\ChatController;
 use App\Http\Controllers\Api\V1\CmsController;
 use App\Http\Controllers\Api\V1\FirebaseTokenController;
 use App\Http\Controllers\Api\V1\FaqController as PublicFaqController;
+use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\IntroScreenController;
 use App\Http\Controllers\Api\V1\ProviderController;
+use App\Http\Controllers\Api\V1\Provider\HomeController as ProviderHomeController;
 use App\Http\Controllers\Api\V1\Provider\ServiceRequestController as ProviderServiceRequestController;
 use App\Http\Controllers\Api\V1\Provider\QuotationController as ProviderQuotationController;
 use App\Http\Controllers\Api\V1\ServiceRequestController as ClientServiceRequestController;
@@ -71,6 +73,8 @@ Route::prefix('v1')->group(function () {
     });
 
     // ─── Public Reference/CMS Routes ──────────────────────────────────────────
+    // Home is guest-accessible; it personalizes its response when hit with a valid Sanctum token.
+    Route::get('/home', [HomeController::class, 'index']);
     Route::get('/intro-screens', [IntroScreenController::class, 'index']);
     Route::get('/countries', [PublicCountryController::class, 'index']);
     Route::get('/cities', [PublicCityController::class, 'index']);
@@ -96,6 +100,7 @@ Route::prefix('v1')->group(function () {
 
         // ─── Provider Self-Service Routes ─────────────────────────────────────
         Route::prefix('provider')->middleware('provider')->group(function () {
+            Route::get('home', [ProviderHomeController::class, 'index']);
             Route::get('profile', [ProviderController::class, 'profile']);
             Route::patch('profile', [ProviderController::class, 'updateProfile']);
             Route::patch('availability/available', [ProviderController::class, 'available']);
