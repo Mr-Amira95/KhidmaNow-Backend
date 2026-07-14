@@ -12,7 +12,7 @@ class StoreMessageRequest extends FormRequest
     {
         return [
             'message' => 'required_without:attachment|nullable|string',
-            'attachment' => 'required_without:message|nullable|file|mimes:jpg,jpeg,png,webp,mp3,wav,m4a,aac,ogg|max:10240',
+            'attachment' => 'required_without:message|nullable|file|mimes:jpg,jpeg,png,webp,mp3,wav,m4a,aac,ogg,mp4,mov|max:10240',
         ];
     }
 }
