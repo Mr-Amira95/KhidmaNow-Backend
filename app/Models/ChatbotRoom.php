@@ -8,7 +8,8 @@ class ChatbotRoom extends Model
 {
     protected $fillable = [
         'user_id',
-        'provider_id',
+        'session_id',
+        'direction',
     ];
 
     public function user()
@@ -16,13 +17,13 @@ class ChatbotRoom extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function provider()
-    {
-        return $this->belongsTo(Provider::class);
-    }
-
     public function messages()
     {
         return $this->hasMany(ChatbotMessage::class);
+    }
+
+    public function latestMessage()
+    {
+        return $this->hasOne(ChatbotMessage::class)->latestOfMany();
     }
 }

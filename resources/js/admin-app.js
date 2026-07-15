@@ -1456,6 +1456,144 @@ function initChatsPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Page: chatbot
+// ═══════════════════════════════════════════════════════════════════════════
+
+function initChatbotPage() {
+    const list = qs('#chatbot-list');
+    if (!list) return;
+
+    let listPage = 1;
+    let activeRoomId = null;
+    let threadPage = 1;
+    let threadHasMore = false;
+
+    const DIRECTION_BADGES = {
+        general: badgeHtml('General', 'accent'),
+        rfq: badgeHtml('RFQ', 'orange'),
+        providers: badgeHtml('Providers', 'green'),
+    };
+
+    function directionBadge(direction) {
+        return DIRECTION_BADGES[direction] || badgeHtml('Unclassified', 'zinc');
+    }
+
+    function roomLabel(room) {
+        return room.user?.name || `Guest · ${room.session_id}`;
+    }
+
+    function messagePreview(room) {
+        return room.latest_message?.message || 'No messages yet';
+    }
+
+    function renderSuggestions(message) {
+        if (!message.suggestions?.length) return '';
+        const chips = message.suggestions.map((s) => `
+            <span class="inline-flex items-center gap-1 rounded-full border border-zinc-200/70 px-2 py-0.5 text-xs dark:border-zinc-700">
+                <i class="ph ph-briefcase text-xs"></i>${escapeHtml(s.provider?.business_name || 'Provider')}
+            </span>
+        `).join('');
+        return `<div class="mt-2 flex flex-wrap gap-1">${chips}</div>`;
+    }
+
+    function renderQuotation(message) {
+        if (!message.quotation) return '';
+        return `
+            <div class="mt-2 rounded-lg border border-accent-200 bg-accent-50 px-3 py-2 text-xs dark:border-accent-900/50 dark:bg-accent-950/30">
+                <p class="font-medium">RFQ #${message.quotation.id} created</p>
+                <p class="text-zinc-500 dark:text-zinc-400">${escapeHtml(message.quotation.title || message.quotation.description || '')} &middot; ${escapeHtml(message.quotation.status)}</p>
+            </div>
+        `;
+    }
+
+    async function loadRooms() {
+        list.innerHTML = `${loadingIndicatorHtml()}`;
+        const result = await apiRequest('get', '/admin/chatbot', {
+            page: listPage,
+            search: qs('#chatbot-search').value || undefined,
+            direction: qs('#chatbot-direction-filter').value || undefined,
+        });
+
+        if (!result.ok) {
+            list.innerHTML = errorIndicatorHtml('Failed to load chatbot conversations.');
+            return;
+        }
+
+        const rooms = result.data.data;
+        list.innerHTML = rooms.length ? rooms.map((room) => `
+            <button type="button" data-room-id="${room.id}" data-label="${escapeHtml(roomLabel(room))}"
+                class="chatbot-row animate-fade-up block w-full border-l-2 border-transparent px-4 py-3 text-left transition-colors duration-150 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 ${activeRoomId == room.id ? 'border-accent-600 bg-accent-50 dark:bg-accent-950/20' : ''}">
+                <div class="flex items-center justify-between gap-2">
+                    <p class="truncate text-sm font-medium">${escapeHtml(roomLabel(room))}</p>
+                    <span class="flex-shrink-0 text-xs text-zinc-400">${formatDate(room.updated_at)}</span>
+                </div>
+                <div class="mt-1 flex items-center justify-between gap-2">
+                    <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">${escapeHtml(messagePreview(room))}</p>
+                    ${directionBadge(room.direction)}
+                </div>
+            </button>
+        `).join('') : `<div class="p-4 text-center text-sm text-zinc-500">No chatbot conversations found.</div>`;
+
+        renderPagination(qs('#chatbot-pagination'), result.data.meta, (p) => { listPage = p; loadRooms(); });
+    }
+
+    async function loadThread(roomId, label, page = 1) {
+        activeRoomId = roomId;
+        qsa('.chatbot-row', list).forEach((row) => {
+            const isActive = row.dataset.roomId == roomId;
+            row.classList.toggle('bg-accent-50', isActive);
+            row.classList.toggle('dark:bg-accent-950/20', isActive);
+            row.classList.toggle('border-accent-600', isActive);
+        });
+
+        qs('#chatbot-thread-header').innerHTML = `<p class="text-sm font-semibold">${escapeHtml(label)}</p>`;
+        const container = qs('#chatbot-thread-messages');
+        container.innerHTML = `<p class="text-center text-sm">${loadingIndicatorHtml()}</p>`;
+
+        const result = await apiRequest('get', `/admin/chatbot/${roomId}/messages`, { page });
+        if (!result.ok) {
+            container.innerHTML = `<p class="text-center text-sm">${errorIndicatorHtml('Failed to load messages.')}</p>`;
+            return;
+        }
+
+        threadPage = result.data.meta.current_page;
+        threadHasMore = result.data.meta.current_page < result.data.meta.last_page;
+
+        const messages = result.data.data.slice().reverse();
+        const bubbles = messages.map((m) => `
+            <div class="animate-fade-up max-w-[75%] rounded-2xl px-4 py-2 text-sm ${m.role === 'user' ? 'ml-auto bg-accent-600 text-white shadow-lg shadow-accent-600/20' : 'bg-zinc-100 dark:bg-zinc-800'}">
+                <p class="mb-0.5 text-xs font-medium opacity-70">${m.role === 'user' ? 'User' : 'Bot'}</p>
+                <p>${escapeHtml(m.message)}</p>
+                ${renderSuggestions(m)}
+                ${renderQuotation(m)}
+                <p class="mt-1 text-right text-[10px] opacity-60">${new Date(m.created_at).toLocaleString()}</p>
+            </div>
+        `).join('');
+
+        const loadOlderButton = threadHasMore
+            ? `<button id="load-older-chatbot-messages" class="mx-auto block text-xs link-action">Load older messages</button>`
+            : '';
+
+        container.innerHTML = messages.length ? loadOlderButton + bubbles : `<p class="text-center text-sm text-zinc-500">No messages in this conversation yet.</p>`;
+
+        if (!loadOlderButton) container.scrollTop = container.scrollHeight;
+
+        qs('#load-older-chatbot-messages', container)?.addEventListener('click', () => loadThread(roomId, label, threadPage + 1));
+    }
+
+    list.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-room-id]');
+        if (!button) return;
+        loadThread(button.dataset.roomId, button.dataset.label);
+    });
+
+    qs('#chatbot-search').addEventListener('input', debounce(() => { listPage = 1; loadRooms(); }));
+    qs('#chatbot-direction-filter').addEventListener('change', () => { listPage = 1; loadRooms(); });
+
+    loadRooms();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Page: support-tickets
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -2073,6 +2211,7 @@ const PAGE_VIEW_PERMISSION = {
     'users-providers': 'providers.view',
     'categories': 'categories.view',
     'chats': 'chats.view',
+    'chatbot': 'chatbot.view',
     'support-tickets': 'support_tickets.view',
     'notifications-send': 'notifications.send',
     'notifications-index': 'notifications.view',
@@ -2122,6 +2261,9 @@ document.addEventListener('DOMContentLoaded', () => {
             break;
         case 'chats':
             initChatsPage();
+            break;
+        case 'chatbot':
+            initChatbotPage();
             break;
         case 'support-tickets':
             initSupportTicketsPage();

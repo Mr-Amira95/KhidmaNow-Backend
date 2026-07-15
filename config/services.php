@@ -49,4 +49,9 @@ return [
         'token_ttl' => (int) env('AGORA_TOKEN_TTL', 3600),
     ],
 
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+    ],
+
 ];

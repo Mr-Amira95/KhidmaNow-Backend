@@ -63,6 +63,9 @@
                         <a href="/admin/chats" data-permission="chats.view" class="nav-link {{ request()->is('admin/chats') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-chats-circle text-lg"></i> Chats
                         </a>
+                        <a href="/admin/chatbot" data-permission="chatbot.view" class="nav-link {{ request()->is('admin/chatbot') ? 'nav-link-active' : '' }}">
+                            <i class="ph ph-robot text-lg"></i> Chatbot
+                        </a>
                         <a href="/admin/support-tickets" data-permission="support_tickets.view" class="nav-link {{ request()->is('admin/support-tickets') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-lifebuoy text-lg"></i> Support Tickets
                         </a>

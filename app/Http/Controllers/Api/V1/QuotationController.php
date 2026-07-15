@@ -8,12 +8,9 @@ use App\Http\Resources\QuotationResource;
 use App\Http\Resources\ServiceRequestResource;
 use App\Http\Traits\ApiResponse;
 use App\Http\Traits\HandlesUploads;
-use App\Models\Notification;
-use App\Models\Provider;
 use App\Models\Quotation;
 use App\Models\QuotationAttachment;
 use App\Models\QuotationBid;
-use App\Models\QuotationTrack;
 use App\Services\QuotationService;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -71,7 +68,7 @@ class QuotationController extends Controller
         return $this->success(new QuotationResource($quotation));
     }
 
-    public function store(StoreQuotationRequest $request)
+    public function store(StoreQuotationRequest $request, QuotationService $quotationService)
     {
         $user = $request->user();
         if ($user->user_type !== 'customer') {
@@ -81,19 +78,7 @@ class QuotationController extends Controller
         $data = $request->validated();
         unset($data['attachments']);
 
-        $quotation = Quotation::create([
-            ...$data,
-            'user_id' => $user->id,
-            'status'  => 'open',
-        ]);
-
-        QuotationTrack::create([
-            'quotation_id' => $quotation->id,
-            'from_status'  => null,
-            'to_status'    => 'open',
-            'changed_by'   => $user->id,
-            'date_time'    => now(),
-        ]);
+        $quotation = $quotationService->create($user, $data);
 
         foreach ($request->file('attachments', []) as $file) {
             QuotationAttachment::create([
@@ -102,8 +87,6 @@ class QuotationController extends Controller
                 'type'         => $this->attachmentType($file),
             ]);
         }
-
-        $this->notifyMatchingProviders($quotation);
 
         $quotation->load('attachments');
 
@@ -127,30 +110,5 @@ class QuotationController extends Controller
             new ServiceRequestResource($serviceRequest),
             'Bid approved. Request created successfully.'
         );
-    }
-
-    private function notifyMatchingProviders(Quotation $quotation): void
-    {
-        $providers = Provider::whereHas('subCategories', function ($q) use ($quotation) {
-            $q->where('sub_category_id', $quotation->sub_category_id);
-        })->get();
-
-        if ($providers->isEmpty()) {
-            return;
-        }
-
-        $notifications = $providers->map(fn (Provider $provider) => [
-            'user_id'    => $provider->user_id,
-            'title'      => 'New quotation request',
-            'body'       => $quotation->title ?: 'A new quotation matching your services is available.',
-            'icon'       => null,
-            'type'       => 'service_request',
-            'type_id'    => $quotation->id,
-            'is_read'    => false,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ])->toArray();
-
-        Notification::insert($notifications);
     }
 }

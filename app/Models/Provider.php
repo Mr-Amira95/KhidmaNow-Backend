@@ -67,9 +67,4 @@ class Provider extends Model
     {
         return $this->hasMany(ChatRoom::class);
     }
-
-    public function chatbotRooms()
-    {
-        return $this->hasMany(ChatbotRoom::class);
-    }
 }

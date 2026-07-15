@@ -38,13 +38,14 @@ class ChatbotSeeder extends Seeder
             ], ['QuickCourier']],
         ];
 
-        foreach ($sessions as [$customerIndex, $businessName, $messages, $suggestionBusinessNames]) {
+        foreach ($sessions as $index => [$customerIndex, $businessName, $messages, $suggestionBusinessNames]) {
             $customer = User::where('email', 'customer' . ($customerIndex + 1) . '@khidmanow.com')->firstOrFail();
-            $provider = Provider::where('business_name', $businessName)->firstOrFail();
+            Provider::where('business_name', $businessName)->firstOrFail();
 
             $room = ChatbotRoom::create([
                 'user_id' => $customer->id,
-                'provider_id' => $provider->id,
+                'session_id' => 'demo-session-' . ($index + 1),
+                'direction' => 'providers',
             ]);
 
             $lastBotMessage = null;
@@ -52,6 +53,7 @@ class ChatbotSeeder extends Seeder
                 $message = ChatbotMessage::create([
                     'chatbot_room_id' => $room->id,
                     'role' => $role,
+                    'direction' => 'providers',
                     'message' => $text,
                 ]);
 

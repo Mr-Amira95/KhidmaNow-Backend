@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AgoraTokenController;
 use App\Http\Controllers\Api\V1\AreaController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CallController;
+use App\Http\Controllers\Api\V1\ChatbotController;
 use App\Http\Controllers\Api\V1\ChatController;
 use App\Http\Controllers\Api\V1\CmsController;
 use App\Http\Controllers\Api\V1\FirebaseTokenController;
@@ -41,6 +42,7 @@ use App\Http\Controllers\Api\V1\Admin\PermissionController;
 use App\Http\Controllers\Api\V1\Admin\PrivacyPolicyController;
 use App\Http\Controllers\Api\V1\Admin\ProviderController as AdminProviderController;
 use App\Http\Controllers\Api\V1\Admin\ChatController as AdminChatController;
+use App\Http\Controllers\Api\V1\Admin\ChatbotController as AdminChatbotController;
 use App\Http\Controllers\Api\V1\Admin\ProviderDocumentController;
 use App\Http\Controllers\Api\V1\Admin\QuotationController as AdminQuotationController;
 use App\Http\Controllers\Api\V1\Admin\RateController;
@@ -87,6 +89,13 @@ Route::prefix('v1')->group(function () {
     Route::get('/faqs', [PublicFaqController::class, 'index']);
     Route::get('/providers', [ProviderController::class, 'index']);
     Route::get('/providers/{provider}', [ProviderController::class, 'show']);
+
+    // ─── Chatbot (public; personalizes/unlocks RFQ creation with a bearer token) ──
+    Route::prefix('chatbot')->group(function () {
+        Route::post('/rooms', [ChatbotController::class, 'store']);
+        Route::get('/rooms/{room}/messages', [ChatbotController::class, 'messages']);
+        Route::middleware('throttle:20,1')->post('/rooms/{room}/messages', [ChatbotController::class, 'sendMessage']);
+    });
 
     // ─── Authenticated Routes ─────────────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {
@@ -290,6 +299,10 @@ Route::prefix('v1')->group(function () {
             // Chats (view-only)
             Route::get('chats', [AdminChatController::class, 'index'])->middleware('permission:chats.view');
             Route::get('chats/{chatRoom}/messages', [AdminChatController::class, 'messages'])->middleware('permission:chats.view');
+
+            // Chatbot (view-only)
+            Route::get('chatbot', [AdminChatbotController::class, 'index'])->middleware('permission:chatbot.view');
+            Route::get('chatbot/{chatbotRoom}/messages', [AdminChatbotController::class, 'messages'])->middleware('permission:chatbot.view');
 
             // Support Tickets
             Route::get('support-tickets', [AdminSupportTicketController::class, 'index'])->middleware('permission:support_tickets.view');

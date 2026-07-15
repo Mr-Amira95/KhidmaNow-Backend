@@ -9,7 +9,9 @@ class ChatbotMessage extends Model
     protected $fillable = [
         'chatbot_room_id',
         'role',
+        'direction',
         'message',
+        'quotation_id',
     ];
 
     public function room()
@@ -20,5 +22,10 @@ class ChatbotMessage extends Model
     public function suggestions()
     {
         return $this->hasMany(ChatbotMessageSuggestion::class);
+    }
+
+    public function quotation()
+    {
+        return $this->belongsTo(Quotation::class);
     }
 }

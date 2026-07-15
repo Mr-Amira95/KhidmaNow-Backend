@@ -36,6 +36,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::view('/categories', 'admin.categories.index')->name('categories');
 
     Route::view('/chats', 'admin.chats.index')->name('chats');
+    Route::view('/chatbot', 'admin.chatbot.index')->name('chatbot');
     Route::view('/support-tickets', 'admin.support-tickets.index')->name('support-tickets');
     Route::view('/notifications/send', 'admin.notifications.send')->name('notifications.send');
     Route::view('/notifications', 'admin.notifications.index')->name('notifications.index');

@@ -59,6 +59,7 @@ class RolePermissionSeeder extends Seeder
         ]],
         'notifications'    => ['label' => 'Notifications', 'actions' => ['view' => 'View Notifications', 'send' => 'Send Notifications']],
         'chats'            => ['label' => 'Chats', 'actions' => ['view' => 'View Chats']],
+        'chatbot'          => ['label' => 'Chatbot', 'actions' => ['view' => 'View Chatbot Conversations']],
         'support_tickets'  => ['label' => 'Support Tickets', 'actions' => [
             'view' => 'View Support Tickets', 'reply' => 'Reply to Support Tickets', 'close' => 'Close/Reopen Support Tickets',
         ]],
