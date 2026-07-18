@@ -10,6 +10,12 @@ class StoreChatRequest extends FormRequest
 
     public function rules(): array
     {
+        if ($this->user()?->user_type === 'provider') {
+            return [
+                'customer_id' => 'required|integer|exists:users,id,user_type,customer',
+            ];
+        }
+
         return [
             'provider_id' => 'required|integer|exists:providers,id',
         ];

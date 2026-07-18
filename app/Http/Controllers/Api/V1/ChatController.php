@@ -40,17 +40,26 @@ class ChatController extends Controller
     {
         $user = $request->user();
 
-        if ($user->user_type !== 'customer') {
-            return $this->error('Only clients can start a chat.', 403);
-        }
+        if ($user->user_type === 'provider') {
+            $chatRoom = ChatRoom::firstOrCreate([
+                'user_id' => $request->validated('customer_id'),
+                'provider_id' => $user->provider->id,
+            ]);
 
-        $chatRoom = ChatRoom::firstOrCreate([
-            'user_id' => $user->id,
-            'provider_id' => $request->validated('provider_id'),
-        ]);
+            if ($chatRoom->deleted_by_provider_at) {
+                $chatRoom->update(['deleted_by_provider_at' => null]);
+            }
+        } elseif ($user->user_type === 'customer') {
+            $chatRoom = ChatRoom::firstOrCreate([
+                'user_id' => $user->id,
+                'provider_id' => $request->validated('provider_id'),
+            ]);
 
-        if ($chatRoom->deleted_by_user_at) {
-            $chatRoom->update(['deleted_by_user_at' => null]);
+            if ($chatRoom->deleted_by_user_at) {
+                $chatRoom->update(['deleted_by_user_at' => null]);
+            }
+        } else {
+            return $this->error('Only clients and providers can start a chat.', 403);
         }
 
         FirestoreService::upsertChatRoom($chatRoom);
