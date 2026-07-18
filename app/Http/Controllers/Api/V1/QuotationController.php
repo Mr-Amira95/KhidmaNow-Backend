@@ -39,7 +39,8 @@ class QuotationController extends Controller
                     }
                 });
             })
-            ->when($user->user_type === 'customer', fn ($q) => $q->where('user_id', $user->id));
+            ->when($user->user_type === 'customer', fn ($q) => $q->where('user_id', $user->id))
+            ->with(['bids' => $this->bidsConstraint($user)]);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -64,8 +65,27 @@ class QuotationController extends Controller
             }
         }
 
-        $quotation->load(['user', 'category', 'subCategory', 'bids.provider.user', 'track.changedBy', 'serviceRequest', 'attachments']);
+        $quotation->load([
+            'user', 'category', 'subCategory',
+            'bids' => $this->bidsConstraint($user),
+            'track.changedBy', 'serviceRequest', 'attachments',
+        ]);
+
         return $this->success(new QuotationResource($quotation));
+    }
+
+    /**
+     * A provider must only ever see their own bid on a quotation, never competing providers' bids.
+     */
+    private function bidsConstraint($user)
+    {
+        return function ($q) use ($user) {
+            $q->with('provider.user');
+
+            if ($user->user_type === 'provider') {
+                $q->where('provider_id', $user->provider?->id);
+            }
+        };
     }
 
     public function store(StoreQuotationRequest $request, QuotationService $quotationService)
