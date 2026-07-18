@@ -16,7 +16,7 @@ class HomeController extends Controller
 {
     use ApiResponse;
 
-    protected const ACTIVE_SERVICE_REQUEST_STATUSES = ['pending', 'approved', 'in_progress', 'confirmed'];
+    protected const ACTIVE_SERVICE_REQUEST_STATUSES = ['pending', 'approved', 'in_progress'];
 
     /**
      * Client home screen: public data for guests, plus personalized data for logged-in customers.

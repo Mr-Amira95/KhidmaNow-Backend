@@ -19,9 +19,7 @@ class RateController extends Controller
         $user = $request->user();
 
         $query = Rate::with(['rater', 'ratee', 'serviceRequest'])
-            ->where(function ($q) use ($user) {
-                $q->where('rater_id', $user->id)->orWhere('ratee_id', $user->id);
-            });
+            ->where('ratee_id', $user->id);
 
         if ($request->filled('rating_type')) {
             $query->where('rating_type', $request->rating_type);

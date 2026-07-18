@@ -14,7 +14,7 @@ class HomeController extends Controller
 {
     use ApiResponse;
 
-    protected const ACTIVE_JOB_STATUSES = ['approved', 'in_progress', 'confirmed'];
+    protected const ACTIVE_JOB_STATUSES = ['approved', 'in_progress'];
 
     public function index(Request $request)
     {
