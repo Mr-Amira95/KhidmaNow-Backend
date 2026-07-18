@@ -6,6 +6,8 @@ use App\Models\Notification;
 use App\Models\DeviceToken;
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Contract\Messaging;
+use Kreait\Firebase\Messaging\AndroidConfig;
+use Kreait\Firebase\Messaging\ApnsConfig;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
 
@@ -82,6 +84,75 @@ class NotificationService
 
         foreach ($report->failures()->getItems() as $failure) {
             Log::warning('Push Notification failure detail:', [
+                'target' => $failure->target()->value(),
+                'error'  => $failure->error()?->getMessage(),
+            ]);
+        }
+
+        foreach ($report->invalidTokens() as $invalidToken) {
+            DeviceToken::where('token', $invalidToken)->update(['is_active' => false]);
+        }
+    }
+
+    /**
+     * Push a data-only, high-priority call signal (no display "notification" block) so the
+     * receiving app renders its own ringing / in-call UI instead of a plain system tray item.
+     * Pass $title/$body to also persist a row in the notification history (e.g. for the
+     * initial "incoming_call" event); transient lifecycle events (accepted/declined/ended)
+     * should omit them.
+     */
+    public static function sendCallEvent(int $userId, string $event, array $data, ?string $title = null, ?string $body = null): void
+    {
+        $tokens = DeviceToken::where('user_id', $userId)
+            ->where('is_active', true)
+            ->where('receive_notifications', true)
+            ->pluck('token');
+
+        if ($tokens->isEmpty()) {
+            return;
+        }
+
+        if ($title !== null) {
+            Notification::create([
+                'user_id' => $userId,
+                'title'   => $title,
+                'body'    => $body ?? '',
+                'type'    => 'call',
+                'type_id' => $data['call_id'] ?? null,
+                'is_read' => false,
+            ]);
+        }
+
+        self::sendCallDataPush($tokens->toArray(), array_merge(['event' => $event], $data));
+    }
+
+    /**
+     * Dispatch a data-only FCM message. Android/iOS are configured for high-priority,
+     * background-waking delivery since these events must land even while the app is killed.
+     */
+    protected static function sendCallDataPush(array $tokens, array $data): void
+    {
+        $message = CloudMessage::new()
+            ->withData(array_map('strval', $data))
+            ->withAndroidConfig(AndroidConfig::fromArray([
+                'priority' => 'high',
+            ]))
+            ->withApnsConfig(ApnsConfig::fromArray([
+                'headers' => ['apns-priority' => '10'],
+                'payload' => ['aps' => ['content-available' => 1]],
+            ]));
+
+        $report = app(Messaging::class)->sendMulticast($message, $tokens);
+
+        Log::info('Call event push dispatched:', [
+            'tokens_count' => count($tokens),
+            'success'      => $report->successes()->count(),
+            'failures'     => $report->failures()->count(),
+            'event'        => $data['event'] ?? null,
+        ]);
+
+        foreach ($report->failures()->getItems() as $failure) {
+            Log::warning('Call event push failure detail:', [
                 'target' => $failure->target()->value(),
                 'error'  => $failure->error()?->getMessage(),
             ]);

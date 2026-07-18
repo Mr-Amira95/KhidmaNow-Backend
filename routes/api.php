@@ -130,6 +130,7 @@ Route::prefix('v1')->group(function () {
             Route::middleware('throttle:20,1')->group(function () {
                 Route::post('/{chatRoom}/calls/start', [CallController::class, 'start']);
                 Route::patch('/{chatRoom}/calls/{call}/accept', [CallController::class, 'accept']);
+                Route::patch('/{chatRoom}/calls/{call}/reject', [CallController::class, 'reject']);
                 Route::patch('/{chatRoom}/calls/{call}/end', [CallController::class, 'end']);
             });
         });

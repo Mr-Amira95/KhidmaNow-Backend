@@ -9,10 +9,12 @@ use App\Http\Traits\ApiResponse;
 use App\Models\Call;
 use App\Models\ChatRoom;
 use App\Models\Message;
+use App\Models\User;
 use App\Services\AgoraTokenBuilder;
 use App\Services\FirestoreService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 class CallController extends Controller
@@ -48,14 +50,22 @@ class CallController extends Controller
         $call->uid = $user->id;
         $call->expire_at = now()->addSeconds($expireSeconds);
 
-        $recipientId = $user->user_type === 'provider' ? $chatRoom->user_id : ($chatRoom->provider ? $chatRoom->provider->user_id : null);
+        $recipientId = $this->otherParticipantId($chatRoom, $user);
         if ($recipientId) {
-            NotificationService::send(
+            NotificationService::sendCallEvent(
                 $recipientId,
+                'incoming_call',
+                [
+                    'call_id' => $call->id,
+                    'chat_id' => $chatRoom->id,
+                    'call_type' => $call->call_type,
+                    'channel' => $call->agora_channel,
+                    'caller_id' => $user->id,
+                    'caller_name' => $user->name,
+                    'caller_avatar' => $this->avatarUrl($user),
+                ],
                 'Incoming call from ' . $user->name,
-                ucfirst($call->call_type) . ' call',
-                'call',
-                $call->id
+                ucfirst($call->call_type) . ' call'
             );
         }
 
@@ -71,6 +81,10 @@ class CallController extends Controller
 
         if ((int) $call->initiated_by === (int) $user->id) {
             return $this->error('The caller cannot accept their own call.', 403);
+        }
+
+        if ($call->status === 'declined') {
+            return $this->error('This call was declined.', 409);
         }
 
         if ($call->status === 'ended') {
@@ -98,7 +112,41 @@ class CallController extends Controller
         $call->uid = $user->id;
         $call->expire_at = now()->addSeconds($expireSeconds);
 
+        NotificationService::sendCallEvent($call->initiated_by, 'call_accepted', [
+            'call_id' => $call->id,
+            'chat_id' => $chatRoom->id,
+        ]);
+
         return $this->success(new CallResource($call), 'Call accepted.');
+    }
+
+    public function reject(Request $request, ChatRoom $chatRoom, Call $call)
+    {
+        $user = $request->user();
+        if (!$chatRoom->hasParticipant($user) || (int) $call->chat_id !== (int) $chatRoom->id) {
+            return $this->error('You are not a participant in this call.', 403);
+        }
+
+        if ((int) $call->initiated_by === (int) $user->id) {
+            return $this->error('The caller cannot reject their own call.', 403);
+        }
+
+        if ($call->status !== 'ringing') {
+            return $this->error('This call can no longer be rejected.', 409);
+        }
+
+        $call->update([
+            'status' => 'declined',
+            'ended_at' => now(),
+            'duration_seconds' => 0,
+        ]);
+
+        NotificationService::sendCallEvent($call->initiated_by, 'call_declined', [
+            'call_id' => $call->id,
+            'chat_id' => $chatRoom->id,
+        ]);
+
+        return $this->success(new CallResource($call), 'Call declined.');
     }
 
     public function show(Request $request, ChatRoom $chatRoom, Call $call)
@@ -118,9 +166,11 @@ class CallController extends Controller
             return $this->error('You are not a participant in this call.', 403);
         }
 
-        if ($call->status === 'ended') {
+        if (in_array($call->status, ['ended', 'declined'], true)) {
             return $this->success(new CallResource($call), 'Call already ended.');
         }
+
+        $wasRinging = $call->status === 'ringing';
 
         $endedAt = now();
         $call->update([
@@ -148,6 +198,37 @@ class CallController extends Controller
         FirestoreService::writeMessage($message);
         FirestoreService::upsertChatRoom($chatRoom);
 
+        $recipientId = $this->otherParticipantId($chatRoom, $user);
+        if ($recipientId) {
+            NotificationService::sendCallEvent($recipientId, $wasRinging ? 'call_cancelled' : 'call_ended', [
+                'call_id' => $call->id,
+                'chat_id' => $chatRoom->id,
+            ]);
+        }
+
         return $this->success(new CallResource($call), 'Call ended.');
+    }
+
+    /**
+     * The user id on "the other side" of this chat room relative to the given user.
+     */
+    private function otherParticipantId(ChatRoom $chatRoom, User $user): ?int
+    {
+        if ($user->user_type === 'provider') {
+            return $chatRoom->user_id;
+        }
+
+        return $chatRoom->provider ? $chatRoom->provider->user_id : null;
+    }
+
+    private function avatarUrl(User $user): ?string
+    {
+        if (!$user->profile_image) {
+            return null;
+        }
+
+        return str_starts_with($user->profile_image, 'http')
+            ? $user->profile_image
+            : Storage::disk('public')->url($user->profile_image);
     }
 }
