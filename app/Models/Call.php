@@ -13,6 +13,7 @@ class Call extends Model
         'agora_channel',
         'status',
         'started_at',
+        'accepted_at',
         'ended_at',
         'duration_seconds',
     ];
@@ -21,6 +22,7 @@ class Call extends Model
     {
         return [
             'started_at' => 'datetime',
+            'accepted_at' => 'datetime',
             'ended_at' => 'datetime',
         ];
     }

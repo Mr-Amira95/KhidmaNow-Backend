@@ -16,6 +16,7 @@ class CallResource extends JsonResource
             'call_type' => $this->call_type,
             'status' => $this->status,
             'started_at' => $this->started_at,
+            'accepted_at' => $this->accepted_at,
             'ended_at' => $this->ended_at,
             'duration_seconds' => $this->duration_seconds,
             'agora' => [
