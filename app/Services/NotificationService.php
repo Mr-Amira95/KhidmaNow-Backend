@@ -41,6 +41,23 @@ class NotificationService
     }
 
     /**
+     * Push (without creating DB rows) to every active, opted-in device token
+     * belonging to the given users. FCM caps a multicast at 500 tokens, so
+     * tokens are sent in chunks.
+     */
+    public static function sendBulkPush(array $userIds, string $title, string $body, string $type, ?int $typeId = null): void
+    {
+        $tokens = DeviceToken::whereIn('user_id', $userIds)
+            ->where('is_active', true)
+            ->where('receive_notifications', true)
+            ->pluck('token');
+
+        foreach ($tokens->chunk(500) as $chunk) {
+            self::sendPushNotification($chunk->toArray(), $title, $body, $type, $typeId);
+        }
+    }
+
+    /**
      * Dispatch a push notification to the given device tokens via Firebase Cloud Messaging.
      */
     protected static function sendPushNotification(array $tokens, string $title, string $body, string $type, ?int $typeId): void
@@ -62,6 +79,13 @@ class NotificationService
             'type'         => $type,
             'type_id'      => $typeId,
         ]);
+
+        foreach ($report->failures()->getItems() as $failure) {
+            Log::warning('Push Notification failure detail:', [
+                'target' => $failure->target()->value(),
+                'error'  => $failure->error()?->getMessage(),
+            ]);
+        }
 
         foreach ($report->invalidTokens() as $invalidToken) {
             DeviceToken::where('token', $invalidToken)->update(['is_active' => false]);

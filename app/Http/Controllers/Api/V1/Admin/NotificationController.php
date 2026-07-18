@@ -8,6 +8,7 @@ use App\Http\Resources\NotificationResource;
 use App\Http\Traits\ApiResponse;
 use App\Models\Notification;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
@@ -49,6 +50,14 @@ class NotificationController extends Controller
         ]))->toArray();
 
         Notification::insert($notifications);
+
+        NotificationService::sendBulkPush(
+            $users->pluck('id')->toArray(),
+            $payload['title'],
+            $payload['body'],
+            $payload['type'],
+            $payload['type_id'] ?? null
+        );
 
         return $this->success([
             'sent_to' => $users->count(),

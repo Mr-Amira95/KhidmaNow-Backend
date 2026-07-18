@@ -62,6 +62,14 @@ class QuotationService
         ])->toArray();
 
         Notification::insert($notifications);
+
+        NotificationService::sendBulkPush(
+            $providers->pluck('user_id')->toArray(),
+            'New quotation request',
+            $quotation->title ?: 'A new quotation matching your services is available.',
+            'service_request',
+            $quotation->id
+        );
     }
 
     public function approveBid(Quotation $quotation, QuotationBid $bid, User $changedBy): ServiceRequest
