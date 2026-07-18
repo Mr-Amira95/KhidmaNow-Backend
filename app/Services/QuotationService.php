@@ -54,7 +54,7 @@ class QuotationService
             'title'      => 'New quotation request',
             'body'       => $quotation->title ?: 'A new quotation matching your services is available.',
             'icon'       => null,
-            'type'       => 'service_request',
+            'type'       => 'quotation',
             'type_id'    => $quotation->id,
             'is_read'    => false,
             'created_at' => now(),
@@ -67,7 +67,7 @@ class QuotationService
             $providers->pluck('user_id')->toArray(),
             'New quotation request',
             $quotation->title ?: 'A new quotation matching your services is available.',
-            'service_request',
+            'quotation',
             $quotation->id
         );
     }

@@ -41,7 +41,7 @@ class QuotationController extends Controller
             $quotation->user_id,
             'New Bid Received',
             'Provider ' . ($provider->business_name ?? $request->user()->name) . ' has submitted a bid of ' . $bid->price . ' on your quotation "' . $quotation->title . '".',
-            'service_request',
+            'quotation',
             $quotation->id
         );
 
