@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Provider;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreServiceRequestRequest extends FormRequest
@@ -11,7 +12,14 @@ class StoreServiceRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'provider_id'     => 'required|integer|exists:providers,id',
+            'provider_id'     => [
+                'required', 'integer', 'exists:providers,id',
+                function ($attribute, $value, $fail) {
+                    if (Provider::find($value)?->isSuspended()) {
+                        $fail('This provider is currently unavailable for new requests.');
+                    }
+                },
+            ],
             'title'           => 'nullable|string|max:255',
             'description'     => 'nullable|string',
             'price'           => 'nullable|numeric|min:0',

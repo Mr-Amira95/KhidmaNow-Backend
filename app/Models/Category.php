@@ -13,12 +13,14 @@ class Category extends Model
         'description_en',
         'icon',
         'is_active',
+        'commission_rate',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_active' => 'boolean',
+            'is_active'       => 'boolean',
+            'commission_rate' => 'decimal:2',
         ];
     }
 

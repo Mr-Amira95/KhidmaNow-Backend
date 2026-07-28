@@ -6,16 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckoutRequest;
 use App\Http\Resources\PaymentResource;
 use App\Http\Traits\ApiResponse;
+use App\Http\Traits\HandlesUploads;
 use App\Models\Payment;
 use App\Models\ServiceRequest;
-use Illuminate\Http\Request;
+use App\Models\User;
+use App\Services\NotificationService;
+use App\Services\StripePaymentService;
 use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, HandlesUploads;
 
-    public function checkout(CheckoutRequest $request, ServiceRequest $serviceRequest)
+    public function checkout(CheckoutRequest $request, ServiceRequest $serviceRequest, StripePaymentService $stripe)
     {
         $user = $request->user();
         if ($user->user_type !== 'customer' || (int) $serviceRequest->user_id !== (int) $user->id) {
@@ -26,48 +29,76 @@ class PaymentController extends Controller
             return $this->error('This request is not ready for checkout.', 422);
         }
 
+        if (Payment::where('service_request_id', $serviceRequest->id)->where('status', 'pending')->exists()) {
+            return $this->error('A payment for this request is already awaiting confirmation.', 422);
+        }
+
         $payment = Payment::create([
             'user_id'            => $user->id,
             'service_request_id' => $serviceRequest->id,
             'amount'             => $serviceRequest->price ?? 0,
             'payment_method'     => $request->payment_method,
             'status'             => 'pending',
-            'transaction_ref'    => 'MOCK-' . Str::upper(Str::random(12)),
         ]);
 
-        return $this->success(new PaymentResource($payment), 'Checkout created. Confirm to complete payment.', 201);
+        if ($request->payment_method === 'cash') {
+            $this->handleCashCheckout($payment, $serviceRequest);
+        } elseif ($request->payment_method === 'cliq') {
+            $this->handleCliqCheckout($request, $payment);
+        } else {
+            $this->handleCardCheckout($payment, $stripe);
+        }
+
+        return $this->success(new PaymentResource($payment->fresh()), 'Checkout created.', 201);
     }
 
-    public function confirm(Request $request, Payment $payment)
+    private function handleCashCheckout(Payment $payment, ServiceRequest $serviceRequest): void
     {
-        $user = $request->user();
-        if ($user->user_type !== 'customer' || (int) $payment->user_id !== (int) $user->id) {
-            return $this->error('You are not allowed to confirm this payment.', 403);
-        }
+        $payment->update(['transaction_ref' => 'CASH-' . Str::upper(Str::random(10))]);
 
-        if ($payment->status !== 'pending') {
-            return $this->error("This payment is already '{$payment->status}'.", 422);
-        }
-
-        $payment->update([
-            'status'  => 'paid',
-            'paid_at' => now(),
-        ]);
-
-        $payment->serviceRequest()->update(['payment_status' => 'paid']);
-
-        $payment->load(['serviceRequest.provider']);
-
-        if ($payment->serviceRequest && $payment->serviceRequest->provider) {
-            \App\Services\NotificationService::send(
-                $payment->serviceRequest->provider->user_id,
-                'Payment Confirmed',
-                'Payment of ' . $payment->amount . ' has been confirmed for service request: "' . $payment->serviceRequest->title . '".',
+        $serviceRequest->loadMissing('provider');
+        if ($serviceRequest->provider) {
+            NotificationService::send(
+                $serviceRequest->provider->user_id,
+                'Cash Payment Pending',
+                'A cash payment of ' . $payment->amount . ' is awaiting your confirmation for "' . $serviceRequest->title . '".',
                 'payment',
                 $payment->id
             );
         }
+    }
 
-        return $this->success(new PaymentResource($payment), 'Payment confirmed successfully.');
+    private function handleCliqCheckout(CheckoutRequest $request, Payment $payment): void
+    {
+        $path = $this->storeUpload($request->file('receipt'), 'payments/receipts');
+        $payment->update([
+            'transaction_ref' => 'CLIQ-' . Str::upper(Str::random(10)),
+            'receipt_path'    => $path,
+        ]);
+
+        $adminIds = User::where('user_type', 'admin')->pluck('id')->all();
+        if (!empty($adminIds)) {
+            NotificationService::sendBulkPush(
+                $adminIds,
+                'CliQ Payment Pending Confirmation',
+                'A CliQ payment of ' . $payment->amount . ' is awaiting review.',
+                'payment',
+                $payment->id
+            );
+        }
+    }
+
+    private function handleCardCheckout(Payment $payment, StripePaymentService $stripe): void
+    {
+        $intent = $stripe->createPaymentIntent((float) $payment->amount, [
+            'payment_id'         => (string) $payment->id,
+            'service_request_id' => (string) $payment->service_request_id,
+        ]);
+
+        $payment->update([
+            'transaction_ref'          => $intent->id,
+            'stripe_payment_intent_id' => $intent->id,
+            'stripe_client_secret'     => $intent->client_secret,
+        ]);
     }
 }

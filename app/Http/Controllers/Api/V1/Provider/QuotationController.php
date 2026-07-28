@@ -17,6 +17,10 @@ class QuotationController extends Controller
     {
         $provider = $request->user()->provider;
 
+        if ($provider->isSuspended()) {
+            return $this->error('Your account is currently suspended and cannot place bids.', 403);
+        }
+
         if ($quotation->status !== 'open') {
             return $this->error("This quotation is already '{$quotation->status}'.", 422);
         }

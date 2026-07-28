@@ -13,6 +13,10 @@ class Payment extends Model
         'payment_method',
         'status',
         'transaction_ref',
+        'receipt_path',
+        'rejection_reason',
+        'stripe_payment_intent_id',
+        'stripe_client_secret',
         'paid_at',
     ];
 
@@ -32,5 +36,18 @@ class Payment extends Model
     public function serviceRequest()
     {
         return $this->belongsTo(ServiceRequest::class);
+    }
+
+    public function recordWalletDebit(): void
+    {
+        $wallet = Wallet::firstOrCreate(['user_id' => $this->user_id]);
+
+        WalletTransaction::create([
+            'wallet_id'   => $wallet->id,
+            'type'        => 'debit',
+            'amount'      => $this->amount,
+            'source_type' => 'payment',
+            'source_id'   => $this->id,
+        ]);
     }
 }

@@ -21,6 +21,7 @@ class RolePermissionSeeder extends Seeder
         'providers'        => ['label' => 'Providers', 'actions' => [
             'view' => 'View Providers', 'edit' => 'Edit Providers', 'delete' => 'Delete Providers',
             'verify' => 'Verify/Unverify Providers', 'manage_documents' => 'Approve/Reject Provider Documents',
+            'suspend' => 'Suspend/Unsuspend Providers',
         ]],
         'categories'       => ['label' => 'Categories', 'actions' => [
             'view' => 'View Categories', 'create' => 'Create Categories', 'edit' => 'Edit Categories', 'delete' => 'Delete Categories',
@@ -39,6 +40,7 @@ class RolePermissionSeeder extends Seeder
         ]],
         'terms'            => ['label' => 'Terms & Conditions', 'actions' => ['view' => 'View Terms & Conditions', 'edit' => 'Edit Terms & Conditions']],
         'privacy'          => ['label' => 'Privacy Policy', 'actions' => ['view' => 'View Privacy Policy', 'edit' => 'Edit Privacy Policy']],
+        'company_cliq'     => ['label' => 'Company CliQ Details', 'actions' => ['view' => 'View Company CliQ Details', 'edit' => 'Edit Company CliQ Details']],
         'faqs'             => ['label' => 'FAQs', 'actions' => [
             'view' => 'View FAQs', 'create' => 'Create FAQs', 'edit' => 'Edit FAQs', 'delete' => 'Delete FAQs',
         ]],
@@ -48,7 +50,7 @@ class RolePermissionSeeder extends Seeder
         'quotations'       => ['label' => 'Quotations', 'actions' => [
             'view' => 'View Quotations', 'create' => 'Create Quotations', 'edit' => 'Edit Quotations',
         ]],
-        'payments'         => ['label' => 'Payments', 'actions' => ['view' => 'View Payments']],
+        'payments'         => ['label' => 'Payments', 'actions' => ['view' => 'View Payments', 'edit' => 'Confirm/Reject CliQ Payments']],
         'payouts'          => ['label' => 'Payouts', 'actions' => ['view' => 'View Payouts', 'edit' => 'Update Payout Status']],
         'wallets'          => ['label' => 'Wallets', 'actions' => ['view' => 'View Wallets']],
         'rates'            => ['label' => 'Rates / Reviews', 'actions' => [

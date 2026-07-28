@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CompanyCliqDetailResource;
 use App\Http\Resources\PrivacyPolicyResource;
 use App\Http\Resources\TermsAndConditionResource;
 use App\Http\Traits\ApiResponse;
+use App\Models\CompanyCliqDetail;
 use App\Models\PrivacyPolicy;
 use App\Models\TermsAndCondition;
 
@@ -23,5 +25,11 @@ class CmsController extends Controller
     {
         $privacyPolicy = PrivacyPolicy::firstOrCreate([], ['content_ar' => '', 'content_en' => '']);
         return $this->success(new PrivacyPolicyResource($privacyPolicy));
+    }
+
+    public function cliqDetails()
+    {
+        $cliqDetail = CompanyCliqDetail::firstOrCreate([], ['alias' => '', 'bank_name' => '', 'holder_name' => '']);
+        return $this->success(new CompanyCliqDetailResource($cliqDetail));
     }
 }

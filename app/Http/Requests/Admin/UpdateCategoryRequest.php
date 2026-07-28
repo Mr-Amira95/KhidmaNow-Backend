@@ -8,6 +8,13 @@ class UpdateCategoryRequest extends FormRequest
 {
     public function authorize(): bool { return true; }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('commission_rate') === '') {
+            $this->merge(['commission_rate' => null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -17,6 +24,7 @@ class UpdateCategoryRequest extends FormRequest
             'description_en' => 'sometimes|string',
             'icon'           => $this->hasFile('icon') ? 'image|mimes:jpeg,png,jpg,svg|max:2048' : 'nullable|string|max:500',
             'is_active'      => 'nullable|boolean',
+            'commission_rate' => 'nullable|numeric|min:0|max:100',
         ];
     }
 }

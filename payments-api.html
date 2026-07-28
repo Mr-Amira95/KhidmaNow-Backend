@@ -1,0 +1,543 @@
+<title>Payments API — Cash · CliQ · Card</title>
+<style>
+  :root{
+    --paper:#f6f3ec;
+    --paper-raised:#efe9dc;
+    --ink:#1c1b17;
+    --ink-soft:#5b5647;
+    --rule:#d8d0bb;
+    --ledger:#0f6e5c;
+    --ledger-soft:#e2ede9;
+    --amber:#96660b;
+    --amber-soft:#f4e9d3;
+    --red:#a3311f;
+    --red-soft:#f4e1dc;
+    --blue:#33587a;
+    --blue-soft:#e1e8ee;
+    --mono-bg:#ece5d3;
+    --get:#33587a;
+    --post:#0f6e5c;
+    --patch:#96660b;
+  }
+  :root[data-theme="dark"]{
+    --paper:#16171a;
+    --paper-raised:#1e2023;
+    --ink:#eae6da;
+    --ink-soft:#a9a396;
+    --rule:#3a3c3f;
+    --ledger:#3fbf9e;
+    --ledger-soft:#1c2b27;
+    --amber:#dba741;
+    --amber-soft:#312a19;
+    --red:#e2695a;
+    --red-soft:#332120;
+    --blue:#7fa8cc;
+    --blue-soft:#1d262f;
+    --mono-bg:#232527;
+    --get:#7fa8cc;
+    --post:#3fbf9e;
+    --patch:#dba741;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#16171a;
+      --paper-raised:#1e2023;
+      --ink:#eae6da;
+      --ink-soft:#a9a396;
+      --rule:#3a3c3f;
+      --ledger:#3fbf9e;
+      --ledger-soft:#1c2b27;
+      --amber:#dba741;
+      --amber-soft:#312a19;
+      --red:#e2695a;
+      --red-soft:#332120;
+      --blue:#7fa8cc;
+      --blue-soft:#1d262f;
+      --mono-bg:#232527;
+      --get:#7fa8cc;
+      --post:#3fbf9e;
+      --patch:#dba741;
+    }
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sans{font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;}
+  .mono, code, .path{
+    font-family:ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  .sheet{
+    max-width:840px;
+    margin:0 auto;
+    padding:56px 28px 120px;
+  }
+
+  header.masthead{
+    border-bottom:2px solid var(--ink);
+    padding-bottom:20px;
+    margin-bottom:36px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+    flex-wrap:wrap;
+  }
+  header.masthead h1{
+    font-size:2.05rem;
+    margin:0 0 6px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    text-wrap:balance;
+  }
+  header.masthead .sub{
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color:var(--ink-soft);
+    font-size:0.95rem;
+  }
+  header.masthead .stamp{
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.78rem;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+    text-align:right;
+    line-height:1.6;
+  }
+
+  .legend{
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+    margin:0 0 44px;
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+  }
+  .legend .chip{
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+  section.method{
+    margin-bottom:56px;
+  }
+  .method-head{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    border-bottom:1px solid var(--rule);
+    padding-bottom:10px;
+    margin-bottom:18px;
+  }
+  .method-head .tag{
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    color:var(--ink-soft);
+  }
+  .method-head h2{
+    font-size:1.5rem;
+    margin:0;
+    font-weight:600;
+  }
+  .method-head .who{
+    margin-left:auto;
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+    text-align:right;
+  }
+
+  .flow{
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    margin:0 0 22px;
+    font-size:0.88rem;
+    color:var(--ink-soft);
+  }
+  .flow .step{
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:5px 10px;
+    color:var(--ink);
+  }
+  .flow .arrow{color:var(--ink-soft);}
+
+  .endpoint{
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:4px;
+    padding:16px 18px;
+    margin-bottom:14px;
+  }
+  .endpoint-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+  .verb{
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.72rem;
+    font-weight:700;
+    letter-spacing:0.04em;
+    padding:3px 8px;
+    border-radius:3px;
+    color:var(--paper);
+  }
+  .verb.get{background:var(--get);}
+  .verb.post{background:var(--post);}
+  .verb.patch{background:var(--patch);}
+  .path{font-size:0.95rem;}
+  .auth{
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.74rem;
+    color:var(--ink-soft);
+    margin-left:auto;
+  }
+  .desc{
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.92rem;
+    color:var(--ink-soft);
+    margin:0 0 10px;
+  }
+  table.fields{
+    width:100%;
+    border-collapse:collapse;
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.85rem;
+  }
+  table.fields th{
+    text-align:left;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    font-size:0.68rem;
+    color:var(--ink-soft);
+    font-weight:600;
+    padding:6px 8px 6px 0;
+    border-bottom:1px solid var(--rule);
+  }
+  table.fields td{
+    padding:7px 8px 7px 0;
+    border-bottom:1px solid var(--rule);
+    vertical-align:top;
+  }
+  table.fields tr:last-child td{border-bottom:none;}
+  table.fields code{
+    background:var(--mono-bg);
+    padding:1px 5px;
+    border-radius:3px;
+    font-size:0.83rem;
+  }
+
+  .note{
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.85rem;
+    color:var(--ink-soft);
+    border-left:3px solid var(--rule);
+    padding:2px 0 2px 14px;
+    margin:14px 0;
+  }
+  .note.warn{border-left-color:var(--amber); }
+  .note.removed{border-left-color:var(--red);}
+  .note strong{color:var(--ink);}
+
+  .wrap-x{overflow-x:auto;}
+  pre{
+    background:var(--mono-bg);
+    border-radius:4px;
+    padding:14px 16px;
+    font-size:0.82rem;
+    overflow-x:auto;
+    margin:0 0 10px;
+    line-height:1.5;
+  }
+
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.78rem;
+    padding:2px 9px;
+    border-radius:99px;
+    font-weight:600;
+  }
+  .status-pill.pending{background:var(--amber-soft);color:var(--amber);}
+  .status-pill.paid{background:var(--ledger-soft);color:var(--ledger);}
+  .status-pill.failed{background:var(--red-soft);color:var(--red);}
+
+  .lifecycle{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:18px 0 8px;
+  }
+
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+  @media (max-width:640px){
+    .grid2{grid-template-columns:1fr;}
+    header.masthead{flex-direction:column;align-items:flex-start;}
+    header.masthead .stamp{text-align:left;}
+  }
+
+  footer.colophon{
+    margin-top:60px;
+    padding-top:18px;
+    border-top:1px solid var(--rule);
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.78rem;
+    color:var(--ink-soft);
+  }
+
+  h3.sub-h{
+    font-family:ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+    margin:26px 0 10px;
+  }
+</style>
+
+<div class="sheet">
+
+  <header class="masthead">
+    <div>
+      <h1>Payments API</h1>
+      <div class="sub">Cash confirmation · CliQ confirmation · Card via Stripe</div>
+    </div>
+    <div class="stamp">KhidmaNow Backend<br>v1 · 2026&#8209;07&#8209;28</div>
+  </header>
+
+  <div class="legend">
+    <span class="chip"><span class="dot" style="background:var(--get)"></span>GET — read</span>
+    <span class="chip"><span class="dot" style="background:var(--post)"></span>POST — create</span>
+    <span class="chip"><span class="dot" style="background:var(--patch)"></span>PATCH — state change</span>
+    <span class="chip"><span class="status-pill pending">pending</span></span>
+    <span class="chip"><span class="status-pill paid">paid</span></span>
+    <span class="chip"><span class="status-pill failed">failed</span></span>
+  </div>
+
+  <p class="sans" style="max-width:65ch;color:var(--ink-soft);margin-bottom:36px;">
+    One checkout endpoint creates a <code class="mono">Payment</code> row in every case, always starting <span class="status-pill pending">pending</span>.
+    What confirms it into <span class="status-pill paid">paid</span> (or knocks it back to <span class="status-pill failed">failed</span>) differs by method — that's the whole shape of this change.
+  </p>
+
+  <div class="note removed">
+    <strong>Removed:</strong> <span class="mono">POST /v1/payments/{payment}/confirm</span> — customers could previously mark their own payment as paid. That's gone; a customer can no longer self-confirm any method. Stop calling this endpoint.
+  </div>
+
+  <!-- CASH -->
+  <section class="method">
+    <div class="method-head">
+      <span class="tag">01</span>
+      <h2>Cash</h2>
+      <span class="who">Confirmed by the <strong>service provider</strong></span>
+    </div>
+    <div class="flow">
+      <span class="step">Customer checks out with cash</span><span class="arrow">→</span>
+      <span class="step">Provider collects cash in person</span><span class="arrow">→</span>
+      <span class="step">Provider confirms or rejects in-app</span>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-row">
+        <span class="verb post">POST</span>
+        <span class="path mono">/v1/service-requests/{serviceRequest}/checkout</span>
+        <span class="auth">customer · Bearer token</span>
+      </div>
+      <p class="desc">Same checkout endpoint used for all three methods — see the shared reference at the bottom for the full request/response shape.</p>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-row">
+        <span class="verb patch">PATCH</span>
+        <span class="path mono">/v1/provider/payments/{payment}/confirm</span>
+        <span class="auth">provider · Bearer token</span>
+      </div>
+      <p class="desc">Marks the cash payment as received. No request body. Only works while the payment is <span class="status-pill pending">pending</span>, method is <code>cash</code>, and the payment belongs to this provider's service request.</p>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-row">
+        <span class="verb patch">PATCH</span>
+        <span class="path mono">/v1/provider/payments/{payment}/reject</span>
+        <span class="auth">provider · Bearer token</span>
+      </div>
+      <p class="desc">Provider says the cash never arrived.</p>
+      <div class="wrap-x">
+      <table class="fields">
+        <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+        <tr><td><code>rejection_reason</code></td><td>string</td><td>required, max 1000 chars</td></tr>
+      </table>
+      </div>
+    </div>
+
+    <p class="note">On reject, status → <span class="status-pill failed">failed</span> and the customer is notified with the reason. <code class="mono">payment_status</code> on the service request stays <code>unpaid</code>, so the customer can call checkout again with any method.</p>
+  </section>
+
+  <!-- CLIQ -->
+  <section class="method">
+    <div class="method-head">
+      <span class="tag">02</span>
+      <h2>CliQ</h2>
+      <span class="who">Confirmed by an <strong>admin</strong></span>
+    </div>
+    <div class="flow">
+      <span class="step">Customer views company CliQ alias</span><span class="arrow">→</span>
+      <span class="step">Sends transfer, checks out with a receipt photo</span><span class="arrow">→</span>
+      <span class="step">Admin reviews and confirms or rejects</span>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-row">
+        <span class="verb get">GET</span>
+        <span class="path mono">/v1/company-cliq-details</span>
+        <span class="auth">any authenticated user</span>
+      </div>
+      <p class="desc">Unchanged, already live. Call this <em>before</em> checkout to show the customer where to send the transfer.</p>
+      <pre class="mono">{ "alias": "khidmanow@cliq", "bank_name": "Arab Bank", "holder_name": "KhidmaNow LLC" }</pre>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-row">
+        <span class="verb post">POST</span>
+        <span class="path mono">/v1/service-requests/{serviceRequest}/checkout</span>
+        <span class="auth">customer · Bearer token</span>
+      </div>
+      <p class="desc"><code>multipart/form-data</code> for this method — a receipt image is required. See shared reference below.</p>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-row">
+        <span class="verb patch">PATCH</span>
+        <span class="path mono">/v1/admin/payments/{payment}/confirm</span>
+        <span class="auth">admin · permission <code>payments.edit</code></span>
+      </div>
+      <p class="desc">No body. Only works for <code>cliq</code> payments still <span class="status-pill pending">pending</span>. Admin should open <span class="mono">GET /v1/admin/payments/{payment}</span> first to view <code>receipt_url</code> before confirming.</p>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-row">
+        <span class="verb patch">PATCH</span>
+        <span class="path mono">/v1/admin/payments/{payment}/reject</span>
+        <span class="auth">admin · permission <code>payments.edit</code></span>
+      </div>
+      <div class="wrap-x">
+      <table class="fields">
+        <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+        <tr><td><code>rejection_reason</code></td><td>string</td><td>required, max 1000 chars</td></tr>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD -->
+  <section class="method">
+    <div class="method-head">
+      <span class="tag">03</span>
+      <h2>Card</h2>
+      <span class="who">Confirmed by <strong>Stripe</strong>, automatically</span>
+    </div>
+    <div class="flow">
+      <span class="step">Customer checks out with card</span><span class="arrow">→</span>
+      <span class="step">App confirms the PaymentIntent with Stripe SDK</span><span class="arrow">→</span>
+      <span class="step">Stripe webhook flips status server-side</span>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-row">
+        <span class="verb post">POST</span>
+        <span class="path mono">/v1/service-requests/{serviceRequest}/checkout</span>
+        <span class="auth">customer · Bearer token</span>
+      </div>
+      <p class="desc">Response includes <code>stripe_client_secret</code> — pass it straight into Stripe's mobile SDK (PaymentSheet on iOS/Android, or the Flutter/RN equivalent) to collect the card and confirm the charge. The app never touches raw card numbers or talks to our backend again for this step.</p>
+    </div>
+
+    <div class="note warn">
+      This is the one flow with a real third party in the loop. Nothing in the mobile app calls a "confirm" endpoint for card — Stripe confirms client-side, then our server learns about it from a webhook (below), independent of the app being open.
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-row">
+        <span class="verb post">POST</span>
+        <span class="path mono">/v1/webhooks/stripe</span>
+        <span class="auth">Stripe only — not for the app</span>
+      </div>
+      <p class="desc">Listens for <code>payment_intent.succeeded</code> and <code>payment_intent.payment_failed</code>. Flips <code>Payment.status</code> to <span class="status-pill paid">paid</span> or <span class="status-pill failed">failed</span> and pushes a notification to the customer. Listed here only so the mobile team knows status changes can arrive without any request from the app.</p>
+    </div>
+  </section>
+
+  <h3 class="sub-h">Shared — checkout request</h3>
+  <div class="wrap-x">
+  <table class="fields">
+    <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+    <tr><td><code>payment_method</code></td><td>string</td><td>required — <code>cash</code> · <code>cliq</code> · <code>card</code></td></tr>
+    <tr><td><code>receipt</code></td><td>image file</td><td>required only when <code>payment_method=cliq</code> · max 5&nbsp;MB · send as <code>multipart/form-data</code></td></tr>
+  </table>
+  </div>
+
+  <h3 class="sub-h">Shared — checkout / payment response</h3>
+  <pre class="wrap-x">{
+  "status": "success",
+  "message": "Checkout created.",
+  "data": {
+    "id": 42,
+    "user_id": 7,
+    "service_request_id": 118,
+    "amount": "25.00",
+    "payment_method": "cliq",
+    "status": "pending",
+    "transaction_ref": "CLIQ-9F3KDX0AQ1",
+    "receipt_url": "https://.../storage/payments/receipts/xyz.jpg",
+    "rejection_reason": null,
+    "stripe_client_secret": null,
+    "paid_at": null,
+    "created_at": "2026-07-28T21:00:00Z",
+    "updated_at": "2026-07-28T21:00:00Z"
+  }
+}</pre>
+  <p class="sans" style="font-size:0.85rem;color:var(--ink-soft);">
+    <code class="mono">stripe_client_secret</code> is only ever populated when <code>payment_method</code> is <code>card</code> and status is still <code>pending</code> — <code>null</code> in every other case.
+    <code class="mono">receipt_url</code> is only populated for <code>cliq</code>.
+  </p>
+
+  <h3 class="sub-h">Polling &amp; push</h3>
+  <p class="sans" style="font-size:0.92rem;color:var(--ink-soft);max-width:65ch;">
+    For all three methods, <span class="mono">GET /v1/service-requests/{serviceRequest}</span> returns the latest payment attempt under <code>data.payment</code> — poll <code>data.payment.status</code>, or just listen for the push notification (<code>type: "payment"</code>, <code>type_id</code> = payment id) that fires the moment it changes.
+  </p>
+
+  <div class="lifecycle sans" style="font-size:0.9rem;">
+    <span class="status-pill pending">pending</span>
+    <span>→</span>
+    <span class="status-pill paid">paid</span>
+    <span style="color:var(--ink-soft);">or</span>
+    <span class="status-pill failed">failed</span>
+    <span style="color:var(--ink-soft);margin-left:8px;">— on <code class="mono">failed</code>, the request stays <code>payment_status: unpaid</code>, so checkout can be called again.</span>
+  </div>
+
+  <footer class="colophon">
+    Endpoints not listed here (payment index/show for admin, wallet, payouts) are unchanged by this work.
+  </footer>
+
+</div>

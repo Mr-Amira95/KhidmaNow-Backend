@@ -19,6 +19,7 @@ class CategoryResource extends JsonResource
             'description_en'  => $this->description_en,
             'icon'            => $this->icon ? (str_starts_with($this->icon, 'http') ? $this->icon : Storage::disk('public')->url($this->icon)) : null,
             'is_active'       => $this->is_active,
+            'commission_rate' => $this->commission_rate !== null ? (float) $this->commission_rate : null,
             'is_wishlist'     => app(WishlistStatusResolver::class)
                 ->isWishlisted($request->user('sanctum')?->id, 'category', $this->id),
             'created_at'      => $this->created_at,

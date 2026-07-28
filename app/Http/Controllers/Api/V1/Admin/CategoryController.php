@@ -32,6 +32,7 @@ class CategoryController extends Controller
     public function store(StoreCategoryRequest $request)
     {
         $data = $request->validated();
+        $data['commission_rate'] = $request->filled('commission_rate') ? $request->input('commission_rate') : null;
         if ($request->hasFile('icon')) {
             $data['icon'] = $this->storeUpload($request->file('icon'), 'categories');
         }
@@ -49,6 +50,9 @@ class CategoryController extends Controller
     public function update(UpdateCategoryRequest $request, Category $category)
     {
         $data = $request->validated();
+        if ($request->has('commission_rate')) {
+            $data['commission_rate'] = $request->filled('commission_rate') ? $request->input('commission_rate') : null;
+        }
         if ($request->hasFile('icon')) {
             $data['icon'] = $this->storeUpload($request->file('icon'), 'categories');
         }

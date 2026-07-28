@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateProviderRequest;
 use App\Http\Resources\ProviderResource;
+use App\Http\Resources\RateResource;
 use App\Http\Traits\ApiResponse;
 use App\Models\Provider;
 use App\Models\ProviderSubCategory;
@@ -43,7 +44,7 @@ class ProviderController extends Controller
             return $this->error('Provider profile not found.', 404);
         }
 
-        $provider->load(['user', 'city', 'documents', 'subCategories.subCategory']);
+        $provider->load(['user.wallet', 'city', 'documents', 'subCategories.subCategory']);
 
         return $this->success(new ProviderResource($provider));
     }
@@ -77,7 +78,7 @@ class ProviderController extends Controller
             }
         });
 
-        $provider->load(['user', 'city', 'documents', 'subCategories.subCategory']);
+        $provider->load(['user.wallet', 'city', 'documents', 'subCategories.subCategory']);
 
         return $this->success(new ProviderResource($provider), 'Provider profile updated successfully.');
     }
@@ -87,9 +88,27 @@ class ProviderController extends Controller
      */
     public function show(Provider $provider)
     {
-        $provider->load(['user', 'city', 'subCategories.subCategory']);
+        if ($provider->isSuspended()) {
+            return $this->error('Provider not found.', 404);
+        }
+
+        $provider->load(['user.wallet', 'city', 'subCategories.subCategory', 'feedbacks.rater']);
 
         return $this->success(new ProviderResource($provider));
+    }
+
+    /**
+     * Public: get the feedback (ratings) left for a provider.
+     */
+    public function feedbacks(Provider $provider)
+    {
+        if ($provider->isSuspended()) {
+            return $this->error('Provider not found.', 404);
+        }
+
+        $query = $provider->feedbacks()->with('rater');
+
+        return $this->paginated(RateResource::class, $query);
     }
 
     /**
@@ -107,7 +126,7 @@ class ProviderController extends Controller
             'sort'                => 'nullable|in:rating,newest,experience',
         ]);
 
-        $query = Provider::query()->with(['user', 'city', 'subCategories.subCategory.category']);
+        $query = Provider::query()->notSuspended()->with(['user.wallet', 'city', 'subCategories.subCategory.category']);
 
         if ($request->filled('sub_category_id')) {
             $query->whereHas('subCategories', fn($q) => $q->where('sub_category_id', $request->sub_category_id));

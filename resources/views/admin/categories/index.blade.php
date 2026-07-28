@@ -20,6 +20,7 @@
                         <th class="py-3 px-4">Icon</th>
                         <th class="py-3 px-4">Name</th>
                         <th class="py-3 px-4">Sub-categories</th>
+                        <th class="py-3 px-4">Commission</th>
                         <th class="py-3 px-4">Status</th>
                         <th class="py-3 px-4 text-right">Actions</th>
                     </tr>
@@ -64,6 +65,8 @@
                 <x-admin.textarea-field name="category_description_ar" label="Description (Arabic)" rows="2" />
             </div>
             <x-admin.file-field name="category_icon" label="Icon" />
+            <x-admin.text-field name="category_commission_rate" type="number" step="0.01" min="0" max="100"
+                label="Commission rate (%) — leave blank to use the global default" />
             <x-admin.toggle-switch name="category_is_active" label="Active" :checked="true" />
             <x-admin.submit-button>Save Category</x-admin.submit-button>
         </form>

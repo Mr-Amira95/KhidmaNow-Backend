@@ -25,7 +25,8 @@ class QuotationController extends Controller
 
         $query = Quotation::with(['user', 'category', 'subCategory'])
             ->when($user->user_type === 'provider', function ($q) use ($user) {
-                $subCategoryIds = $user->provider
+                $isSuspended = $user->provider?->isSuspended() ?? false;
+                $subCategoryIds = $user->provider && !$isSuspended
                     ? $user->provider->subCategories()->pluck('sub_category_id')
                     : collect();
 

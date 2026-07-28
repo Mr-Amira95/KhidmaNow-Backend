@@ -19,6 +19,10 @@ class ProviderResource extends JsonResource
             'experience_years'    => $this->experience_years,
             'availability_status' => $this->availability_status,
             'is_verified'         => $this->is_verified,
+            'is_suspended'        => $this->isSuspended(),
+            'suspended_until'     => $this->suspended_until,
+            'debt_amount'         => $this->debtAmount(),
+            'is_debt_suspended'   => $this->isDebtSuspended(),
             'is_wishlist'         => app(WishlistStatusResolver::class)
                 ->isWishlisted($request->user('sanctum')?->id, 'provider', $this->id),
             'created_at'          => $this->created_at,
@@ -27,6 +31,7 @@ class ProviderResource extends JsonResource
             'city'                => new CityResource($this->whenLoaded('city')),
             'documents'           => ProviderDocumentResource::collection($this->whenLoaded('documents')),
             'sub_categories'      => ProviderSubCategoryResource::collection($this->whenLoaded('subCategories')),
+            'feedbacks'           => RateResource::collection($this->whenLoaded('feedbacks')),
         ];
     }
 }

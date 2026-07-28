@@ -20,6 +20,10 @@ class ServiceRequestController extends Controller
     {
         $provider = $request->user()->provider;
 
+        if ($provider->isSuspended()) {
+            return $this->error('Your account is currently suspended and cannot create new requests.', 403);
+        }
+
         $serviceRequest = ServiceRequest::create([
             ...$request->validated(),
             'provider_id'    => $provider->id,

@@ -425,22 +425,55 @@ function initUsersProvidersPage() {
 
     let page = 1;
 
+    const POLICY_SETTINGS = {
+        'provider_rejection_limit': '#policy-rejection-limit',
+        'provider_rejection_window_hours': '#policy-window-hours',
+        'provider_suspension_duration_hours': '#policy-suspension-hours',
+        'provider_debt_suspension_threshold': '#policy-debt-threshold',
+    };
+
+    async function loadPolicy() {
+        if (!hasPermission('settings.view')) return;
+        const result = await apiRequest('get', '/admin/settings', { search: 'provider_' });
+        if (!result.ok) return;
+        (result.data.data || []).forEach((setting) => {
+            const selector = POLICY_SETTINGS[setting.key];
+            if (selector) qs(selector).value = setting.value;
+        });
+    }
+
+    async function savePolicy() {
+        const statusEl = qs('#policy-save-status');
+        statusEl.textContent = 'Saving…';
+        const settings = Object.entries(POLICY_SETTINGS).map(([key, selector]) => ({
+            key,
+            value: qs(selector).value,
+        }));
+        const result = await apiRequest('put', '/admin/settings', { settings });
+        statusEl.textContent = result.ok ? 'Saved.' : 'Failed to save.';
+        setTimeout(() => { statusEl.textContent = ''; }, 2500);
+    }
+
+    qs('#policy-save-button')?.addEventListener('click', savePolicy);
+    loadPolicy();
+
     async function load() {
-        tbody.innerHTML = loadingRow(6);
+        tbody.innerHTML = loadingRow(8);
         const result = await apiRequest('get', '/admin/providers', {
             page,
             search: qs('#providers-search').value || undefined,
             is_verified: qs('#providers-verified-filter').value || undefined,
+            is_suspended: qs('#providers-suspended-filter').value || undefined,
         });
 
         if (!result.ok) {
-            tbody.innerHTML = errorRow(6, 'Failed to load providers.');
+            tbody.innerHTML = errorRow(8, 'Failed to load providers.');
             return;
         }
 
         const providers = result.data.data;
         if (!providers.length) {
-            tbody.innerHTML = emptyRow(6, 'No providers found.');
+            tbody.innerHTML = emptyRow(8, 'No providers found.');
         } else {
             tbody.innerHTML = providers.map((p) => `
                 <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
@@ -449,9 +482,13 @@ function initUsersProvidersPage() {
                     <td class="py-3 px-4 text-sm">${escapeHtml(p.city?.name_en) || '—'}</td>
                     <td class="py-3 px-4 text-sm">${p.availability_status}</td>
                     <td class="py-3 px-4">${p.is_verified ? badgeHtml('Verified', 'green') : badgeHtml('Pending', 'orange')}</td>
+                    <td class="py-3 px-4">${p.is_suspended ? badgeHtml('Suspended', 'rose') : badgeHtml('Active', 'green')}</td>
+                    <td class="py-3 px-4 text-sm">${Number(p.debt_amount) > 0 ? `<span class="text-rose-600 dark:text-rose-400">${p.debt_amount}</span>` : '—'}</td>
                     <td class="py-3 px-4 text-right text-sm">
                         <button data-action="view" data-id="${p.id}" class="link-action">View</button>
                         ${hasPermission('providers.verify') ? `<button data-action="toggle-verify" data-id="${p.id}" data-verified="${p.is_verified ? '1' : '0'}" class="ml-3 link-action">${p.is_verified ? 'Unverify' : 'Verify'}</button>` : ''}
+                        ${hasPermission('providers.suspend') ? `<button data-action="toggle-suspend" data-id="${p.id}" data-suspended="${p.is_suspended ? '1' : '0'}" class="ml-3 link-action">${p.is_suspended ? 'Unsuspend' : 'Suspend'}</button>` : ''}
+                        ${hasPermission('providers.suspend') && Number(p.debt_amount) > 0 ? `<button data-action="record-debt-payment" data-id="${p.id}" class="ml-3 link-action">Record Payment</button>` : ''}
                         ${hasPermission('providers.delete') ? `<button data-action="delete" data-id="${p.id}" class="ml-3 link-action-danger">Delete</button>` : ''}
                     </td>
                 </tr>
@@ -472,6 +509,7 @@ function initUsersProvidersPage() {
                     <p class="text-sm font-semibold">${escapeHtml(p.business_name)}</p>
                     <p class="text-sm text-zinc-500">${escapeHtml(p.description) || 'No description.'}</p>
                     <p class="mt-1 text-xs text-zinc-400">${p.experience_years ?? 0} years experience &middot; ${escapeHtml(p.city?.name_en)}</p>
+                    ${Number(p.debt_amount) > 0 ? `<p class="mt-1 text-xs font-medium text-rose-600 dark:text-rose-400">Owes ${p.debt_amount} in unpaid commission</p>` : ''}
                 </div>
                 <div>
                     <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">Sub-categories</p>
@@ -519,6 +557,26 @@ function initUsersProvidersPage() {
                 load();
             });
         }
+
+        if (button.dataset.action === 'toggle-suspend') {
+            if (button.dataset.suspended === '1') {
+                confirmAndRun('Unsuspend this provider?', async () => {
+                    await apiRequest('patch', `/admin/providers/${id}/unsuspend`);
+                    load();
+                });
+            } else {
+                const reason = window.prompt('Reason for suspension (optional):') || undefined;
+                await apiRequest('patch', `/admin/providers/${id}/suspend`, { reason });
+                load();
+            }
+        }
+
+        if (button.dataset.action === 'record-debt-payment') {
+            const amount = window.prompt('Amount paid toward the outstanding commission:');
+            if (!amount || Number(amount) <= 0) return;
+            await apiRequest('post', `/admin/providers/${id}/record-debt-payment`, { amount });
+            load();
+        }
     });
 
     qs('#provider-detail-body').addEventListener('click', async (event) => {
@@ -539,6 +597,7 @@ function initUsersProvidersPage() {
 
     qs('#providers-search').addEventListener('input', debounce(() => { page = 1; load(); }));
     qs('#providers-verified-filter').addEventListener('change', () => { page = 1; load(); });
+    qs('#providers-suspended-filter').addEventListener('change', () => { page = 1; load(); });
 
     load();
 }
@@ -554,13 +613,13 @@ function initCategoriesPage() {
     let activeCategoryId = null;
 
     async function loadCategories() {
-        tbody.innerHTML = loadingRow(5);
+        tbody.innerHTML = loadingRow(6);
         const result = await apiRequest('get', '/admin/categories', { search: qs('#categories-search').value || undefined });
         if (!result.ok) return;
 
         const categories = result.data.data;
         if (!categories.length) {
-            tbody.innerHTML = emptyRow(5, 'No categories yet.');
+            tbody.innerHTML = emptyRow(6, 'No categories yet.');
             return;
         }
 
@@ -569,6 +628,7 @@ function initCategoriesPage() {
                 <td class="py-3 px-4">${c.icon ? `<img src="${c.icon}" class="h-8 w-8 rounded-lg object-cover">` : '<div class="h-8 w-8 rounded-lg bg-zinc-100 dark:bg-zinc-800"></div>'}</td>
                 <td class="py-3 px-4 text-sm font-medium">${escapeHtml(c.name_en)}<br><span class="text-zinc-400">${escapeHtml(c.name_ar)}</span></td>
                 <td class="py-3 px-4 text-sm">${c.sub_categories_count ?? 0}</td>
+                <td class="py-3 px-4 text-sm">${c.commission_rate !== null && c.commission_rate !== undefined ? `${c.commission_rate}%` : '<span class="text-zinc-400">Default</span>'}</td>
                 <td class="py-3 px-4">${c.is_active ? badgeHtml('Active', 'green') : badgeHtml('Inactive', 'zinc')}</td>
                 <td class="py-3 px-4 text-right text-sm">
                     <button data-action="manage" data-id="${c.id}" class="link-action">Sub-categories</button>
@@ -612,6 +672,7 @@ function initCategoriesPage() {
         qs('#category_name_en').value = category?.name_en || '';
         qs('#category_description_ar').value = category?.description_ar || '';
         qs('#category_description_en').value = category?.description_en || '';
+        qs('#category_commission_rate').value = category?.commission_rate ?? '';
         qs('#category_is_active').checked = category ? !!category.is_active : true;
         qs('#category-modal-title').textContent = category ? 'Edit Category' : 'New Category';
         openModal('category-modal');
@@ -687,6 +748,7 @@ function initCategoriesPage() {
         formData.append('name_en', qs('#category_name_en').value);
         formData.append('description_ar', qs('#category_description_ar').value);
         formData.append('description_en', qs('#category_description_en').value);
+        formData.append('commission_rate', qs('#category_commission_rate').value);
         formData.append('is_active', qs('#category_is_active').checked ? '1' : '0');
         const iconFile = qs('#category_icon').files[0];
         if (iconFile) formData.append('icon', iconFile);

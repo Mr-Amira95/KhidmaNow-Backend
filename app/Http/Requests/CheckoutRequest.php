@@ -11,7 +11,8 @@ class CheckoutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'payment_method' => 'required|in:card,cash',
+            'payment_method' => 'required|in:card,cash,cliq',
+            'receipt'        => 'required_if:payment_method,cliq|image|max:5120',
         ];
     }
 }

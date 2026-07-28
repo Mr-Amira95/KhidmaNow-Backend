@@ -43,7 +43,7 @@ class QuotationService
     {
         $providers = Provider::whereHas('subCategories', function ($q) use ($quotation) {
             $q->where('sub_category_id', $quotation->sub_category_id);
-        })->get();
+        })->notSuspended()->online()->get();
 
         if ($providers->isEmpty()) {
             return;

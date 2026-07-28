@@ -28,8 +28,9 @@ class HomeController extends Controller
         $categories = Category::where('is_active', true)->latest()->take(12)->get();
 
         $featuredProviders = Provider::query()
-            ->with(['user', 'city', 'subCategories.subCategory'])
+            ->with(['user.wallet', 'city', 'subCategories.subCategory'])
             ->where('is_verified', true)
+            ->notSuspended()
             ->orderByDesc(
                 User::select('average_rating')->whereColumn('users.id', 'providers.user_id')
             )

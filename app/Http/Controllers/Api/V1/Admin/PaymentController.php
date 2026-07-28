@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\RejectPaymentRequest;
 use App\Http\Resources\PaymentResource;
 use App\Http\Traits\ApiResponse;
 use App\Models\Payment;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -33,5 +35,75 @@ class PaymentController extends Controller
     {
         $payment->load(['user', 'serviceRequest.provider.user']);
         return $this->success(new PaymentResource($payment));
+    }
+
+    public function confirm(Payment $payment)
+    {
+        $error = $this->authorizeCliqPayment($payment);
+        if ($error) {
+            return $error;
+        }
+
+        $payment->update(['status' => 'paid', 'paid_at' => now()]);
+        $payment->serviceRequest()->update(['payment_status' => 'paid']);
+        $payment->recordWalletDebit();
+
+        $payment->load('serviceRequest.provider');
+
+        NotificationService::send(
+            $payment->user_id,
+            'CliQ Payment Confirmed',
+            'Your CliQ payment of ' . $payment->amount . ' has been confirmed.',
+            'payment',
+            $payment->id
+        );
+
+        if ($payment->serviceRequest && $payment->serviceRequest->provider) {
+            NotificationService::send(
+                $payment->serviceRequest->provider->user_id,
+                'Payment Confirmed',
+                'Payment of ' . $payment->amount . ' has been confirmed for service request: "' . $payment->serviceRequest->title . '".',
+                'payment',
+                $payment->id
+            );
+        }
+
+        return $this->success(new PaymentResource($payment->fresh()), 'Payment confirmed successfully.');
+    }
+
+    public function reject(RejectPaymentRequest $request, Payment $payment)
+    {
+        $error = $this->authorizeCliqPayment($payment);
+        if ($error) {
+            return $error;
+        }
+
+        $payment->update([
+            'status'           => 'failed',
+            'rejection_reason' => $request->rejection_reason,
+        ]);
+
+        NotificationService::send(
+            $payment->user_id,
+            'CliQ Payment Rejected',
+            'Your CliQ payment was not confirmed: ' . $request->rejection_reason,
+            'payment',
+            $payment->id
+        );
+
+        return $this->success(new PaymentResource($payment->fresh()), 'Payment rejected.');
+    }
+
+    private function authorizeCliqPayment(Payment $payment)
+    {
+        if ($payment->payment_method !== 'cliq') {
+            return $this->error('Only CliQ payments can be confirmed or rejected here.', 422);
+        }
+
+        if ($payment->status !== 'pending') {
+            return $this->error("This payment is already '{$payment->status}'.", 422);
+        }
+
+        return null;
     }
 }

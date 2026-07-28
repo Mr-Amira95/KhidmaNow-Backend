@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Provider;
 use App\Models\ServiceRequest;
 use App\Models\ServiceRequestTrack;
 use App\Models\User;
@@ -36,6 +37,10 @@ class ServiceRequestStatusService
             throw new InvalidArgumentException('The invoice must be paid before the request can start.');
         }
 
+        $wasDebtSuspended = $toStatus === 'confirmed' && $serviceRequest->provider
+            ? $serviceRequest->provider->isDebtSuspended()
+            : false;
+
         DB::transaction(function () use ($serviceRequest, $fromStatus, $toStatus, $changedBy) {
             $serviceRequest->update(['status' => $toStatus]);
 
@@ -49,51 +54,85 @@ class ServiceRequestStatusService
 
             // Handle payout and wallet credits upon customer confirmation
             if ($toStatus === 'confirmed') {
+                // Commission is always calculated from the full request price.
                 $price = floatval($serviceRequest->price ?? 0);
-                
-                $commissionRateSetting = Setting::where('key', 'commission_rate')->first();
-                $commissionRate = $commissionRateSetting ? floatval($commissionRateSetting->value) : 15.0;
-                
+
+                $commissionRate = $this->resolveCommissionRate($serviceRequest);
+
                 $commission = $price * ($commissionRate / 100.0);
                 $netAmount = $price - $commission;
-                
+
                 $provider = $serviceRequest->provider;
-                
+                $paymentMethod = $serviceRequest->payment?->payment_method;
+
                 if ($provider) {
-                    Payout::create([
-                        'provider_id'        => $provider->id,
-                        'service_request_id' => $serviceRequest->id,
-                        'amount'             => $netAmount,
-                        'commission'         => $commission,
-                        'status'             => 'pending',
-                    ]);
-                    
                     $wallet = Wallet::firstOrCreate(['user_id' => $provider->user_id]);
-                    
-                    // Credit gross amount
-                    $wallet->increment('balance', $price);
-                    WalletTransaction::create([
-                        'wallet_id'   => $wallet->id,
-                        'type'        => 'credit',
-                        'amount'      => $price,
-                        'source_type' => 'payment',
-                        'source_id'   => $serviceRequest->id,
-                    ]);
-                    
-                    // Debit commission
-                    if ($commission > 0) {
-                        $wallet->decrement('balance', $commission);
+
+                    if ($paymentMethod === 'cash') {
+                        // The customer already paid the provider directly in cash, so the
+                        // company has nothing to pay out — the provider instead owes the
+                        // company its commission, tracked as a negative wallet balance.
+                        if ($commission > 0) {
+                            $wallet->decrement('balance', $commission);
+                            WalletTransaction::create([
+                                'wallet_id'   => $wallet->id,
+                                'type'        => 'debit',
+                                'amount'      => $commission,
+                                'source_type' => 'commission',
+                                'source_id'   => $serviceRequest->id,
+                            ]);
+                        }
+                    } else {
+                        Payout::create([
+                            'provider_id'        => $provider->id,
+                            'service_request_id' => $serviceRequest->id,
+                            'amount'             => $netAmount,
+                            'commission'         => $commission,
+                            'status'             => 'pending',
+                        ]);
+
+                        // Credit gross amount
+                        $wallet->increment('balance', $price);
                         WalletTransaction::create([
                             'wallet_id'   => $wallet->id,
-                            'type'        => 'debit',
-                            'amount'      => $commission,
-                            'source_type' => 'commission',
+                            'type'        => 'credit',
+                            'amount'      => $price,
+                            'source_type' => 'payment',
                             'source_id'   => $serviceRequest->id,
                         ]);
+
+                        // Debit commission
+                        if ($commission > 0) {
+                            $wallet->decrement('balance', $commission);
+                            WalletTransaction::create([
+                                'wallet_id'   => $wallet->id,
+                                'type'        => 'debit',
+                                'amount'      => $commission,
+                                'source_type' => 'commission',
+                                'source_id'   => $serviceRequest->id,
+                            ]);
+                        }
                     }
                 }
             }
         });
+
+        if ($toStatus === 'confirmed' && $serviceRequest->provider) {
+            $provider = $serviceRequest->provider->fresh();
+            if (!$wasDebtSuspended && $provider->isDebtSuspended()) {
+                NotificationService::send(
+                    $provider->user_id,
+                    'Account Suspended',
+                    'Your provider account has been suspended for outstanding commission owed to the company. It will be reinstated once you settle the balance.',
+                    'system',
+                    $provider->id
+                );
+            }
+        }
+
+        if ($toStatus === 'rejected' && $serviceRequest->provider && (int) $changedBy->id === (int) $serviceRequest->provider->user_id) {
+            $this->maybeSuspendProvider($serviceRequest->provider);
+        }
 
         // Notify the other participant
         $notifyUserId = null;
@@ -115,5 +154,55 @@ class ServiceRequestStatusService
         }
 
         return $serviceRequest;
+    }
+
+    private function resolveCommissionRate(ServiceRequest $serviceRequest): float
+    {
+        $category = $serviceRequest->quotation?->category;
+
+        if ($category && $category->commission_rate !== null) {
+            return floatval($category->commission_rate);
+        }
+
+        $commissionRateSetting = Setting::where('key', 'commission_rate')->first();
+
+        return $commissionRateSetting ? floatval($commissionRateSetting->value) : 15.0;
+    }
+
+    private function resolveIntSetting(string $key, int $default): int
+    {
+        $setting = Setting::where('key', $key)->first();
+
+        return $setting ? (int) $setting->value : $default;
+    }
+
+    private function maybeSuspendProvider(Provider $provider): void
+    {
+        $limit = $this->resolveIntSetting('provider_rejection_limit', 3);
+        $windowHours = $this->resolveIntSetting('provider_rejection_window_hours', 24);
+        $durationHours = $this->resolveIntSetting('provider_suspension_duration_hours', 72);
+
+        $rejectionCount = ServiceRequestTrack::where('to_status', 'rejected')
+            ->where('changed_by', $provider->user_id)
+            ->where('created_at', '>=', now()->subHours($windowHours))
+            ->count();
+
+        if ($rejectionCount < $limit) {
+            return;
+        }
+
+        $provider->update([
+            'suspended_at'      => now(),
+            'suspended_until'   => now()->addHours($durationHours),
+            'suspension_reason' => "Exceeded {$limit} rejected requests within {$windowHours}h.",
+        ]);
+
+        NotificationService::send(
+            $provider->user_id,
+            'Account Suspended',
+            "Your provider account has been suspended for {$durationHours} hours after rejecting too many requests.",
+            'system',
+            $provider->id
+        );
     }
 }

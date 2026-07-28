@@ -15,8 +15,10 @@ use App\Http\Controllers\Api\V1\ProviderController;
 use App\Http\Controllers\Api\V1\Provider\HomeController as ProviderHomeController;
 use App\Http\Controllers\Api\V1\Provider\ServiceRequestController as ProviderServiceRequestController;
 use App\Http\Controllers\Api\V1\Provider\QuotationController as ProviderQuotationController;
+use App\Http\Controllers\Api\V1\Provider\PaymentController as ProviderPaymentController;
 use App\Http\Controllers\Api\V1\ServiceRequestController as ClientServiceRequestController;
 use App\Http\Controllers\Api\V1\PaymentController as ClientPaymentController;
+use App\Http\Controllers\Api\V1\StripeWebhookController;
 use App\Http\Controllers\Api\V1\QuotationController as ClientQuotationController;
 use App\Http\Controllers\Api\V1\WalletController as ClientWalletController;
 use App\Http\Controllers\Api\V1\RateController as ClientRateController;
@@ -43,6 +45,7 @@ use App\Http\Controllers\Api\V1\Admin\PrivacyPolicyController;
 use App\Http\Controllers\Api\V1\Admin\ProviderController as AdminProviderController;
 use App\Http\Controllers\Api\V1\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Api\V1\Admin\ChatbotController as AdminChatbotController;
+use App\Http\Controllers\Api\V1\Admin\CompanyCliqDetailController;
 use App\Http\Controllers\Api\V1\Admin\ProviderDocumentController;
 use App\Http\Controllers\Api\V1\Admin\QuotationController as AdminQuotationController;
 use App\Http\Controllers\Api\V1\Admin\RateController;
@@ -89,6 +92,10 @@ Route::prefix('v1')->group(function () {
     Route::get('/faqs', [PublicFaqController::class, 'index']);
     Route::get('/providers', [ProviderController::class, 'index']);
     Route::get('/providers/{provider}', [ProviderController::class, 'show']);
+    Route::get('/providers/{provider}/feedbacks', [ProviderController::class, 'feedbacks']);
+
+    // ─── Stripe Webhook (public; verified via signature, not auth) ────────────
+    Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
 
     // ─── Chatbot (public; personalizes/unlocks RFQ creation with a bearer token) ──
     Route::prefix('chatbot')->group(function () {
@@ -107,6 +114,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/profile', [ProfileController::class, 'show']);
         Route::patch('/profile', [ProfileController::class, 'update']);
 
+        // ─── Company CliQ Payment Details (read-only) ──────────────────────────
+        Route::get('/company-cliq-details', [CmsController::class, 'cliqDetails']);
+
         // ─── Provider Self-Service Routes ─────────────────────────────────────
         Route::prefix('provider')->middleware('provider')->group(function () {
             Route::get('home', [ProviderHomeController::class, 'index']);
@@ -117,6 +127,8 @@ Route::prefix('v1')->group(function () {
             Route::post('service-requests', [ProviderServiceRequestController::class, 'store']);
             Route::patch('service-requests/{serviceRequest}/status', [ProviderServiceRequestController::class, 'updateStatus']);
             Route::post('quotations/{quotation}/bids', [ProviderQuotationController::class, 'storeBid']);
+            Route::patch('payments/{payment}/confirm', [ProviderPaymentController::class, 'confirm']);
+            Route::patch('payments/{payment}/reject', [ProviderPaymentController::class, 'reject']);
         });
 
         // ─── Chats (client <-> provider) ──────────────────────────────────────
@@ -167,8 +179,6 @@ Route::prefix('v1')->group(function () {
             });
         });
 
-        Route::post('/payments/{payment}/confirm', [ClientPaymentController::class, 'confirm'])->middleware('customer');
-
         // ─── Quotations (client create/approve-bid; both read) ─────────────────
         Route::prefix('quotations')->group(function () {
             Route::get('/', [ClientQuotationController::class, 'index']);
@@ -212,6 +222,9 @@ Route::prefix('v1')->group(function () {
             // Providers
             Route::patch('providers/{provider}/verify', [AdminProviderController::class, 'verify'])->middleware('permission:providers.verify');
             Route::patch('providers/{provider}/unverify', [AdminProviderController::class, 'unverify'])->middleware('permission:providers.verify');
+            Route::patch('providers/{provider}/suspend', [AdminProviderController::class, 'suspend'])->middleware('permission:providers.suspend');
+            Route::patch('providers/{provider}/unsuspend', [AdminProviderController::class, 'unsuspend'])->middleware('permission:providers.suspend');
+            Route::post('providers/{provider}/record-debt-payment', [AdminProviderController::class, 'recordDebtPayment'])->middleware('permission:providers.suspend');
             Route::apiResource('providers', AdminProviderController::class)->only(['index', 'show', 'update', 'destroy'])->middleware('permission:providers');
 
             // Provider Documents
@@ -244,6 +257,10 @@ Route::prefix('v1')->group(function () {
             Route::get('privacy-policy', [PrivacyPolicyController::class, 'show'])->middleware('permission:privacy.view');
             Route::put('privacy-policy', [PrivacyPolicyController::class, 'update'])->middleware('permission:privacy.edit');
 
+            // CMS: Company CliQ Payment Details (singleton)
+            Route::get('company-cliq-details', [CompanyCliqDetailController::class, 'show'])->middleware('permission:company_cliq.view');
+            Route::put('company-cliq-details', [CompanyCliqDetailController::class, 'update'])->middleware('permission:company_cliq.edit');
+
             // CMS: FAQs
             Route::apiResource('faqs', FaqController::class)->middleware('permission:faqs');
 
@@ -263,6 +280,8 @@ Route::prefix('v1')->group(function () {
             // Payments
             Route::get('payments', [PaymentController::class, 'index'])->middleware('permission:payments.view');
             Route::get('payments/{payment}', [PaymentController::class, 'show'])->middleware('permission:payments.view');
+            Route::patch('payments/{payment}/confirm', [PaymentController::class, 'confirm'])->middleware('permission:payments.edit');
+            Route::patch('payments/{payment}/reject', [PaymentController::class, 'reject'])->middleware('permission:payments.edit');
 
             // Payouts
             Route::patch('payouts/{payout}/status', [PayoutController::class, 'updateStatus'])->middleware('permission:payouts.edit');
