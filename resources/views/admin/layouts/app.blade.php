@@ -104,6 +104,9 @@
                         <a href="/admin/cms/faqs" data-permission="faqs.view" class="nav-link {{ request()->is('admin/cms/faqs') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-question text-lg"></i> FAQs
                         </a>
+                        <a href="/admin/cms/company-cliq-details" data-permission="company_cliq.view" class="nav-link {{ request()->is('admin/cms/company-cliq-details') ? 'nav-link-active' : '' }}">
+                            <i class="ph ph-bank text-lg"></i> Company CliQ Details
+                        </a>
                     </div>
 
                     <div data-requires-super-admin>

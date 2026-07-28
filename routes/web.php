@@ -49,6 +49,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::view('/cms/terms', 'admin.cms.terms')->name('cms.terms');
     Route::view('/cms/privacy-policy', 'admin.cms.privacy-policy')->name('cms.privacy-policy');
     Route::view('/cms/faqs', 'admin.cms.faqs')->name('cms.faqs');
+    Route::view('/cms/company-cliq-details', 'admin.cms.company-cliq-details')->name('cms.company-cliq-details');
 
     Route::view('/admins', 'admin.admins.index')->name('admins');
     Route::view('/roles', 'admin.roles.index')->name('roles');

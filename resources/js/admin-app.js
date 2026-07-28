@@ -1408,6 +1408,51 @@ function initCmsSingletonPage({ pageEl, endpoint, contentArId, contentEnId, form
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Page: cms/company-cliq-details (singleton)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function initCmsCompanyCliqDetailsPage() {
+    const endpoint = '/admin/company-cliq-details';
+    const bannerSelector = '#cliq-banner';
+    const form = qs('#cliq-form');
+    if (!form) return;
+
+    async function load() {
+        const result = await apiRequest('get', endpoint);
+        if (!result.ok) return;
+        qs('#alias', form).value = result.data.data.alias || '';
+        qs('#bank_name', form).value = result.data.data.bank_name || '';
+        qs('#holder_name', form).value = result.data.data.holder_name || '';
+    }
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const button = qs('button[type="submit"]', form);
+        setLoading(button, true);
+        clearFieldErrors(form);
+        hideBanner(bannerSelector);
+
+        const result = await apiRequest('put', endpoint, {
+            alias: qs('#alias', form).value,
+            bank_name: qs('#bank_name', form).value,
+            holder_name: qs('#holder_name', form).value,
+        });
+
+        setLoading(button, false);
+
+        if (result.ok) {
+            showBanner(bannerSelector, 'Saved successfully.', 'success');
+        } else if (result.status === 422) {
+            setFieldErrors(form, result.data.errors);
+        } else {
+            showBanner(bannerSelector, result.data.message || 'Something went wrong.');
+        }
+    });
+
+    load();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Page: chats (view-only)
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -2284,6 +2329,7 @@ const PAGE_VIEW_PERMISSION = {
     'cms-faqs': 'faqs.view',
     'cms-terms': 'terms.view',
     'cms-privacy-policy': 'privacy.view',
+    'cms-company-cliq-details': 'company_cliq.view',
     'admins': null, // super-admin only, checked separately
     'roles': null,  // super-admin only, checked separately
 };
@@ -2370,6 +2416,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 formId: '#privacy-form',
                 bannerSelector: '#privacy-banner',
             });
+            break;
+        case 'cms-company-cliq-details':
+            initCmsCompanyCliqDetailsPage();
             break;
         case 'admins':
             initAdminsPage();
