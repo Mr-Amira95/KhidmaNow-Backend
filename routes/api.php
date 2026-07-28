@@ -175,6 +175,7 @@ Route::prefix('v1')->group(function () {
             Route::middleware('customer')->group(function () {
                 Route::post('/', [ClientServiceRequestController::class, 'store']);
                 Route::patch('/{serviceRequest}/status', [ClientServiceRequestController::class, 'updateStatus']);
+                Route::get('/{serviceRequest}/checkout', [ClientPaymentController::class, 'checkoutPreview']);
                 Route::post('/{serviceRequest}/checkout', [ClientPaymentController::class, 'checkout']);
             });
         });

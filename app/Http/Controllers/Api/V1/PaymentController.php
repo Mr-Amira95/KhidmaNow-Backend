@@ -4,19 +4,49 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckoutRequest;
+use App\Http\Resources\CompanyCliqDetailResource;
 use App\Http\Resources\PaymentResource;
 use App\Http\Traits\ApiResponse;
 use App\Http\Traits\HandlesUploads;
+use App\Models\CompanyCliqDetail;
 use App\Models\Payment;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Services\NotificationService;
 use App\Services\StripePaymentService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
     use ApiResponse, HandlesUploads;
+
+    public function checkoutPreview(Request $request, ServiceRequest $serviceRequest)
+    {
+        $user = $request->user();
+        if ($user->user_type !== 'customer' || (int) $serviceRequest->user_id !== (int) $user->id) {
+            return $this->error('You are not allowed to view payment details for this request.', 403);
+        }
+
+        $hasPendingPayment = Payment::where('service_request_id', $serviceRequest->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        $payable = $serviceRequest->status === 'approved'
+            && $serviceRequest->payment_status === 'unpaid'
+            && !$hasPendingPayment;
+
+        return $this->success([
+            'service_request_id' => $serviceRequest->id,
+            'title'               => $serviceRequest->title,
+            'amount'              => $serviceRequest->price ?? 0,
+            'status'              => $serviceRequest->status,
+            'payment_status'      => $serviceRequest->payment_status,
+            'payable'             => $payable,
+            'payment_methods'     => ['card', 'cash', 'cliq'],
+            'cliq_details'        => new CompanyCliqDetailResource(CompanyCliqDetail::firstOrCreate([])),
+        ], 'Payment details retrieved.');
+    }
 
     public function checkout(CheckoutRequest $request, ServiceRequest $serviceRequest, StripePaymentService $stripe)
     {
