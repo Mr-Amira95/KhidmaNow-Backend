@@ -2311,12 +2311,195 @@ function initRolesPage() {
     loadPermissions().then(load);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Page: payments
+// ═══════════════════════════════════════════════════════════════════════════
+
+function initPaymentsPage() {
+    const tbody = qs('#payments-table-body');
+    if (!tbody) return;
+
+    let page = 1;
+    let currentPaymentId = null;
+
+    function paymentStatusBadge(status) {
+        const color = status === 'paid' ? 'green' : status === 'failed' ? 'rose' : 'orange';
+        return badgeHtml(status, color);
+    }
+
+    function methodBadge(method) {
+        const labels = { cash: 'Cash', cliq: 'CliQ', card: 'Card' };
+        return badgeHtml(labels[method] || method, 'zinc');
+    }
+
+    async function load() {
+        tbody.innerHTML = loadingRow(7);
+        const result = await apiRequest('get', '/admin/payments', {
+            page,
+            payment_method: qs('#payments-method-filter').value || undefined,
+            status: qs('#payments-status-filter').value || undefined,
+        });
+
+        if (!result.ok) {
+            tbody.innerHTML = errorRow(7, 'Failed to load payments.');
+            return;
+        }
+
+        const payments = result.data.data;
+        if (!payments.length) {
+            tbody.innerHTML = emptyRow(7, 'No payments found.');
+        } else {
+            tbody.innerHTML = payments.map((p) => `
+                <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
+                    <td class="py-3 px-4 text-sm font-medium">${escapeHtml(p.user?.name) || '—'}</td>
+                    <td class="py-3 px-4 text-sm">${escapeHtml(p.service_request?.title) || `#${p.service_request_id}`}</td>
+                    <td class="py-3 px-4 text-sm font-mono">${escapeHtml(p.amount)}</td>
+                    <td class="py-3 px-4">${methodBadge(p.payment_method)}</td>
+                    <td class="py-3 px-4">${paymentStatusBadge(p.status)}</td>
+                    <td class="py-3 px-4 text-sm text-zinc-500">${formatDate(p.created_at)}</td>
+                    <td class="py-3 px-4 text-right text-sm">
+                        <button data-action="view" data-id="${p.id}" class="link-action">View</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        renderPagination(qs('#payments-pagination'), result.data.meta, (p) => { page = p; load(); });
+    }
+
+    async function viewPayment(id) {
+        const result = await apiRequest('get', `/admin/payments/${id}`);
+        if (!result.ok) return;
+        const p = result.data.data;
+        currentPaymentId = p.id;
+
+        const canAct = p.payment_method === 'cliq' && p.status === 'pending' && hasPermission('payments.edit');
+
+        qs('#payment-detail-body').innerHTML = `
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-zinc-400">Customer</p>
+                        <p class="font-medium">${escapeHtml(p.user?.name) || '—'}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-zinc-400">Amount</p>
+                        <p class="font-medium font-mono">${escapeHtml(p.amount)}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-zinc-400">Method</p>
+                        <p>${methodBadge(p.payment_method)}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-zinc-400">Status</p>
+                        <p>${paymentStatusBadge(p.status)}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-zinc-400">Reference</p>
+                        <p class="font-mono text-xs">${escapeHtml(p.transaction_ref) || '—'}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-zinc-400">Service Request</p>
+                        <p>${escapeHtml(p.service_request?.title) || `#${p.service_request_id}`}</p>
+                    </div>
+                </div>
+                ${p.receipt_url ? `
+                    <div>
+                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">CliQ Receipt</p>
+                        <a href="${p.receipt_url}" target="_blank">
+                            <img src="${p.receipt_url}" class="max-h-64 w-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
+                        </a>
+                    </div>
+                ` : ''}
+                ${p.rejection_reason ? `
+                    <div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
+                        <p class="text-xs font-semibold uppercase tracking-wide">Rejection reason</p>
+                        <p>${escapeHtml(p.rejection_reason)}</p>
+                    </div>
+                ` : ''}
+                ${canAct ? `
+                    <div class="flex gap-3 pt-2">
+                        <button id="payment-confirm-button" class="btn btn-primary flex-1 justify-center">Confirm payment</button>
+                        <button id="payment-reject-button" class="btn btn-secondary flex-1 justify-center text-rose-600 dark:text-rose-400">Reject payment</button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+
+        const confirmButton = qs('#payment-confirm-button');
+        if (confirmButton) {
+            confirmButton.addEventListener('click', () => {
+                confirmAndRun('Confirm that this CliQ transfer was received?', async () => {
+                    setLoading(confirmButton, true);
+                    const res = await apiRequest('patch', `/admin/payments/${id}/confirm`);
+                    setLoading(confirmButton, false);
+                    if (res.ok) {
+                        closeModal('payment-detail-modal');
+                        showBanner('#payments-banner', 'Payment confirmed successfully.', 'success');
+                        load();
+                    } else {
+                        showBanner('#payments-banner', res.data.message || 'Something went wrong.');
+                    }
+                });
+            });
+        }
+
+        const rejectButton = qs('#payment-reject-button');
+        if (rejectButton) {
+            rejectButton.addEventListener('click', () => {
+                closeModal('payment-detail-modal');
+                const rejectForm = qs('#payment-reject-form');
+                clearFieldErrors(rejectForm);
+                rejectForm.reset();
+                openModal('payment-reject-modal');
+            });
+        }
+
+        openModal('payment-detail-modal');
+    }
+
+    tbody.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-action="view"]');
+        if (!button) return;
+        viewPayment(button.dataset.id);
+    });
+
+    const rejectForm = qs('#payment-reject-form');
+    rejectForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!currentPaymentId) return;
+        clearFieldErrors(rejectForm);
+        const button = qs('button[type="submit"]', rejectForm);
+        setLoading(button, true);
+        const result = await apiRequest('patch', `/admin/payments/${currentPaymentId}/reject`, {
+            rejection_reason: qs('#rejection_reason', rejectForm).value,
+        });
+        setLoading(button, false);
+
+        if (result.ok) {
+            closeModal('payment-reject-modal');
+            showBanner('#payments-banner', 'Payment rejected.', 'success');
+            load();
+        } else if (result.status === 422) {
+            setFieldErrors(rejectForm, result.data.errors);
+        } else {
+            showBanner('#payments-banner', result.data.message || 'Something went wrong.');
+        }
+    });
+
+    qs('#payments-method-filter').addEventListener('change', () => { page = 1; load(); });
+    qs('#payments-status-filter').addEventListener('change', () => { page = 1; load(); });
+
+    load();
+}
+
 // ─── Dispatcher ─────────────────────────────────────────────────────────────
 
 const PAGE_VIEW_PERMISSION = {
     'users-clients': 'clients.view',
     'users-providers': 'providers.view',
     'categories': 'categories.view',
+    'payments': 'payments.view',
     'chats': 'chats.view',
     'chatbot': 'chatbot.view',
     'support-tickets': 'support_tickets.view',
@@ -2366,6 +2549,9 @@ document.addEventListener('DOMContentLoaded', () => {
             break;
         case 'categories':
             initCategoriesPage();
+            break;
+        case 'payments':
+            initPaymentsPage();
             break;
         case 'chats':
             initChatsPage();

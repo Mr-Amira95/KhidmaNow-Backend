@@ -52,6 +52,13 @@
                     </div>
 
                     <div>
+                        <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">Finance</p>
+                        <a href="/admin/payments" data-permission="payments.view" class="nav-link {{ request()->is('admin/payments') ? 'nav-link-active' : '' }}">
+                            <i class="ph ph-credit-card text-lg"></i> Payments
+                        </a>
+                    </div>
+
+                    <div>
                         <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">Catalog</p>
                         <a href="/admin/categories" data-permission="categories.view" class="nav-link {{ request()->is('admin/categories') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-squares-four text-lg"></i> Categories
