@@ -28,13 +28,8 @@ class PaymentController extends Controller
             return $this->error('You are not allowed to view payment details for this request.', 403);
         }
 
-        $hasPendingPayment = Payment::where('service_request_id', $serviceRequest->id)
-            ->where('status', 'pending')
-            ->exists();
-
         $payable = $serviceRequest->status === 'approved'
-            && $serviceRequest->payment_status === 'unpaid'
-            && !$hasPendingPayment;
+            && $serviceRequest->payment_status === 'unpaid';
 
         return $this->success([
             'service_request_id' => $serviceRequest->id,
@@ -59,10 +54,6 @@ class PaymentController extends Controller
             return $this->error('This request is not ready for checkout.', 422);
         }
 
-        if (Payment::where('service_request_id', $serviceRequest->id)->where('status', 'pending')->exists()) {
-            return $this->error('A payment for this request is already awaiting confirmation.', 422);
-        }
-
         $payment = Payment::create([
             'user_id'            => $user->id,
             'service_request_id' => $serviceRequest->id,
@@ -70,6 +61,8 @@ class PaymentController extends Controller
             'payment_method'     => $request->payment_method,
             'status'             => 'pending',
         ]);
+
+        $serviceRequest->update(['payment_status' => 'pending']);
 
         if ($request->payment_method === 'cash') {
             $this->handleCashCheckout($payment, $serviceRequest);

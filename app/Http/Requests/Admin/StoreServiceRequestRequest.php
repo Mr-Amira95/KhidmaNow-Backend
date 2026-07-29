@@ -17,7 +17,7 @@ class StoreServiceRequestRequest extends FormRequest
             'description'     => 'nullable|string',
             'price'           => 'nullable|numeric|min:0',
             'status'          => 'nullable|in:pending,approved,rejected,in_progress,completed,confirmed,cancelled',
-            'payment_status'  => 'nullable|in:unpaid,paid',
+            'payment_status'  => 'nullable|in:unpaid,pending,paid',
             'latitude'        => 'nullable|numeric',
             'longitude'       => 'nullable|numeric',
             'address'         => 'nullable|string|max:255',

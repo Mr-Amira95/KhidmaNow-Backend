@@ -74,6 +74,7 @@ class StripeWebhookController extends Controller
         }
 
         $payment->update(['status' => 'failed', 'rejection_reason' => $reason]);
+        $payment->serviceRequest()->update(['payment_status' => 'unpaid']);
 
         NotificationService::send(
             $payment->user_id,

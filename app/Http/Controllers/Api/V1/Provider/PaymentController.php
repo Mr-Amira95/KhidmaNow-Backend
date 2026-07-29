@@ -47,6 +47,7 @@ class PaymentController extends Controller
             'status'            => 'failed',
             'rejection_reason'  => $request->rejection_reason,
         ]);
+        $payment->serviceRequest()->update(['payment_status' => 'unpaid']);
 
         NotificationService::send(
             $payment->user_id,
