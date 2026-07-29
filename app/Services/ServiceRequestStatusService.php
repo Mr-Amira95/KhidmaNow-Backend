@@ -73,6 +73,17 @@ class ServiceRequestStatusService
                         // The customer already paid the provider directly in cash, so the
                         // company has nothing to pay out — the provider instead owes the
                         // company its commission, tracked as a negative wallet balance.
+                        // We still log the full cash amount collected so the provider's
+                        // wallet history shows they received it, without affecting the
+                        // balance (which must keep reflecting only commission owed).
+                        WalletTransaction::create([
+                            'wallet_id'   => $wallet->id,
+                            'type'        => 'credit',
+                            'amount'      => $price,
+                            'source_type' => 'cash',
+                            'source_id'   => $serviceRequest->id,
+                        ]);
+
                         if ($commission > 0) {
                             $wallet->decrement('balance', $commission);
                             WalletTransaction::create([
