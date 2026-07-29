@@ -71,11 +71,19 @@ class ServiceRequestSeeder extends Seeder
             'description' => $description,
             'price' => $price,
             'status' => 'pending',
-            'payment_status' => 'unpaid',
             'latitude' => $customer->latitude,
             'longitude' => $customer->longitude,
             'address' => $customer->address,
             'scheduled_at' => $createdAt->copy()->addDays(2),
+            'created_at' => $createdAt,
+            'updated_at' => $createdAt,
+        ]);
+
+        Payment::create([
+            'user_id' => $customer->id,
+            'service_request_id' => $serviceRequest->id,
+            'amount' => $price,
+            'status' => 'unpaid',
             'created_at' => $createdAt,
             'updated_at' => $createdAt,
         ]);
@@ -241,19 +249,14 @@ class ServiceRequestSeeder extends Seeder
 
     private function pay(ServiceRequest $sr, User $customer, Carbon $paidAt): void
     {
-        $payment = Payment::create([
-            'user_id' => $customer->id,
-            'service_request_id' => $sr->id,
-            'amount' => $sr->price,
+        $payment = $sr->payment()->latest()->first();
+        $payment->update([
             'payment_method' => fake()->randomElement(['card', 'cash']),
             'status' => 'pending',
             'transaction_ref' => 'MOCK-' . strtoupper(fake()->bothify('##########')),
-            'created_at' => $paidAt,
-            'updated_at' => $paidAt,
         ]);
 
         $payment->update(['status' => 'paid', 'paid_at' => $paidAt]);
-        $sr->update(['payment_status' => 'paid']);
 
         Notification::create([
             'user_id' => $sr->provider->user_id,

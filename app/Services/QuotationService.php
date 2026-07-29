@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Notification;
+use App\Models\Payment;
 use App\Models\Provider;
 use App\Models\Quotation;
 use App\Models\QuotationBid;
@@ -112,11 +113,17 @@ class QuotationService
                 'description'     => $quotation->description,
                 'price'           => $bid->price,
                 'status'          => 'approved',
-                'payment_status'  => 'unpaid',
                 'latitude'        => $quotation->latitude,
                 'longitude'       => $quotation->longitude,
                 'address'         => $quotation->address,
                 'scheduled_at'    => $quotation->scheduled_at,
+            ]);
+
+            Payment::create([
+                'user_id'            => $serviceRequest->user_id,
+                'service_request_id' => $serviceRequest->id,
+                'amount'             => $serviceRequest->price ?? 0,
+                'status'             => 'unpaid',
             ]);
 
             ServiceRequestTrack::create([

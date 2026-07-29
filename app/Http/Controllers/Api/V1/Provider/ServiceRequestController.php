@@ -7,6 +7,7 @@ use App\Http\Requests\Provider\StoreServiceRequestRequest;
 use App\Http\Requests\Provider\UpdateServiceRequestStatusRequest;
 use App\Http\Resources\ServiceRequestResource;
 use App\Http\Traits\ApiResponse;
+use App\Models\Payment;
 use App\Models\ServiceRequest;
 use App\Models\ServiceRequestTrack;
 use App\Services\ServiceRequestStatusService;
@@ -26,10 +27,16 @@ class ServiceRequestController extends Controller
 
         $serviceRequest = ServiceRequest::create([
             ...$request->validated(),
-            'provider_id'    => $provider->id,
-            'status'         => 'approved',
-            'payment_status' => 'unpaid',
-            'source'         => 'chat',
+            'provider_id' => $provider->id,
+            'status'      => 'approved',
+            'source'      => 'chat',
+        ]);
+
+        Payment::create([
+            'user_id'            => $serviceRequest->user_id,
+            'service_request_id' => $serviceRequest->id,
+            'amount'             => $serviceRequest->price ?? 0,
+            'status'             => 'unpaid',
         ]);
 
         ServiceRequestTrack::create([
@@ -39,6 +46,8 @@ class ServiceRequestController extends Controller
             'changed_by'         => $request->user()->id,
             'date_time'          => now(),
         ]);
+
+        $serviceRequest->load('payment');
 
         return $this->success(new ServiceRequestResource($serviceRequest), 'Service request created successfully.', 201);
     }
@@ -59,6 +68,8 @@ class ServiceRequestController extends Controller
         } catch (InvalidArgumentException $e) {
             return $this->error($e->getMessage(), 422);
         }
+
+        $serviceRequest->load('payment');
 
         return $this->success(new ServiceRequestResource($serviceRequest), 'Status updated successfully.');
     }

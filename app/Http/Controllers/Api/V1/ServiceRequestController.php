@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateServiceRequestStatusRequest;
 use App\Http\Resources\ServiceRequestResource;
 use App\Http\Traits\ApiResponse;
 use App\Http\Traits\HandlesUploads;
+use App\Models\Payment;
 use App\Models\ServiceRequest;
 use App\Models\ServiceRequestAttachment;
 use App\Models\ServiceRequestTrack;
@@ -23,7 +24,7 @@ class ServiceRequestController extends Controller
     {
         $user = $request->user();
 
-        $query = ServiceRequest::with(['user', 'provider.user', 'rates'])
+        $query = ServiceRequest::with(['user', 'provider.user', 'rates', 'payment'])
             ->when($user->user_type === 'provider', fn ($q) => $q->where('provider_id', $user->provider->id))
             ->when($user->user_type !== 'provider', fn ($q) => $q->where('user_id', $user->id));
 
@@ -31,7 +32,8 @@ class ServiceRequestController extends Controller
             $query->where('status', $request->status);
         }
         if ($request->filled('payment_status')) {
-            $query->where('payment_status', $request->payment_status);
+            $status = $request->payment_status;
+            $query->whereHas('payment', fn ($q) => $q->where('status', $status));
         }
 
         return $this->paginated(ServiceRequestResource::class, $query->latest());
@@ -60,10 +62,16 @@ class ServiceRequestController extends Controller
 
         $serviceRequest = ServiceRequest::create([
             ...$data,
-            'user_id'        => $user->id,
-            'status'         => 'pending',
-            'payment_status' => 'unpaid',
-            'source'         => 'direct',
+            'user_id' => $user->id,
+            'status'  => 'pending',
+            'source'  => 'direct',
+        ]);
+
+        Payment::create([
+            'user_id'            => $user->id,
+            'service_request_id' => $serviceRequest->id,
+            'amount'             => $serviceRequest->price ?? 0,
+            'status'             => 'unpaid',
         ]);
 
         ServiceRequestTrack::create([
@@ -93,7 +101,7 @@ class ServiceRequestController extends Controller
             );
         }
 
-        $serviceRequest->load('attachments');
+        $serviceRequest->load(['attachments', 'payment']);
 
         return $this->success(new ServiceRequestResource($serviceRequest), 'Service request created successfully.', 201);
     }
@@ -110,6 +118,8 @@ class ServiceRequestController extends Controller
         } catch (InvalidArgumentException $e) {
             return $this->error($e->getMessage(), 422);
         }
+
+        $serviceRequest->load('payment');
 
         return $this->success(new ServiceRequestResource($serviceRequest), 'Status updated successfully.');
     }

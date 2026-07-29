@@ -33,7 +33,8 @@ class ServiceRequestStatusService
             throw new InvalidArgumentException("Cannot move a request from '{$fromStatus}' to '{$toStatus}'.");
         }
 
-        if ($toStatus === 'in_progress' && $serviceRequest->payment_status !== 'paid') {
+        $serviceRequest->loadMissing('payment');
+        if ($toStatus === 'in_progress' && $serviceRequest->payment?->status !== 'paid') {
             throw new InvalidArgumentException('The invoice must be paid before the request can start.');
         }
 

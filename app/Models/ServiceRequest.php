@@ -16,7 +16,6 @@ class ServiceRequest extends Model
         'description',
         'price',
         'status',
-        'payment_status',
         'latitude',
         'longitude',
         'address',

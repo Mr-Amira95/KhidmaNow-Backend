@@ -28,15 +28,18 @@ class PaymentController extends Controller
             return $this->error('You are not allowed to view payment details for this request.', 403);
         }
 
+        $serviceRequest->loadMissing('payment');
+        $paymentStatus = $serviceRequest->payment?->status ?? 'unpaid';
+
         $payable = $serviceRequest->status === 'approved'
-            && $serviceRequest->payment_status === 'unpaid';
+            && $paymentStatus === 'unpaid';
 
         return $this->success([
             'service_request_id' => $serviceRequest->id,
             'title'               => $serviceRequest->title,
             'amount'              => $serviceRequest->price ?? 0,
             'status'              => $serviceRequest->status,
-            'payment_status'      => $serviceRequest->payment_status,
+            'payment_status'      => $paymentStatus,
             'payable'             => $payable,
             'payment_methods'     => ['card', 'cash', 'cliq'],
             'cliq_details'        => new CompanyCliqDetailResource(CompanyCliqDetail::firstOrCreate([])),
@@ -50,19 +53,28 @@ class PaymentController extends Controller
             return $this->error('You are not allowed to pay for this request.', 403);
         }
 
-        if ($serviceRequest->status !== 'approved' || $serviceRequest->payment_status !== 'unpaid') {
+        $serviceRequest->loadMissing('payment');
+        $payment = $serviceRequest->payment;
+
+        if ($serviceRequest->status !== 'approved' || ($payment?->status ?? 'unpaid') !== 'unpaid') {
             return $this->error('This request is not ready for checkout.', 422);
         }
 
-        $payment = Payment::create([
-            'user_id'            => $user->id,
-            'service_request_id' => $serviceRequest->id,
-            'amount'             => $serviceRequest->price ?? 0,
-            'payment_method'     => $request->payment_method,
-            'status'             => 'pending',
-        ]);
-
-        $serviceRequest->update(['payment_status' => 'pending']);
+        if ($payment) {
+            $payment->update([
+                'amount'         => $serviceRequest->price ?? 0,
+                'payment_method' => $request->payment_method,
+                'status'         => 'pending',
+            ]);
+        } else {
+            $payment = Payment::create([
+                'user_id'            => $user->id,
+                'service_request_id' => $serviceRequest->id,
+                'amount'             => $serviceRequest->price ?? 0,
+                'payment_method'     => $request->payment_method,
+                'status'             => 'pending',
+            ]);
+        }
 
         if ($request->payment_method === 'cash') {
             $this->handleCashCheckout($payment, $serviceRequest);

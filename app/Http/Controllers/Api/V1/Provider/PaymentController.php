@@ -22,7 +22,6 @@ class PaymentController extends Controller
         }
 
         $payment->update(['status' => 'paid', 'paid_at' => now()]);
-        $payment->serviceRequest()->update(['payment_status' => 'paid']);
         $payment->recordWalletDebit();
 
         NotificationService::send(
@@ -47,7 +46,13 @@ class PaymentController extends Controller
             'status'            => 'failed',
             'rejection_reason'  => $request->rejection_reason,
         ]);
-        $payment->serviceRequest()->update(['payment_status' => 'unpaid']);
+
+        Payment::create([
+            'user_id'            => $payment->user_id,
+            'service_request_id' => $payment->service_request_id,
+            'amount'             => $payment->amount,
+            'status'             => 'unpaid',
+        ]);
 
         NotificationService::send(
             $payment->user_id,

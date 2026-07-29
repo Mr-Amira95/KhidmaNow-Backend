@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreServiceRequestRequest;
 use App\Http\Requests\Admin\UpdateServiceRequestStatusRequest;
 use App\Http\Resources\ServiceRequestResource;
 use App\Http\Traits\ApiResponse;
+use App\Models\Payment;
 use App\Models\ServiceRequest;
 use App\Models\ServiceRequestTrack;
 use Illuminate\Http\Request;
@@ -17,13 +18,14 @@ class ServiceRequestController extends Controller
 
     public function index(Request $request)
     {
-        $query = ServiceRequest::with(['user', 'provider.user']);
+        $query = ServiceRequest::with(['user', 'provider.user', 'payment']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
         if ($request->filled('payment_status')) {
-            $query->where('payment_status', $request->payment_status);
+            $status = $request->payment_status;
+            $query->whereHas('payment', fn ($q) => $q->where('status', $status));
         }
         if ($request->filled('provider_id')) {
             $query->where('provider_id', $request->provider_id);
@@ -49,11 +51,22 @@ class ServiceRequestController extends Controller
 
     public function store(StoreServiceRequestRequest $request)
     {
+        $data = $request->validated();
+        $paymentStatus = $data['payment_status'] ?? 'unpaid';
+        unset($data['payment_status']);
+
         $serviceRequest = ServiceRequest::create([
-            ...$request->validated(),
-            'status'         => $request->status ?? 'pending',
-            'payment_status' => $request->payment_status ?? 'unpaid',
-            'source'         => 'direct',
+            ...$data,
+            'status' => $request->status ?? 'pending',
+            'source' => 'direct',
+        ]);
+
+        Payment::create([
+            'user_id'            => $serviceRequest->user_id,
+            'service_request_id' => $serviceRequest->id,
+            'amount'             => $serviceRequest->price ?? 0,
+            'status'             => $paymentStatus,
+            'paid_at'            => $paymentStatus === 'paid' ? now() : null,
         ]);
 
         ServiceRequestTrack::create([
@@ -63,6 +76,8 @@ class ServiceRequestController extends Controller
             'changed_by'         => $request->user()->id,
             'date_time'          => now(),
         ]);
+
+        $serviceRequest->load('payment');
 
         return $this->success(new ServiceRequestResource($serviceRequest), 'Service request created successfully.', 201);
     }
@@ -79,6 +94,8 @@ class ServiceRequestController extends Controller
             'changed_by'         => $request->user()->id,
             'date_time'          => now(),
         ]);
+
+        $serviceRequest->load('payment');
 
         return $this->success(new ServiceRequestResource($serviceRequest), 'Status updated successfully.');
     }
