@@ -17,6 +17,8 @@ class Payment extends Model
         'rejection_reason',
         'stripe_payment_intent_id',
         'stripe_client_secret',
+        'stripe_checkout_session_id',
+        'stripe_checkout_url',
         'paid_at',
     ];
 

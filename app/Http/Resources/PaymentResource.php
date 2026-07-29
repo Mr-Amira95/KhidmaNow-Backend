@@ -20,7 +20,7 @@ class PaymentResource extends JsonResource
             'transaction_ref'       => $this->transaction_ref,
             'receipt_url'           => $this->receipt_path ? Storage::disk('public')->url($this->receipt_path) : null,
             'rejection_reason'      => $this->rejection_reason,
-            'stripe_client_secret'  => $this->when($this->payment_method === 'card' && $this->status === 'pending', $this->stripe_client_secret),
+            'checkout_url'          => $this->when($this->payment_method === 'card' && $this->status === 'pending', $this->stripe_checkout_url),
             'paid_at'               => $this->paid_at,
             'created_at'            => $this->created_at,
             'updated_at'            => $this->updated_at,

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PaymentPageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,11 @@ Route::get('/locale/{locale}', function (Request $request, string $locale) {
 
     return redirect(in_array($redirect, $allowed, true) ? $redirect : '/admin/login');
 })->name('locale.switch');
+
+Route::prefix('payments/checkout')->name('payments.checkout.')->group(function () {
+    Route::get('/success', [PaymentPageController::class, 'success'])->name('success');
+    Route::get('/cancel', [PaymentPageController::class, 'cancel'])->name('cancel');
+});
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::view('/login', 'admin.auth.login')->name('login');

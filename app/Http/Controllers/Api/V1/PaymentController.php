@@ -81,7 +81,7 @@ class PaymentController extends Controller
         } elseif ($request->payment_method === 'cliq') {
             $this->handleCliqCheckout($request, $payment);
         } else {
-            $this->handleCardCheckout($payment, $stripe);
+            $this->handleCardCheckout($payment, $serviceRequest, $stripe);
         }
 
         return $this->success(new PaymentResource($payment->fresh()), 'Checkout created.', 201);
@@ -123,17 +123,27 @@ class PaymentController extends Controller
         }
     }
 
-    private function handleCardCheckout(Payment $payment, StripePaymentService $stripe): void
+    private function handleCardCheckout(Payment $payment, ServiceRequest $serviceRequest, StripePaymentService $stripe): void
     {
-        $intent = $stripe->createPaymentIntent((float) $payment->amount, [
-            'payment_id'         => (string) $payment->id,
-            'service_request_id' => (string) $payment->service_request_id,
-        ]);
+        $successUrl = route('payments.checkout.success') . '?payment_id=' . $payment->id . '&session_id={CHECKOUT_SESSION_ID}';
+        $cancelUrl = route('payments.checkout.cancel') . '?payment_id=' . $payment->id;
+
+        $session = $stripe->createCheckoutSession(
+            (float) $payment->amount,
+            'Payment for ' . $serviceRequest->title,
+            $successUrl,
+            $cancelUrl,
+            [
+                'payment_id'         => (string) $payment->id,
+                'service_request_id' => (string) $payment->service_request_id,
+            ]
+        );
 
         $payment->update([
-            'transaction_ref'          => $intent->id,
-            'stripe_payment_intent_id' => $intent->id,
-            'stripe_client_secret'     => $intent->client_secret,
+            'transaction_ref'            => $session->id,
+            'stripe_checkout_session_id' => $session->id,
+            'stripe_payment_intent_id'   => $session->payment_intent,
+            'stripe_checkout_url'        => $session->url,
         ]);
     }
 }

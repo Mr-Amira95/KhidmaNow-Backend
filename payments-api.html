@@ -461,7 +461,7 @@
     </div>
     <div class="flow">
       <span class="step">Customer checks out with card</span><span class="arrow">→</span>
-      <span class="step">App confirms the PaymentIntent with Stripe SDK</span><span class="arrow">→</span>
+      <span class="step">App opens <code>checkout_url</code> in a webview</span><span class="arrow">→</span>
       <span class="step">Stripe webhook flips status server-side</span>
     </div>
 
@@ -471,11 +471,11 @@
         <span class="path mono">/v1/service-requests/{serviceRequest}/checkout</span>
         <span class="auth">customer · Bearer token</span>
       </div>
-      <p class="desc">Response includes <code>stripe_client_secret</code> — pass it straight into Stripe's mobile SDK (PaymentSheet on iOS/Android, or the Flutter/RN equivalent) to collect the card and confirm the charge. The app never touches raw card numbers or talks to our backend again for this step.</p>
+      <p class="desc">Response includes <code>checkout_url</code> — a Stripe-hosted Checkout page. Open it in an in-app webview so the customer enters card details on Stripe's page (the app never touches raw card numbers). When the customer finishes or cancels, Stripe redirects the webview to our <code>/payments/checkout/success</code> or <code>/payments/checkout/cancel</code> page — watch for either path in the webview's navigation delegate, then close the webview and return to the app.</p>
     </div>
 
     <div class="note warn">
-      This is the one flow with a real third party in the loop. Nothing in the mobile app calls a "confirm" endpoint for card — Stripe confirms client-side, then our server learns about it from a webhook (below), independent of the app being open.
+      Nothing in the mobile app calls a "confirm" endpoint for card — Stripe confirms the charge on its hosted page, then our server learns about it from a webhook (below), independent of the app being open. Reaching the success redirect only means the customer completed Stripe Checkout, not that our webhook has processed it yet — poll or listen for the push notification below to get the authoritative status.
     </div>
 
     <div class="endpoint">
@@ -511,14 +511,14 @@
     "transaction_ref": "CLIQ-9F3KDX0AQ1",
     "receipt_url": "https://.../storage/payments/receipts/xyz.jpg",
     "rejection_reason": null,
-    "stripe_client_secret": null,
+    "checkout_url": null,
     "paid_at": null,
     "created_at": "2026-07-28T21:00:00Z",
     "updated_at": "2026-07-28T21:00:00Z"
   }
 }</pre>
   <p class="sans" style="font-size:0.85rem;color:var(--ink-soft);">
-    <code class="mono">stripe_client_secret</code> is only ever populated when <code>payment_method</code> is <code>card</code> and status is still <code>pending</code> — <code>null</code> in every other case.
+    <code class="mono">checkout_url</code> is only ever populated when <code>payment_method</code> is <code>card</code> and status is still <code>pending</code> — <code>null</code> in every other case.
     <code class="mono">receipt_url</code> is only populated for <code>cliq</code>.
   </p>
 
