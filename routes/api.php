@@ -112,7 +112,7 @@ Route::prefix('v1')->group(function () {
 
         // ─── Profile Self-Service Routes ───────────────────────────────────────
         Route::get('/profile', [ProfileController::class, 'show']);
-        Route::patch('/profile', [ProfileController::class, 'update']);
+        Route::post('/profile', [ProfileController::class, 'update']);
 
         // ─── Company CliQ Payment Details (read-only) ──────────────────────────
         Route::get('/company-cliq-details', [CmsController::class, 'cliqDetails']);
