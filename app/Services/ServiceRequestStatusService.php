@@ -174,7 +174,7 @@ class ServiceRequestStatusService
 
     private function resolveCommissionRate(ServiceRequest $serviceRequest): float
     {
-        $category = $serviceRequest->quotation?->category;
+        $category = $serviceRequest->quotation?->category ?? $serviceRequest->provider?->category;
 
         if ($category && $category->commission_rate !== null) {
             return floatval($category->commission_rate);

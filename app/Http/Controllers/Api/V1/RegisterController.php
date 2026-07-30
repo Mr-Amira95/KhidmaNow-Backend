@@ -89,6 +89,7 @@ class RegisterController extends Controller
             'id_token' => 'required_without:password|string',
             'code' => 'required|string',
             'city_id' => 'required|integer|exists:cities,id',
+            'category_id' => 'required|integer|exists:categories,id',
             'business_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'experience_years' => 'nullable|integer|min:0',
@@ -130,6 +131,7 @@ class RegisterController extends Controller
             $provider = Provider::create([
                 'user_id' => $user->id,
                 'city_id' => $request->city_id,
+                'category_id' => $request->category_id,
                 'business_name' => $request->business_name,
                 'description' => $request->description,
                 'experience_years' => $request->experience_years,

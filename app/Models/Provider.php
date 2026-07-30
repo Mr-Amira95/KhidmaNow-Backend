@@ -9,6 +9,7 @@ class Provider extends Model
     protected $fillable = [
         'user_id',
         'city_id',
+        'category_id',
         'business_name',
         'description',
         'experience_years',
@@ -102,6 +103,11 @@ class Provider extends Model
     public function city()
     {
         return $this->belongsTo(City::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 
     public function documents()
