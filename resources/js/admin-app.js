@@ -430,6 +430,8 @@ function initUsersProvidersPage() {
         'provider_rejection_window_hours': '#policy-window-hours',
         'provider_suspension_duration_hours': '#policy-suspension-hours',
         'provider_debt_suspension_threshold': '#policy-debt-threshold',
+        'provider_cancellation_limit': '#policy-cancellation-limit',
+        'provider_cancellation_window_days': '#policy-cancellation-window-days',
     };
 
     async function loadPolicy() {

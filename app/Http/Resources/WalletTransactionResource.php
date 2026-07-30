@@ -10,14 +10,16 @@ class WalletTransactionResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'          => $this->id,
-            'wallet_id'   => $this->wallet_id,
-            'type'        => $this->type,
-            'amount'      => $this->amount,
-            'source_type' => $this->source_type,
-            'source_id'   => $this->source_id,
-            'created_at'  => $this->created_at,
-            'updated_at'  => $this->updated_at,
+            'id'             => $this->id,
+            'wallet_id'      => $this->wallet_id,
+            'type'           => $this->type,
+            'amount'         => $this->amount,
+            'source_type'    => $this->source_type,
+            'source_id'      => $this->source_id,
+            'request_title'  => $this->requestTitle(),
+            'payment_method' => $this->transactionPaymentMethod(),
+            'created_at'     => $this->created_at,
+            'updated_at'     => $this->updated_at,
         ];
     }
 }

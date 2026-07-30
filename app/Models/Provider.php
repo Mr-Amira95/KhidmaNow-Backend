@@ -35,7 +35,13 @@ class Provider extends Model
 
     public function isTimeSuspended(): bool
     {
-        return $this->suspended_until !== null && $this->suspended_until->isFuture();
+        if ($this->suspended_at === null) {
+            return false;
+        }
+
+        // A null suspended_until means the suspension has no auto-expiry and
+        // stays in effect until an admin explicitly unsuspends the provider.
+        return $this->suspended_until === null || $this->suspended_until->isFuture();
     }
 
     public function isDebtSuspended(): bool
@@ -62,7 +68,10 @@ class Provider extends Model
     public function scopeNotSuspended($query)
     {
         $query->where(function ($q) {
-            $q->whereNull('suspended_until')->orWhere('suspended_until', '<=', now());
+            $q->whereNull('suspended_at')
+                ->orWhere(function ($q2) {
+                    $q2->whereNotNull('suspended_until')->where('suspended_until', '<=', now());
+                });
         });
 
         $threshold = (new static())->debtSuspensionThreshold();

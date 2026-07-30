@@ -19,8 +19,8 @@ class ServiceRequestStatusService
 {
     private const TRANSITIONS = [
         'pending'     => ['approved', 'rejected', 'cancelled'],
-        'approved'    => ['in_progress'],
-        'in_progress' => ['completed'],
+        'approved'    => ['in_progress', 'cancelled'],
+        'in_progress' => ['completed', 'cancelled'],
         'completed'   => ['confirmed'],
     ];
 
@@ -146,6 +146,10 @@ class ServiceRequestStatusService
             $this->maybeSuspendProvider($serviceRequest->provider);
         }
 
+        if ($toStatus === 'cancelled' && $serviceRequest->provider && (int) $changedBy->id === (int) $serviceRequest->provider->user_id) {
+            $this->maybeSuspendProviderForCancellations($serviceRequest->provider);
+        }
+
         // Notify the other participant
         $notifyUserId = null;
         if ((int) $changedBy->id === (int) $serviceRequest->user_id) {
@@ -213,6 +217,35 @@ class ServiceRequestStatusService
             $provider->user_id,
             'Account Suspended',
             "Your provider account has been suspended for {$durationHours} hours after rejecting too many requests.",
+            'system',
+            $provider->id
+        );
+    }
+
+    private function maybeSuspendProviderForCancellations(Provider $provider): void
+    {
+        $limit = $this->resolveIntSetting('provider_cancellation_limit', 3);
+        $windowDays = $this->resolveIntSetting('provider_cancellation_window_days', 7);
+
+        $cancellationCount = ServiceRequestTrack::where('to_status', 'cancelled')
+            ->where('changed_by', $provider->user_id)
+            ->where('created_at', '>=', now()->subDays($windowDays))
+            ->count();
+
+        if ($cancellationCount < $limit) {
+            return;
+        }
+
+        $provider->update([
+            'suspended_at'      => now(),
+            'suspended_until'   => null,
+            'suspension_reason' => "Exceeded {$limit} cancelled requests within {$windowDays} days. Suspended until reviewed by an admin.",
+        ]);
+
+        NotificationService::send(
+            $provider->user_id,
+            'Account Suspended',
+            "Your provider account has been suspended after cancelling too many requests. An admin will review your account before it can be reinstated.",
             'system',
             $provider->id
         );

@@ -9,6 +9,7 @@
         <p class="mb-3 text-xs text-zinc-400">
             A provider who rejects this many requests within the time window is automatically suspended for the configured duration.
             A provider whose unpaid cash-job commission reaches the debt threshold is suspended until an admin records their payment.
+            A provider who cancels this many accepted requests within the day window is suspended until an admin reviews and reinstates their account.
         </p>
         <div class="flex flex-wrap items-end gap-3">
             <label class="text-xs text-zinc-500">
@@ -26,6 +27,14 @@
             <label class="text-xs text-zinc-500">
                 Debt suspension threshold
                 <input id="policy-debt-threshold" type="number" min="0" step="0.01" class="input-field-sm mt-1 block w-32">
+            </label>
+            <label class="text-xs text-zinc-500">
+                Cancellation limit
+                <input id="policy-cancellation-limit" type="number" min="1" class="input-field-sm mt-1 block w-32">
+            </label>
+            <label class="text-xs text-zinc-500">
+                Window (days)
+                <input id="policy-cancellation-window-days" type="number" min="1" class="input-field-sm mt-1 block w-32">
             </label>
             <button id="policy-save-button" type="button" class="btn btn-primary">Save Policy</button>
             <span id="policy-save-status" class="text-xs text-zinc-400"></span>

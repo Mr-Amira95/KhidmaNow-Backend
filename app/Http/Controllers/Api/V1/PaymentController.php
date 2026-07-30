@@ -60,11 +60,15 @@ class PaymentController extends Controller
             return $this->error('This request is not ready for checkout.', 422);
         }
 
+        // Card payments stay 'unpaid' until Stripe confirms them via webhook — there is no
+        // in-between "pending" hold, so an abandoned/incomplete checkout never blocks retries.
+        $initialStatus = $request->payment_method === 'card' ? 'unpaid' : 'pending';
+
         if ($payment) {
             $payment->update([
                 'amount'         => $serviceRequest->price ?? 0,
                 'payment_method' => $request->payment_method,
-                'status'         => 'pending',
+                'status'         => $initialStatus,
             ]);
         } else {
             $payment = Payment::create([
@@ -72,7 +76,7 @@ class PaymentController extends Controller
                 'service_request_id' => $serviceRequest->id,
                 'amount'             => $serviceRequest->price ?? 0,
                 'payment_method'     => $request->payment_method,
-                'status'             => 'pending',
+                'status'             => $initialStatus,
             ]);
         }
 

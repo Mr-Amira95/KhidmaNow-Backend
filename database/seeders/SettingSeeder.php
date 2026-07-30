@@ -18,6 +18,8 @@ class SettingSeeder extends Seeder
             ['key' => 'provider_rejection_window_hours', 'value' => '24', 'type' => 'number'],
             ['key' => 'provider_suspension_duration_hours', 'value' => '72', 'type' => 'number'],
             ['key' => 'provider_debt_suspension_threshold', 'value' => '50', 'type' => 'number'],
+            ['key' => 'provider_cancellation_limit', 'value' => '3', 'type' => 'number'],
+            ['key' => 'provider_cancellation_window_days', 'value' => '7', 'type' => 'number'],
         ];
 
         foreach ($settings as $setting) {

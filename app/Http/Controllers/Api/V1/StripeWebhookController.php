@@ -37,7 +37,7 @@ class StripeWebhookController extends Controller
 
     private function markPaid(string $paymentIntentId): void
     {
-        $payment = Payment::where('stripe_payment_intent_id', $paymentIntentId)->where('status', 'pending')->first();
+        $payment = Payment::where('stripe_payment_intent_id', $paymentIntentId)->where('status', 'unpaid')->first();
         if (!$payment) {
             return;
         }
@@ -67,7 +67,7 @@ class StripeWebhookController extends Controller
 
     private function markFailed(string $paymentIntentId, string $reason): void
     {
-        $payment = Payment::where('stripe_payment_intent_id', $paymentIntentId)->where('status', 'pending')->first();
+        $payment = Payment::where('stripe_payment_intent_id', $paymentIntentId)->where('status', 'unpaid')->first();
         if (!$payment) {
             return;
         }
