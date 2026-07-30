@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\Provider\HomeController as ProviderHomeControlle
 use App\Http\Controllers\Api\V1\Provider\ServiceRequestController as ProviderServiceRequestController;
 use App\Http\Controllers\Api\V1\Provider\QuotationController as ProviderQuotationController;
 use App\Http\Controllers\Api\V1\Provider\PaymentController as ProviderPaymentController;
+use App\Http\Controllers\Api\V1\Provider\DebtPaymentController as ProviderDebtPaymentController;
 use App\Http\Controllers\Api\V1\ServiceRequestController as ClientServiceRequestController;
 use App\Http\Controllers\Api\V1\PaymentController as ClientPaymentController;
 use App\Http\Controllers\Api\V1\StripeWebhookController;
@@ -39,6 +40,7 @@ use App\Http\Controllers\Api\V1\Admin\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationController as PublicNotificationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\Admin\PaymentController;
+use App\Http\Controllers\Api\V1\Admin\DebtPaymentController as AdminDebtPaymentController;
 use App\Http\Controllers\Api\V1\Admin\PayoutController;
 use App\Http\Controllers\Api\V1\Admin\PermissionController;
 use App\Http\Controllers\Api\V1\Admin\PrivacyPolicyController;
@@ -129,6 +131,12 @@ Route::prefix('v1')->group(function () {
             Route::post('quotations/{quotation}/bids', [ProviderQuotationController::class, 'storeBid']);
             Route::patch('payments/{payment}/confirm', [ProviderPaymentController::class, 'confirm']);
             Route::patch('payments/{payment}/reject', [ProviderPaymentController::class, 'reject']);
+
+            // Debt Payments (provider pays company: cash, cliq, or card)
+            Route::get('debt-payments/preview', [ProviderDebtPaymentController::class, 'preview']);
+            Route::get('debt-payments', [ProviderDebtPaymentController::class, 'index']);
+            Route::get('debt-payments/{debtPayment}', [ProviderDebtPaymentController::class, 'show']);
+            Route::post('debt-payments', [ProviderDebtPaymentController::class, 'store']);
         });
 
         // ─── Chats (client <-> provider) ──────────────────────────────────────
@@ -283,6 +291,12 @@ Route::prefix('v1')->group(function () {
             Route::get('payments/{payment}', [PaymentController::class, 'show'])->middleware('permission:payments.view');
             Route::patch('payments/{payment}/confirm', [PaymentController::class, 'confirm'])->middleware('permission:payments.edit');
             Route::patch('payments/{payment}/reject', [PaymentController::class, 'reject'])->middleware('permission:payments.edit');
+
+            // Debt Payments (provider -> company)
+            Route::get('debt-payments', [AdminDebtPaymentController::class, 'index'])->middleware('permission:payments.view');
+            Route::get('debt-payments/{debtPayment}', [AdminDebtPaymentController::class, 'show'])->middleware('permission:payments.view');
+            Route::patch('debt-payments/{debtPayment}/confirm', [AdminDebtPaymentController::class, 'confirm'])->middleware('permission:payments.edit');
+            Route::patch('debt-payments/{debtPayment}/reject', [AdminDebtPaymentController::class, 'reject'])->middleware('permission:payments.edit');
 
             // Payouts
             Route::patch('payouts/{payout}/status', [PayoutController::class, 'updateStatus'])->middleware('permission:payouts.edit');

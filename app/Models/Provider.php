@@ -140,6 +140,11 @@ class Provider extends Model
         return $this->hasMany(Payout::class);
     }
 
+    public function debtPayments()
+    {
+        return $this->hasMany(DebtPayment::class);
+    }
+
     public function chatRooms()
     {
         return $this->hasMany(ChatRoom::class);

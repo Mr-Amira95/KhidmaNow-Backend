@@ -28,7 +28,9 @@ class SubCategoryController extends Controller
     {
         $subCategories = SubCategory::where('category_id', $category->id)
             ->where('is_active', true)
-            ->with('providers.user', 'providers.city')
+            ->with(['providers' => function ($query) {
+                $query->notSuspended()->with('user', 'city');
+            }])
             ->latest()
             ->get();
 

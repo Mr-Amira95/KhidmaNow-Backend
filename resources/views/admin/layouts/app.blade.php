@@ -56,6 +56,9 @@
                         <a href="/admin/payments" data-permission="payments.view" class="nav-link {{ request()->is('admin/payments') ? 'nav-link-active' : '' }}">
                             <i class="ph ph-credit-card text-lg"></i> Payments
                         </a>
+                        <a href="/admin/debt-payments" data-permission="payments.view" class="nav-link {{ request()->is('admin/debt-payments') ? 'nav-link-active' : '' }}">
+                            <i class="ph ph-hand-coins text-lg"></i> Debt Payments
+                        </a>
                     </div>
 
                     <div>

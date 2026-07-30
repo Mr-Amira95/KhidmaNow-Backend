@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\DebtPayment;
 use App\Models\Payment;
 use App\Services\NotificationService;
 use App\Services\StripePaymentService;
@@ -38,10 +39,33 @@ class StripeWebhookController extends Controller
     private function markPaid(string $paymentIntentId): void
     {
         $payment = Payment::where('stripe_payment_intent_id', $paymentIntentId)->where('status', 'unpaid')->first();
-        if (!$payment) {
+        if ($payment) {
+            $this->markPaymentPaid($payment);
             return;
         }
 
+        $debtPayment = DebtPayment::where('stripe_payment_intent_id', $paymentIntentId)->where('status', 'unpaid')->first();
+        if ($debtPayment) {
+            $this->markDebtPaymentPaid($debtPayment);
+        }
+    }
+
+    private function markFailed(string $paymentIntentId, string $reason): void
+    {
+        $payment = Payment::where('stripe_payment_intent_id', $paymentIntentId)->where('status', 'unpaid')->first();
+        if ($payment) {
+            $this->markPaymentFailed($payment, $reason);
+            return;
+        }
+
+        $debtPayment = DebtPayment::where('stripe_payment_intent_id', $paymentIntentId)->where('status', 'unpaid')->first();
+        if ($debtPayment) {
+            $this->markDebtPaymentFailed($debtPayment, $reason);
+        }
+    }
+
+    private function markPaymentPaid(Payment $payment): void
+    {
         $payment->update(['status' => 'paid', 'paid_at' => now()]);
         $payment->recordWalletDebit();
         $payment->load('serviceRequest.provider');
@@ -65,13 +89,8 @@ class StripeWebhookController extends Controller
         }
     }
 
-    private function markFailed(string $paymentIntentId, string $reason): void
+    private function markPaymentFailed(Payment $payment, string $reason): void
     {
-        $payment = Payment::where('stripe_payment_intent_id', $paymentIntentId)->where('status', 'unpaid')->first();
-        if (!$payment) {
-            return;
-        }
-
         $payment->update(['status' => 'failed', 'rejection_reason' => $reason]);
 
         Payment::create([
@@ -87,6 +106,39 @@ class StripeWebhookController extends Controller
             'Your card payment could not be completed: ' . $reason,
             'payment',
             $payment->id
+        );
+    }
+
+    private function markDebtPaymentPaid(DebtPayment $debtPayment): void
+    {
+        $debtPayment->update(['status' => 'paid', 'paid_at' => now()]);
+        $debtPayment->recordWalletCredit();
+
+        NotificationService::send(
+            $debtPayment->provider->user_id,
+            'Debt Payment Confirmed',
+            'Your card payment of ' . $debtPayment->amount . ' toward your outstanding balance has been confirmed.',
+            'payment',
+            $debtPayment->id
+        );
+    }
+
+    private function markDebtPaymentFailed(DebtPayment $debtPayment, string $reason): void
+    {
+        $debtPayment->update(['status' => 'failed', 'rejection_reason' => $reason]);
+
+        DebtPayment::create([
+            'provider_id' => $debtPayment->provider_id,
+            'amount'      => $debtPayment->amount,
+            'status'      => 'unpaid',
+        ]);
+
+        NotificationService::send(
+            $debtPayment->provider->user_id,
+            'Debt Payment Failed',
+            'Your card payment could not be completed: ' . $reason,
+            'payment',
+            $debtPayment->id
         );
     }
 }
