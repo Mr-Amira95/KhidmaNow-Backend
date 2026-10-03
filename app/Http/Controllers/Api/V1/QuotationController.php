@@ -143,4 +143,20 @@ class QuotationController extends Controller
             'Bid approved. Request created successfully.'
         );
     }
+
+    public function destroy(Request $request, Quotation $quotation)
+    {
+        $user = $request->user();
+        if ($user->user_type !== 'customer' || (int) $quotation->user_id !== (int) $user->id) {
+            return $this->error('You are not allowed to delete this quotation.', 403);
+        }
+
+        if ($quotation->status !== 'open') {
+            return $this->error("This quotation is already '{$quotation->status}' and cannot be deleted.", 422);
+        }
+
+        $quotation->delete();
+
+        return $this->success([], 'Quotation deleted successfully.');
+    }
 }

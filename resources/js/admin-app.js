@@ -2668,6 +2668,214 @@ function initDebtPaymentsPage() {
     load();
 }
 
+function initFinancialsPage() {
+    const providersBody = qs('#financials-providers-table-body');
+    if (!providersBody) return;
+
+    let providersPage = 1;
+    let chart = null;
+
+    function formatAmount(value) {
+        const n = Number(value || 0);
+        return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function walletBadge(balance) {
+        const n = Number(balance || 0);
+        if (n < 0) return badgeHtml(`Owes ${formatAmount(Math.abs(n))}`, 'rose');
+        if (n > 0) return badgeHtml(`Owed ${formatAmount(n)}`, 'green');
+        return badgeHtml('Settled', 'zinc');
+    }
+
+    function currentRange() {
+        return {
+            from: qs('#financials-from-filter').value || undefined,
+            to: qs('#financials-to-filter').value || undefined,
+        };
+    }
+
+    async function loadOverview() {
+        const result = await apiRequest('get', '/admin/financials/overview', currentRange());
+        if (!result.ok) {
+            showBanner('#financials-banner', result.data.message || 'Failed to load financial overview.');
+            return;
+        }
+
+        const { summary, monthly } = result.data.data;
+        qs('#stat-income').textContent = formatAmount(summary.income);
+        qs('#stat-outcome').textContent = formatAmount(summary.outcome);
+        qs('#stat-net').textContent = formatAmount(summary.net);
+        qs('#stat-commission').textContent = formatAmount(summary.commission_earned);
+        qs('#stat-pending-payouts').textContent = formatAmount(summary.pending_payouts);
+        qs('#stat-outstanding-debt').textContent = formatAmount(summary.outstanding_debt);
+
+        renderChart(monthly);
+    }
+
+    function renderChart(monthly) {
+        const canvas = qs('#financials-chart');
+        if (!canvas || typeof window.Chart === 'undefined') return;
+
+        const labels = monthly.map((m) => m.month);
+        const data = {
+            labels,
+            datasets: [
+                { label: 'Income', data: monthly.map((m) => m.income), borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.1)', tension: 0.3 },
+                { label: 'Outcome', data: monthly.map((m) => m.outcome), borderColor: '#e11d48', backgroundColor: 'rgba(225,29,72,0.1)', tension: 0.3 },
+                { label: 'Net', data: monthly.map((m) => m.net), borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.1)', tension: 0.3 },
+            ],
+        };
+
+        if (chart) {
+            chart.data = data;
+            chart.update();
+            return;
+        }
+
+        chart = new window.Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } },
+            },
+        });
+    }
+
+    async function loadProviders() {
+        providersBody.innerHTML = loadingRow(6);
+        const result = await apiRequest('get', '/admin/financials/providers', {
+            page: providersPage,
+            search: qs('#financials-provider-search').value || undefined,
+        });
+
+        if (!result.ok) {
+            providersBody.innerHTML = errorRow(6, 'Failed to load providers.');
+            return;
+        }
+
+        const providers = result.data.data;
+        if (!providers.length) {
+            providersBody.innerHTML = emptyRow(6, 'No providers found.');
+        } else {
+            providersBody.innerHTML = providers.map((p) => `
+                <tr class="border-b border-zinc-100 dark:border-zinc-800/70 table-row-motion">
+                    <td class="py-3 px-4 text-sm font-medium">${escapeHtml(p.business_name || p.user?.name) || '—'}</td>
+                    <td class="py-3 px-4 text-sm font-mono">${formatAmount(p.paid_payouts)}</td>
+                    <td class="py-3 px-4 text-sm font-mono">${formatAmount(p.pending_payouts)}</td>
+                    <td class="py-3 px-4 text-sm font-mono">${formatAmount(p.paid_debt)}</td>
+                    <td class="py-3 px-4">${walletBadge(p.wallet_balance)}</td>
+                    <td class="py-3 px-4 text-right text-sm">
+                        <button data-action="view" data-id="${p.id}" class="link-action">View</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        renderPagination(qs('#financials-providers-pagination'), result.data.meta, (p) => { providersPage = p; loadProviders(); });
+    }
+
+    async function viewProvider(id) {
+        const result = await apiRequest('get', `/admin/financials/providers/${id}`);
+        if (!result.ok) return;
+        const { provider, summary, recent_payouts, recent_debt_payments, recent_wallet_transactions } = result.data.data;
+
+        function miniTable(rows, columns) {
+            if (!rows.length) return '<p class="text-sm text-zinc-400">No records yet.</p>';
+            return `
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="table-head-row">${columns.map((c) => `<th class="py-2 px-2">${c.label}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>
+                        ${rows.map((row) => `
+                            <tr class="border-b border-zinc-100 dark:border-zinc-800/70">
+                                ${columns.map((c) => `<td class="py-2 px-2">${c.render(row)}</td>`).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        qs('#financials-provider-body').innerHTML = `
+            <div class="space-y-5">
+                <div>
+                    <p class="font-semibold text-zinc-900 dark:text-zinc-50">${escapeHtml(provider.business_name || provider.user?.name) || '—'}</p>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">${escapeHtml(provider.user?.email) || ''}</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-zinc-400">Paid payouts</p>
+                        <p class="font-mono font-medium">${formatAmount(summary.paid_payouts)}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-zinc-400">Pending payouts</p>
+                        <p class="font-mono font-medium">${formatAmount(summary.pending_payouts)}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-zinc-400">Paid debt</p>
+                        <p class="font-mono font-medium">${formatAmount(summary.paid_debt)}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-zinc-400">Wallet balance</p>
+                        <p>${walletBadge(summary.wallet_balance)}</p>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">Recent payouts</p>
+                    ${miniTable(recent_payouts, [
+                        { label: 'Amount', render: (r) => formatAmount(r.amount) },
+                        { label: 'Status', render: (r) => badgeHtml(r.status, r.status === 'paid' ? 'green' : r.status === 'failed' ? 'rose' : 'orange') },
+                        { label: 'Date', render: (r) => formatDate(r.paid_at || r.created_at) },
+                    ])}
+                </div>
+
+                <div>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">Recent debt payments</p>
+                    ${miniTable(recent_debt_payments, [
+                        { label: 'Amount', render: (r) => formatAmount(r.amount) },
+                        { label: 'Status', render: (r) => badgeHtml(r.status, r.status === 'paid' ? 'green' : r.status === 'failed' ? 'rose' : 'orange') },
+                        { label: 'Date', render: (r) => formatDate(r.paid_at || r.created_at) },
+                    ])}
+                </div>
+
+                <div>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">Recent wallet activity</p>
+                    ${miniTable(recent_wallet_transactions, [
+                        { label: 'Type', render: (r) => badgeHtml(r.type, r.type === 'credit' ? 'green' : 'rose') },
+                        { label: 'Amount', render: (r) => formatAmount(r.amount) },
+                        { label: 'Source', render: (r) => escapeHtml(r.source_type) },
+                        { label: 'Date', render: (r) => formatDate(r.created_at) },
+                    ])}
+                </div>
+            </div>
+        `;
+
+        openModal('financials-provider-modal');
+    }
+
+    providersBody.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-action="view"]');
+        if (!button) return;
+        viewProvider(button.dataset.id);
+    });
+
+    qs('#financials-apply-range').addEventListener('click', () => loadOverview());
+    qs('#financials-clear-range').addEventListener('click', () => {
+        qs('#financials-from-filter').value = '';
+        qs('#financials-to-filter').value = '';
+        loadOverview();
+    });
+    qs('#financials-provider-search').addEventListener('input', debounce(() => { providersPage = 1; loadProviders(); }));
+
+    loadOverview();
+    loadProviders();
+}
+
 // ─── Dispatcher ─────────────────────────────────────────────────────────────
 
 const PAGE_VIEW_PERMISSION = {
@@ -2676,6 +2884,7 @@ const PAGE_VIEW_PERMISSION = {
     'categories': 'categories.view',
     'payments': 'payments.view',
     'debt-payments': 'payments.view',
+    'financials': 'financials.view',
     'chats': 'chats.view',
     'chatbot': 'chatbot.view',
     'support-tickets': 'support_tickets.view',
@@ -2731,6 +2940,9 @@ document.addEventListener('DOMContentLoaded', () => {
             break;
         case 'debt-payments':
             initDebtPaymentsPage();
+            break;
+        case 'financials':
+            initFinancialsPage();
             break;
         case 'chats':
             initChatsPage();

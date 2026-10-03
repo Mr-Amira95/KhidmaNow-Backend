@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\V1\Admin\CityController;
 use App\Http\Controllers\Api\V1\Admin\CountryController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
 use App\Http\Controllers\Api\V1\Admin\FaqController;
+use App\Http\Controllers\Api\V1\Admin\FinancialController;
 use App\Http\Controllers\Api\V1\Admin\IntroScreenController as AdminIntroScreenController;
 use App\Http\Controllers\Api\V1\Admin\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationController as PublicNotificationController;
@@ -129,6 +130,8 @@ Route::prefix('v1')->group(function () {
             Route::post('service-requests', [ProviderServiceRequestController::class, 'store']);
             Route::patch('service-requests/{serviceRequest}/status', [ProviderServiceRequestController::class, 'updateStatus']);
             Route::post('quotations/{quotation}/bids', [ProviderQuotationController::class, 'storeBid']);
+            Route::patch('quotations/{quotation}/bids/{bid}', [ProviderQuotationController::class, 'updateBid']);
+            Route::delete('quotations/{quotation}/bids/{bid}', [ProviderQuotationController::class, 'destroyBid']);
             Route::patch('payments/{payment}/confirm', [ProviderPaymentController::class, 'confirm']);
             Route::patch('payments/{payment}/reject', [ProviderPaymentController::class, 'reject']);
 
@@ -195,6 +198,7 @@ Route::prefix('v1')->group(function () {
             Route::middleware('customer')->group(function () {
                 Route::post('/', [ClientQuotationController::class, 'store']);
                 Route::patch('/{quotation}/bids/{bid}/approve', [ClientQuotationController::class, 'approveBid']);
+                Route::delete('/{quotation}', [ClientQuotationController::class, 'destroy']);
             });
         });
 
@@ -306,6 +310,11 @@ Route::prefix('v1')->group(function () {
             // Wallets
             Route::get('wallets', [WalletController::class, 'index'])->middleware('permission:wallets.view');
             Route::get('wallets/{wallet}', [WalletController::class, 'show'])->middleware('permission:wallets.view');
+
+            // Financials (income/outcome overview + per-provider breakdown)
+            Route::get('financials/overview', [FinancialController::class, 'overview'])->middleware('permission:financials.view');
+            Route::get('financials/providers', [FinancialController::class, 'providers'])->middleware('permission:financials.view');
+            Route::get('financials/providers/{provider}', [FinancialController::class, 'providerShow'])->middleware('permission:financials.view');
 
             // Rates / Reviews
             Route::get('rates', [RateController::class, 'index'])->middleware('permission:rates.view');

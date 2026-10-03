@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\V1\Provider;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Provider\StoreQuotationBidRequest;
+use App\Http\Requests\Provider\UpdateQuotationBidRequest;
 use App\Http\Resources\QuotationBidResource;
 use App\Http\Traits\ApiResponse;
 use App\Models\Quotation;
 use App\Models\QuotationBid;
+use Illuminate\Http\Request;
 
 class QuotationController extends Controller
 {
@@ -52,5 +54,53 @@ class QuotationController extends Controller
         $bid->load('provider.user');
 
         return $this->success(new QuotationBidResource($bid), 'Bid submitted successfully.', 201);
+    }
+
+    public function updateBid(UpdateQuotationBidRequest $request, Quotation $quotation, QuotationBid $bid)
+    {
+        $provider = $request->user()->provider;
+
+        if ((int) $bid->quotation_id !== (int) $quotation->id) {
+            return $this->error('This bid does not belong to this quotation.', 422);
+        }
+
+        if (!$provider || (int) $bid->provider_id !== (int) $provider->id) {
+            return $this->error('You are not allowed to edit this bid.', 403);
+        }
+
+        if ($quotation->status !== 'open') {
+            return $this->error("This quotation is already '{$quotation->status}'.", 422);
+        }
+
+        if ($bid->status !== 'pending') {
+            return $this->error("This bid is already '{$bid->status}' and cannot be edited.", 422);
+        }
+
+        $bid->update($request->validated());
+
+        $bid->load('provider.user');
+
+        return $this->success(new QuotationBidResource($bid), 'Bid updated successfully.');
+    }
+
+    public function destroyBid(Request $request, Quotation $quotation, QuotationBid $bid)
+    {
+        $provider = $request->user()->provider;
+
+        if ((int) $bid->quotation_id !== (int) $quotation->id) {
+            return $this->error('This bid does not belong to this quotation.', 422);
+        }
+
+        if (!$provider || (int) $bid->provider_id !== (int) $provider->id) {
+            return $this->error('You are not allowed to delete this bid.', 403);
+        }
+
+        if ($bid->status !== 'pending') {
+            return $this->error("This bid is already '{$bid->status}' and cannot be deleted.", 422);
+        }
+
+        $bid->delete();
+
+        return $this->success([], 'Bid deleted successfully.');
     }
 }

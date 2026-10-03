@@ -43,6 +43,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::view('/payments', 'admin.payments.index')->name('payments');
     Route::view('/debt-payments', 'admin.debt-payments.index')->name('debt-payments');
+    Route::view('/financials', 'admin.financials.index')->name('financials');
 
     Route::view('/chats', 'admin.chats.index')->name('chats');
     Route::view('/chatbot', 'admin.chatbot.index')->name('chatbot');

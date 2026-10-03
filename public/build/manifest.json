@@ -4,7 +4,7 @@
     "name": "theme"
   },
   "resources/css/app.css": {
-    "file": "assets/app-B0NFDUz4.css",
+    "file": "assets/app-Bd9qqltm.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -13,7 +13,7 @@
     ]
   },
   "resources/js/admin-app.js": {
-    "file": "assets/admin-app-BRI-XR8T.js",
+    "file": "assets/admin-app-CEcDRLVU.js",
     "name": "admin-app",
     "src": "resources/js/admin-app.js",
     "isEntry": true,

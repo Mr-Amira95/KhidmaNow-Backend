@@ -53,6 +53,7 @@ class RolePermissionSeeder extends Seeder
         'payments'         => ['label' => 'Payments', 'actions' => ['view' => 'View Payments', 'edit' => 'Confirm/Reject CliQ Payments']],
         'payouts'          => ['label' => 'Payouts', 'actions' => ['view' => 'View Payouts', 'edit' => 'Update Payout Status']],
         'wallets'          => ['label' => 'Wallets', 'actions' => ['view' => 'View Wallets']],
+        'financials'       => ['label' => 'Financials', 'actions' => ['view' => 'View Financial Overview']],
         'rates'            => ['label' => 'Rates / Reviews', 'actions' => [
             'view' => 'View Rates', 'create' => 'Create Rates', 'delete' => 'Delete Rates',
         ]],

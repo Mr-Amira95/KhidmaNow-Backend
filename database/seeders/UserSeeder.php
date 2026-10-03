@@ -106,6 +106,12 @@ class UserSeeder extends Seeder
     {
         $cities = City::pluck('id', 'name_en');
 
+        $coords = [
+            'Riyadh' => [24.7136, 46.6753],
+            'Jeddah' => [21.4858, 39.1925],
+            'Dammam' => [26.4207, 50.0888],
+        ];
+
         $providers = [
             [
                 'name' => 'Sparkle Home Services', 'city' => 'Riyadh', 'years' => 6, 'verified' => true,
@@ -160,6 +166,9 @@ class UserSeeder extends Seeder
                 'password' => $password,
                 'user_type' => 'provider',
                 'status' => 'active',
+                'latitude' => $coords[$data['city']][0] + fake()->randomFloat(5, -0.05, 0.05),
+                'longitude' => $coords[$data['city']][1] + fake()->randomFloat(5, -0.05, 0.05),
+                'address' => $data['city'] . ', Saudi Arabia',
             ]);
 
             $provider = Provider::create([
