@@ -11,8 +11,10 @@ use App\Http\Traits\ApiResponse;
 use App\Http\Traits\HandlesUploads;
 use App\Models\ChatRoom;
 use App\Models\Message;
+use App\Models\QuotationBid;
 use App\Services\FirestoreService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class ChatController extends Controller
 {
@@ -33,7 +35,39 @@ class ChatController extends Controller
             }])
             ->latest('last_message_at');
 
-        return $this->paginated(ChatRoomResource::class, $query);
+        return $this->paginated(
+            ChatRoomResource::class,
+            $query,
+            15,
+            fn ($chatRooms) => $this->attachLastBids($chatRooms)
+        );
+    }
+
+    /**
+     * Attach the most recent bid (if any) placed by each chat room's provider
+     * on any quotation belonging to that chat room's customer.
+     */
+    private function attachLastBids(iterable $chatRooms): void
+    {
+        $chatRooms = Collection::make($chatRooms);
+        if ($chatRooms->isEmpty()) {
+            return;
+        }
+
+        $providerIds = $chatRooms->pluck('provider_id')->filter()->unique();
+        $userIds = $chatRooms->pluck('user_id')->unique();
+
+        $bids = QuotationBid::whereIn('provider_id', $providerIds)
+            ->whereHas('quotation', fn ($q) => $q->whereIn('user_id', $userIds))
+            ->with('quotation:id,user_id')
+            ->latest('id')
+            ->get()
+            ->groupBy(fn ($bid) => $bid->provider_id . '-' . $bid->quotation->user_id);
+
+        $chatRooms->each(function ($chatRoom) use ($bids) {
+            $key = $chatRoom->provider_id . '-' . $chatRoom->user_id;
+            $chatRoom->setAttribute('last_bid', $bids->get($key)?->first());
+        });
     }
 
     public function store(StoreChatRequest $request)
@@ -65,6 +99,7 @@ class ChatController extends Controller
         FirestoreService::upsertChatRoom($chatRoom);
 
         $chatRoom->load(['user', 'provider.user', 'latestMessage']);
+        $this->attachLastBids([$chatRoom]);
 
         return $this->success(new ChatRoomResource($chatRoom), 'Chat started.', 201);
     }

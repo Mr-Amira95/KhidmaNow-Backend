@@ -17,6 +17,11 @@ class ChatRoomResource extends JsonResource
             'client' => new UserResource($this->whenLoaded('user')),
             'provider' => new ProviderResource($this->whenLoaded('provider')),
             'last_message' => new MessageResource($this->whenLoaded('latestMessage')),
+            'last_bid' => $this->last_bid ? [
+                'bid_id' => $this->last_bid->id,
+                'price'  => $this->last_bid->price,
+                'note'   => $this->last_bid->note,
+            ] : null,
         ];
     }
 }
