@@ -11,6 +11,7 @@ use App\Http\Traits\HandlesUploads;
 use App\Models\Quotation;
 use App\Models\QuotationAttachment;
 use App\Models\QuotationBid;
+use App\Services\GeoService;
 use App\Services\QuotationService;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -71,6 +72,16 @@ class QuotationController extends Controller
             'bids' => $this->bidsConstraint($user),
             'track.changedBy', 'serviceRequest', 'attachments',
         ]);
+
+        $quotation->bids->each(function (QuotationBid $bid) use ($quotation) {
+            $providerUser = $bid->provider?->user;
+            $bid->distance_km = GeoService::distanceInKm(
+                $quotation->latitude,
+                $quotation->longitude,
+                $providerUser?->latitude,
+                $providerUser?->longitude
+            );
+        });
 
         return $this->success(new QuotationResource($quotation));
     }
